@@ -215,7 +215,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const containerH = "calc(100vh - 56px)";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: containerH, background: "var(--bg)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: containerH, background: "var(--surface)" }}>
 
       {/* ── Top toolbar ──────────────────────────────────────────────── */}
       <div style={{
@@ -383,7 +383,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         {(!isMobile || activePane === "preview") && (
           <div style={{
             flex: 1, display: "flex", flexDirection: "column",
-            background: "#f0f0f0", /* light outer background */
+            background: "var(--surface2)", /* outer "desk" background */
             minWidth: 0, overflowY: "auto",
           }}>
             {/* Preview header */}

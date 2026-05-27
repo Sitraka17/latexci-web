@@ -1,32 +1,80 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────
+   DARK theme (default)
+───────────────────────────────────────────────────── */
 :root {
-  --bg: #0a0a0f;
-  --surface: #111118;
-  --surface2: #1a1a24;
-  --border: #2a2a38;
-  --accent: #6c63ff;
-  --accent2: #a78bfa;
-  --fg: #e2e8f0;
-  --fg-muted: #94a3b8;
-  --green: #10b981;
-  --red: #ef4444;
+  --bg:           #0d0d13;
+  --surface:      #141419;
+  --surface2:     #1c1c26;
+  --border:       #28283a;
+  --accent:       #7c6cf8;
+  --accent2:      #b49ff5;
+  --fg:           #e4e1ef;
+  --fg-muted:     #8a88a4;
+  --green:        #34d399;
+  --red:          #f87171;
+  --amber:        #fbbf24;
+  --nav-bg:       rgba(13, 13, 19, 0.85);
+  --nav-border:   rgba(40, 40, 58, 0.9);
+  --shadow-sm:    0 1px 4px rgba(0,0,0,0.5);
+  --shadow-md:    0 4px 20px rgba(0,0,0,0.4);
 }
 
-* { box-sizing: border-box; }
+/* ─────────────────────────────────────────────────────
+   LIGHT / BEIGE theme
+───────────────────────────────────────────────────── */
+html.light {
+  --bg:           #ece7da;
+  --surface:      #f7f3ea;
+  --surface2:     #ede8de;
+  --border:       #cfc8bc;
+  --accent:       #5a46c8;
+  --accent2:      #7a62e0;
+  --fg:           #1a1714;
+  --fg-muted:     #7a7060;
+  --green:        #166534;
+  --red:          #991b1b;
+  --amber:        #92400e;
+  --nav-bg:       rgba(247, 243, 234, 0.9);
+  --nav-border:   rgba(207, 200, 188, 0.9);
+  --shadow-sm:    0 1px 4px rgba(0,0,0,0.08);
+  --shadow-md:    0 4px 20px rgba(0,0,0,0.1);
+}
+
+/* ─────────────────────────────────────────────────────
+   Base
+───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   margin: 0;
   min-height: 100vh;
 }
 
-.katex { color: var(--fg); }
+/* ─────────────────────────────────────────────────────
+   Scrollbars
+───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+/* ─────────────────────────────────────────────────────
+   KaTeX
+───────────────────────────────────────────────────── */
+.katex { color: inherit; }
 .katex-display { overflow-x: auto; padding: 0.5rem 0; }
 
+/* ─────────────────────────────────────────────────────
+   CodeMirror (editor — always dark)
+───────────────────────────────────────────────────── */
 .cm-editor {
   height: 100%;
   font-family: 'JetBrains Mono', monospace !important;
@@ -35,33 +83,100 @@ body {
 .cm-editor.cm-focused { outline: none !important; }
 .cm-scroller { overflow: auto; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a50; }
-
-.diff-added { background: rgba(16, 185, 129, 0.15); color: #34d399; display: block; padding: 0 0.5rem; }
-.diff-removed { background: rgba(239, 68, 68, 0.15); color: #f87171; display: block; padding: 0 0.5rem; text-decoration: line-through; }
+/* ─────────────────────────────────────────────────────
+   Diff
+───────────────────────────────────────────────────── */
+.diff-added   { background: rgba(52,211,153,0.12);  color: #34d399; display: block; padding: 0 0.5rem; }
+.diff-removed { background: rgba(248,113,113,0.12); color: #f87171; display: block; padding: 0 0.5rem; text-decoration: line-through; }
 .diff-neutral { color: var(--fg-muted); display: block; padding: 0 0.5rem; }
 
-/* Tool card hover */
-.tool-card > div { transition: border-color 0.2s, background 0.2s; }
-.tool-card:hover > div { border-color: var(--accent) !important; background: var(--surface2) !important; }
+/* ─────────────────────────────────────────────────────
+   Tool cards
+───────────────────────────────────────────────────── */
+.tool-card > div {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+.tool-card:hover > div {
+  border-color: var(--accent) !important;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
 
-/* Academics page thesis card hover */
-.thesis-card { transition: border-color 0.2s, box-shadow 0.2s; }
-.thesis-card:hover { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent); }
+/* Thesis / academics cards */
+.thesis-card { transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+.thesis-card:hover {
+  border-color: var(--accent) !important;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
 
-.latex-preview { line-height: 1.75; }
-.latex-preview h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.75rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; }
-.latex-preview h2 { font-size: 1.3rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--accent2); }
-.latex-preview h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.4rem; }
-.latex-preview p { margin: 0.75rem 0; }
-.latex-preview code { background: var(--surface2); padding: 0.15em 0.4em; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
-.latex-preview pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; }
-.latex-preview ul, .latex-preview ol { margin: 0.75rem 0; padding-left: 1.5rem; }
-.latex-preview li { margin: 0.3rem 0; }
-.latex-preview table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-.latex-preview th { background: var(--surface2); border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; }
-.latex-preview td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; }
-.latex-preview .math-block { margin: 1.5rem 0; text-align: center; }
+/* ─────────────────────────────────────────────────────
+   LaTeX Preview — paper card (always looks like print)
+───────────────────────────────────────────────────── */
+.latex-preview {
+  line-height: 1.8;
+  color: #18140f;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.latex-preview h1, .latex-preview h2,
+.latex-preview h3, .latex-preview h4 { color: #111; font-family: Georgia, serif; }
+.latex-preview h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.6rem; }
+.latex-preview h2 {
+  font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.5rem;
+  border-bottom: 1px solid #ddd8d0; padding-bottom: 0.25rem;
+}
+.latex-preview h3 { font-size: 1.05rem; font-weight: 600; margin: 1.4rem 0 0.3rem; }
+.latex-preview h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.25rem; }
+.latex-preview p  { margin: 0.7rem 0; }
+
+.latex-preview code {
+  background: #f0ede5; color: #3c2c1c;
+  padding: 0.1em 0.35em; border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+}
+.latex-preview pre {
+  background: #f5f1ea; border: 1px solid #d9d4c9;
+  border-radius: 5px; padding: 0.85rem 1rem; overflow-x: auto; margin: 0.75rem 0;
+}
+.latex-preview ul, .latex-preview ol { margin: 0.7rem 0; padding-left: 1.6rem; }
+.latex-preview li { margin: 0.25rem 0; }
+.latex-preview table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.91em; }
+.latex-preview th { background: #f0ece5; border: 1px solid #cec9c0; padding: 0.45rem 0.75rem; font-weight: 600; text-align: left; }
+.latex-preview td { border: 1px solid #cec9c0; padding: 0.45rem 0.75rem; }
+.latex-preview .math-block  { margin: 1.4rem 0; text-align: center; overflow-x: auto; }
+.latex-preview .doc-title   { font-size: 1.85rem; font-weight: 700; text-align: center; margin-bottom: 0.4rem; }
+.latex-preview .doc-author  { text-align: center; color: #555; font-size: 0.94rem; margin: 0.2rem 0; }
+.latex-preview .doc-date    { text-align: center; color: #888; font-size: 0.87rem; margin: 0.2rem 0; }
+.latex-preview .doc-rule    { border: none; border-top: 1px solid #ccc; margin: 1rem 0 1.5rem; }
+.latex-preview .abstract    {
+  background: #f5f1ea; border-left: 3px solid #b5b0a8;
+  padding: 0.75rem 1rem; margin: 1rem 0;
+  border-radius: 0 4px 4px 0; font-size: 0.93em; color: #28201a;
+}
+.latex-preview .thm-box     {
+  border: 1px solid #cec9c0; border-radius: 4px;
+  padding: 0.75rem 1rem; margin: 1rem 0; background: #faf7f1;
+}
+.latex-preview .thm-label   { font-weight: 700; font-style: italic; color: #3a3028; }
+.latex-preview .fig-block   { text-align: center; margin: 1.5rem 0; }
+.latex-preview .fig-placeholder {
+  background: #f0ede5; border: 2px dashed #c5c0b8;
+  padding: 2rem; border-radius: 6px; color: #8a8078; font-size: 0.88em;
+}
+.latex-preview figcaption   { font-size: 0.87em; color: #666; margin-top: 0.5rem; font-style: italic; }
+.latex-preview .ref         { color: #4a38a8; }
+.latex-preview .unknown-env {
+  background: #fff8e6; border: 1px solid #f0d98a;
+  border-radius: 4px; padding: 0.35rem 0.7rem; color: #7a6020; font-size: 0.84em;
+}
+.latex-preview .toc-placeholder { text-align: center; color: #888; padding: 1rem; font-style: italic; }
+.latex-preview .appendix-marker { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid #cec9c0; }
+.latex-preview sup.footnote { cursor: help; color: #4a38a8; }
+
+/* ─────────────────────────────────────────────────────
+   Focus ring (accessibility)
+───────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
