@@ -1,11 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",   // Static HTML export — works on Cloudflare Pages, GitHub Pages, any CDN
-  trailingSlash: true, // Ensures /tools/preview/ works without a server
-  images: {
-    unoptimized: true, // Required for static export (no Next.js image server)
-  },
+  // Vercel runs Next.js natively — no static export needed.
+  // Images are optimized by Vercel's built-in image service.
 };
 
 export default nextConfig;
