@@ -116,19 +116,14 @@ export default function AcademicsPage() {
       <Navbar />
 
       {/* ── Hero ──────────────────────────────────── */}
-      <section style={{
-        textAlign: "center",
-        padding: "5rem 1.5rem 4rem",
-        background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(108,99,255,0.2), transparent)",
-        position: "relative", overflow: "hidden",
-      }}>
-        <div aria-hidden="true" style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
-          backgroundSize: "40px 40px", opacity: 0.2,
-          maskImage: "radial-gradient(ellipse 80% 60% at center, black, transparent)",
-        }} />
-        <div style={{ position: "relative", maxWidth: 780, margin: "0 auto" }}>
+      <section
+        className="has-grid"
+        style={{
+          textAlign: "center",
+          padding: "5rem 1.5rem 4rem",
+        }}
+      >
+        <div style={{ maxWidth: 780, margin: "0 auto" }}>
           <span style={{
             display: "inline-block", padding: "0.3rem 1rem", borderRadius: 999,
             border: "1px solid rgba(108,99,255,0.4)", background: "rgba(108,99,255,0.08)",

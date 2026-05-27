@@ -99,7 +99,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section style={{ padding: "5.5rem 1.5rem 4rem", textAlign: "center" }}>
+      <section className="has-grid" style={{ padding: "5.5rem 1.5rem 4.5rem", textAlign: "center" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
 
           <h1
