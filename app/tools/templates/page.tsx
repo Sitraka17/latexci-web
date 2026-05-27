@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
+import SiteFooter from "@/components/SiteFooter";
 import TemplatesFilter from "@/components/TemplatesFilter";
 
 export const metadata: Metadata = {
@@ -83,20 +84,7 @@ export default function TemplatesPage() {
         </section>
       </div>
 
-      {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--border)",
-          padding: "1.25rem 1.5rem",
-          textAlign: "center",
-          color: "var(--fg-muted)",
-          fontSize: "0.8rem",
-          background: "var(--surface)",
-        }}
-      >
-        <span style={{ fontWeight: 700, color: "var(--accent)" }}>latexci</span>
-        {" "}· Free LaTeX tools for researchers &amp; students
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

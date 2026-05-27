@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import SiteFooter from "@/components/SiteFooter";
 import { TEMPLATES } from "@/lib/templates";
 import LZString from "lz-string";
 
@@ -417,22 +418,7 @@ export default function AcademicsPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{
-        marginTop: "auto", borderTop: "1px solid var(--border)",
-        padding: "1.5rem", background: "var(--surface)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <span style={{ fontWeight: 800, background: "linear-gradient(135deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>latexci</span>
-            <span style={{ color: "var(--fg-muted)", fontSize: "0.8rem", marginLeft: "0.5rem" }}>Free LaTeX tools for academics</span>
-          </div>
-          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-            {[["Academics", "/academics"], ["Preview", "/tools/preview"], ["Diff", "/tools/diff"], ["Word→LaTeX", "/tools/word-to-latex"], ["Templates", "/tools/templates"]].map(([label, href]) => (
-              <Link key={label} href={href} style={{ fontSize: "0.82rem", color: "var(--fg-muted)", textDecoration: "none" }}>{label}</Link>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
