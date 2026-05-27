@@ -3,7 +3,17 @@
  * Handles common LaTeX constructs. Math rendering is done separately via KaTeX.
  */
 
-export function latexToHtml(src: string): string {
+export interface ParseWarning { env: string; reason: string; }
+
+const KNOWN_ENVS = new Set([
+  "document", "abstract", "itemize", "enumerate", "figure", "verbatim",
+  "lstlisting", "tabular", "equation", "equation*", "align", "align*",
+  "gather", "gather*", "matrix", "pmatrix", "bmatrix", "vmatrix",
+  "array", "cases", "split", "multline", "multline*",
+]);
+
+export function latexToHtml(src: string): { html: string; warnings: ParseWarning[] } {
+  const warnings: ParseWarning[] = [];
   // Extract body if \begin{document}...\end{document} exists
   const bodyMatch = src.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
   let body = bodyMatch ? bodyMatch[1] : src;
@@ -85,8 +95,15 @@ export function latexToHtml(src: string): string {
   body = body.replace(/\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/g, (_, c) => `<pre><code>${escapeHtml(c)}</code></pre>`);
   body = body.replace(/\\begin\{lstlisting\}(\[.*?\])?([\s\S]*?)\\end\{lstlisting\}/g, (_, _opts, c) => `<pre><code>${escapeHtml(c)}</code></pre>`);
 
-  // Remove remaining \begin{...}...\end{...} blocks we don't handle
-  body = body.replace(/\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\}/g, "");
+  // Remove remaining \begin{...}...\end{...} blocks — collect warnings for unknown envs
+  body = body.replace(/\\begin\{([^}]+)\}([\s\S]*?)\\end\{\1\}/g, (_, env: string) => {
+    if (!KNOWN_ENVS.has(env)) {
+      if (!warnings.find(w => w.env === env)) {
+        warnings.push({ env, reason: "Environment not supported in browser preview" });
+      }
+    }
+    return "";
+  });
 
   // Comments
   body = body.replace(/(?<!\\)%.*$/gm, "");
@@ -106,7 +123,7 @@ export function latexToHtml(src: string): string {
     .filter(Boolean)
     .join("\n");
 
-  return header + body;
+  return { html: header + body, warnings };
 }
 
 function processInline(text: string): string {

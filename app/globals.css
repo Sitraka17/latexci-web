@@ -44,6 +44,10 @@ body {
 .diff-removed { background: rgba(239, 68, 68, 0.15); color: #f87171; display: block; padding: 0 0.5rem; text-decoration: line-through; }
 .diff-neutral { color: var(--fg-muted); display: block; padding: 0 0.5rem; }
 
+/* Tool card hover */
+.tool-card > div { transition: border-color 0.2s, background 0.2s; }
+.tool-card:hover > div { border-color: var(--accent) !important; background: var(--surface2) !important; }
+
 .latex-preview { line-height: 1.75; }
 .latex-preview h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.75rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; }
 .latex-preview h2 { font-size: 1.3rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--accent2); }
