@@ -8,6 +8,7 @@ const tools = [
   { href: "/tools/diff", label: "Diff" },
   { href: "/tools/word-to-latex", label: "Word → LaTeX" },
   { href: "/tools/templates", label: "Templates" },
+  { href: "/academics", label: "🎓 Academics" },
 ];
 
 export default function Navbar() {

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
-const BASE_URL = "https://latexci-web.vercel.app";
+// NEXT_PUBLIC_SITE_URL is set in Vercel → Settings → Environment Variables
+// Fallback: your Vercel project URL. Update this when you add a custom domain.
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://latexci-web.vercel.app");
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -20,6 +24,12 @@ export const metadata: Metadata = {
     "latex to html",
     "latex equation preview",
     "free latex tools",
+    "latex thesis template",
+    "phd thesis latex",
+    "academic latex tools",
+    "latex for researchers",
+    "bibtex online",
+    "overleaf alternative",
   ],
   authors: [{ name: "Sitraka Forler", url: "https://github.com/Sitraka17" }],
   creator: "Sitraka Forler",

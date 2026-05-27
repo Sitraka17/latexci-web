@@ -230,6 +230,45 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Academics callout */}
+      <section style={{
+        padding: "0 1.5rem 2rem",
+        maxWidth: 1100, margin: "0 auto", width: "100%",
+      }}>
+        <Link href="/academics" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{
+            background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(167,139,250,0.08))",
+            border: "1px solid rgba(108,99,255,0.3)", borderRadius: 14,
+            padding: "2rem 2.5rem",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: "2rem", flexWrap: "wrap",
+          }}>
+            <div>
+              <div style={{
+                display: "inline-block", padding: "0.2rem 0.75rem", borderRadius: 999,
+                background: "rgba(108,99,255,0.15)", border: "1px solid rgba(108,99,255,0.3)",
+                fontSize: "0.72rem", color: "var(--accent2)", fontWeight: 700,
+                letterSpacing: "0.05em", marginBottom: "0.75rem",
+              }}>🎓 FOR ACADEMICS</div>
+              <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.3rem", fontWeight: 800 }}>
+                Writing a thesis or research paper?
+              </h2>
+              <p style={{ margin: 0, fontSize: "0.88rem", color: "var(--fg-muted)", lineHeight: 1.65, maxWidth: 520 }}>
+                PhD thesis templates, essential package guide, advisor diff workflow, and a dedicated tool for heavy LaTeX documents. Built for researchers who live in LaTeX.
+              </p>
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: "0.5rem",
+              padding: "0.7rem 1.5rem", borderRadius: 8,
+              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+              color: "#fff", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0,
+            }}>
+              Academics hub →
+            </div>
+          </div>
+        </Link>
+      </section>
+
       {/* How it works */}
       <section style={{ padding: "3rem 1.5rem", maxWidth: 900, margin: "0 auto", width: "100%", textAlign: "center" }}>
         <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem" }}>Why latexci?</h2>
@@ -282,6 +321,7 @@ export default function HomePage() {
           </div>
           <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
             {[
+              ["Academics", "/academics"],
               ["Preview", "/tools/preview"],
               ["Diff", "/tools/diff"],
               ["Word → LaTeX", "/tools/word-to-latex"],

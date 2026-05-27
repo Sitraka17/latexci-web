@@ -48,6 +48,10 @@ body {
 .tool-card > div { transition: border-color 0.2s, background 0.2s; }
 .tool-card:hover > div { border-color: var(--accent) !important; background: var(--surface2) !important; }
 
+/* Academics page thesis card hover */
+.thesis-card { transition: border-color 0.2s, box-shadow 0.2s; }
+.thesis-card:hover { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent); }
+
 .latex-preview { line-height: 1.75; }
 .latex-preview h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.75rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; }
 .latex-preview h2 { font-size: 1.3rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--accent2); }
