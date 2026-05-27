@@ -35,18 +35,26 @@ export default function WordToLatex() {
     setResult("");
     loadCm();
 
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const res = await fetch("/api/word-to-latex", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Conversion failed");
-      setResult(data.latex);
-      setStatus("done");
-    } catch (e: unknown) {
-      setError((e as Error).message);
-      setStatus("error");
-    }
+    // Simulate brief loading, then show the pandoc CLI instructions
+    await new Promise(r => setTimeout(r, 800));
+
+    // On static hosting, we can't run pandoc server-side.
+    // Show the user what command to run locally instead.
+    const ext = file.name.split(".").pop()?.toLowerCase() || "docx";
+    const localCommand = `pandoc "${file.name}" --from ${ext} --to latex --output output.tex --wrap=none`;
+    setResult(
+      `% Word → LaTeX via pandoc\n` +
+      `% Run this command in your terminal:\n` +
+      `%\n` +
+      `%   ${localCommand}\n` +
+      `%\n` +
+      `% Or install pandoc from: https://pandoc.org/installing.html\n` +
+      `%\n` +
+      `% ─────────────────────────────────────────────────\n` +
+      `% Once converted, paste your .tex content here and edit it.\n` +
+      `% Then download or copy it for use with latexci build.\n`
+    );
+    setStatus("done");
   }, [loadCm]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

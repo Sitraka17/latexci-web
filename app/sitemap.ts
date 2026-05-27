@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://latexci-web.vercel.app";
