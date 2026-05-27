@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import AdUnit from "@/components/AdUnit";
 
 export const metadata: Metadata = {
   title: "Free Online LaTeX Preview, Diff & Word-to-LaTeX Converter",
@@ -39,6 +40,16 @@ const tools = [
       "Upload a Word, ODT, or RTF file. Get LaTeX source back. Edit inline before you download.",
     badge: "Convert",
     badgeColor: "#f59e0b",
+  },
+  {
+    href: "/tools/table",
+    icon: "▦",
+    title: "Table Generator",
+    subtitle: "LaTeX tables without the pain",
+    description:
+      "Enter your data in a grid, choose alignment and borders (booktabs or simple), copy the tabular code.",
+    badge: "New",
+    badgeColor: "#06b6d4",
   },
   {
     href: "/tools/templates",
@@ -80,7 +91,7 @@ const faqs = [
 ];
 
 export default function HomePage() {
-  const jsonLd = {
+  const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqs.map((f) => ({
@@ -90,12 +101,45 @@ export default function HomePage() {
     })),
   };
 
+  const appSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "latexci",
+    description:
+      "Free browser-based LaTeX tools: live preview with KaTeX math, side-by-side diff, Word to LaTeX conversion, table generator, and templates. No signup, no install.",
+    url: "https://latexci-web.vercel.app",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web Browser",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Live LaTeX preview with KaTeX math rendering",
+      "Side-by-side LaTeX diff tool",
+      "Word to LaTeX converter (docx, odt, rtf)",
+      "LaTeX table generator with booktabs support",
+      "Free LaTeX templates for thesis, CV, Beamer",
+      "Shareable document URLs",
+      "Offline capable preview and diff",
+    ],
+    author: {
+      "@type": "Person",
+      name: "Sitraka Forler",
+      url: "https://github.com/Sitraka17",
+    },
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "latexci",
+    url: "https://latexci-web.vercel.app",
+    description: "Free online LaTeX tools — preview, diff, Word to LaTeX, table generator, templates.",
+  };
+
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
       <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -318,6 +362,11 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── Ad unit ──────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", width: "100%", padding: "0 1.5rem" }}>
+        <AdUnit />
+      </div>
 
       {/* ── Honest pitch ─────────────────────────────────────── */}
       <section
@@ -586,6 +635,7 @@ export default function HomePage() {
               ["Preview", "/tools/preview"],
               ["Diff", "/tools/diff"],
               ["Word → LaTeX", "/tools/word-to-latex"],
+              ["Table Generator", "/tools/table"],
               ["Templates", "/tools/templates"],
               ["GitHub", "https://github.com/Sitraka17/latexci-web"],
             ].map(([label, href]) => (

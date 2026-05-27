@@ -5,19 +5,35 @@ import { TEMPLATES } from "@/lib/templates";
 import LZString from "lz-string";
 
 export const metadata: Metadata = {
-  title: "LaTeX for Academics — Thesis, PhD & Research Papers",
+  title: "LaTeX for PhD Students & Researchers — Thesis Templates, Diff & Tools",
   description:
-    "Free LaTeX tools built for heavy academic work: PhD thesis templates, research paper diff, Word-to-LaTeX for advisor feedback. Used by researchers and PhD students worldwide.",
+    "Free LaTeX tools built for academic writing: PhD and Master's thesis templates, live preview, advisor diff workflow, Word-to-LaTeX conversion, and a 12-package reference guide. No signup.",
   alternates: { canonical: "/academics" },
   keywords: [
     "phd thesis latex template",
-    "latex for academics",
+    "latex for phd students",
     "thesis writing latex",
-    "latex thesis structure",
-    "academic paper latex",
-    "overleaf alternative for thesis",
     "latex dissertation template",
+    "academic paper latex template",
+    "overleaf alternative for thesis",
+    "latex thesis structure",
+    "master thesis latex template",
+    "latex research paper template",
+    "latex for academics",
+    "track changes latex thesis",
   ],
+  openGraph: {
+    title: "LaTeX for PhD Students & Researchers — latexci",
+    description:
+      "PhD thesis templates, advisor diff workflow, Word to LaTeX, and a 12-package guide. All free, in your browser.",
+    url: "/academics",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LaTeX for PhD Students — latexci",
+    description: "Thesis templates, diff tool, and Word → LaTeX. Free, no signup.",
+  },
 };
 
 const THESIS_TEMPLATES = TEMPLATES.filter(t => t.category === "Thesis" || t.id === "article" || t.id === "ieee-paper");
