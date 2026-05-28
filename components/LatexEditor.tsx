@@ -218,74 +218,89 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     <div style={{ display: "flex", flexDirection: "column", height: containerH, background: "var(--surface)" }}>
 
       {/* ── Top toolbar ──────────────────────────────────────────────── */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "0.5rem",
-        padding: "0 0.75rem", height: 44,
-        background: "var(--surface)", borderBottom: "1px solid var(--border)",
-        flexShrink: 0,
-      }}>
-        {/* macOS dots */}
-        <div style={{ display: "flex", gap: 5, marginRight: 4 }}>
-          {["#ff5f57", "#ffbd2e", "#28c840"].map(c => (
-            <span key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c, display: "inline-block" }} />
-          ))}
+      {isMobile ? (
+        /* ── Mobile: two-row toolbar ─────────────────────────────────── */
+        <div style={{ flexShrink: 0, background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+          {/* Row 1: filename + pane tabs */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 0.75rem", height: 40 }}>
+            <div style={{ display: "flex", gap: 5, marginRight: 2 }}>
+              {["#ff5f57", "#ffbd2e", "#28c840"].map(c => (
+                <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, display: "inline-block" }} />
+              ))}
+            </div>
+            <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.72rem", color: "var(--fg-muted)", flex: 1 }}>
+              main.tex
+            </span>
+            {/* Pane switcher — always visible on mobile */}
+            <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 6, border: "1px solid var(--border)", overflow: "hidden" }}>
+              {(["editor", "preview"] as const).map(pane => (
+                <button key={pane} onClick={() => setActivePane(pane)} style={{
+                  padding: "0.28rem 0.9rem", border: "none", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600,
+                  background: activePane === pane ? "var(--accent)" : "transparent",
+                  color: activePane === pane ? "#fff" : "var(--fg-muted)",
+                }}>
+                  {pane === "editor" ? "Edit" : "Preview"}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Row 2: action buttons */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0 0.75rem 0.5rem" }}>
+            <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨ Snippets</Btn>
+            <Btn onClick={() => setSource(SAMPLE)} title="Restore demo">Reset</Btn>
+            <Btn onClick={() => setSource("")} title="Clear editor">Clear</Btn>
+            <div style={{ flex: 1 }} />
+            {warnings.length > 0 && (
+              <span title={warnings.map(w => w.env).join(", ")} style={{
+                fontSize: "0.68rem", color: "#f59e0b", padding: "0.15rem 0.4rem",
+                background: "rgba(245,158,11,0.1)", borderRadius: 5,
+                border: "1px solid rgba(245,158,11,0.3)", cursor: "help",
+              }}>⚠</span>
+            )}
+            <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
+              {shared ? "✓" : "🔗 Share"}
+            </Btn>
+          </div>
         </div>
-
-        <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
-          main.tex
-        </span>
-
-        <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
-
-        {/* Snippet toggle */}
-        <Btn
-          active={showSnippets}
-          onClick={() => setShowSnippets(s => !s)}
-          title="Snippets panel"
-        >
-          ⌨ Snippets
-        </Btn>
-
-        <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>
-        <Btn onClick={() => setSource("")} title="Clear editor">Clear</Btn>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Warnings */}
-        {warnings.length > 0 && (
-          <span title={warnings.map(w => w.env).join(", ")} style={{
-            fontSize: "0.71rem", color: "#f59e0b", padding: "0.2rem 0.55rem",
-            background: "rgba(245,158,11,0.1)", borderRadius: 5,
-            border: "1px solid rgba(245,158,11,0.3)", cursor: "help",
-          }}>
-            ⚠ {warnings.map(w => w.env).join(", ")}
-          </span>
-        )}
-
-        {/* Mobile tab switcher */}
-        {isMobile && (
-          <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 6, border: "1px solid var(--border)", overflow: "hidden" }}>
-            {(["editor", "preview"] as const).map(pane => (
-              <button key={pane} onClick={() => setActivePane(pane)} style={{
-                padding: "0.25rem 0.7rem", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600,
-                background: activePane === pane ? "var(--accent)" : "transparent",
-                color: activePane === pane ? "#fff" : "var(--fg-muted)",
-              }}>
-                {pane === "editor" ? "Editor" : "Preview"}
-              </button>
+      ) : (
+        /* ── Desktop: single-row toolbar ─────────────────────────────── */
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.5rem",
+          padding: "0 0.75rem", height: 44,
+          background: "var(--surface)", borderBottom: "1px solid var(--border)",
+          flexShrink: 0,
+        }}>
+          <div style={{ display: "flex", gap: 5, marginRight: 4 }}>
+            {["#ff5f57", "#ffbd2e", "#28c840"].map(c => (
+              <span key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c, display: "inline-block" }} />
             ))}
           </div>
-        )}
-
-        {/* Share / Copy / Download */}
-        <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
-          {shared ? "✓ Copied!" : "🔗 Share"}
-        </Btn>
-        <Btn active={copied} activeColor="#6c63ff" onClick={copyHtml} title="Copy HTML output">
-          {copied ? "✓ HTML!" : "Copy HTML"}
-        </Btn>
-        <Btn onClick={downloadHtml} title="Download as HTML file">↓ HTML</Btn>
-      </div>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
+            main.tex
+          </span>
+          <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
+          <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
+          <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>
+          <Btn onClick={() => setSource("")} title="Clear editor">Clear</Btn>
+          <div style={{ flex: 1 }} />
+          {warnings.length > 0 && (
+            <span title={warnings.map(w => w.env).join(", ")} style={{
+              fontSize: "0.71rem", color: "#f59e0b", padding: "0.2rem 0.55rem",
+              background: "rgba(245,158,11,0.1)", borderRadius: 5,
+              border: "1px solid rgba(245,158,11,0.3)", cursor: "help",
+            }}>
+              ⚠ {warnings.map(w => w.env).join(", ")}
+            </span>
+          )}
+          <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
+            {shared ? "✓ Copied!" : "🔗 Share"}
+          </Btn>
+          <Btn active={copied} activeColor="#6c63ff" onClick={copyHtml} title="Copy HTML output">
+            {copied ? "✓ HTML!" : "Copy HTML"}
+          </Btn>
+          <Btn onClick={downloadHtml} title="Download as HTML file">↓ HTML</Btn>
+        </div>
+      )}
 
       {/* ── Main split ───────────────────────────────────────────────── */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
