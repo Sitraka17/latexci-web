@@ -100,27 +100,25 @@ export default function Navbar() {
         >
           <ThemeToggle />
 
-          <a
-            href="https://github.com/Sitraka17/latexci-web/discussions"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/pricing"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "0.3rem",
-              padding: "0.3rem 0.7rem",
+              padding: "0.3rem 0.85rem",
               borderRadius: 6,
               background: "color-mix(in srgb, var(--accent) 12%, transparent)",
               border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
               fontSize: "0.78rem",
-              fontWeight: 600,
+              fontWeight: 700,
               color: "var(--accent2)",
               textDecoration: "none",
               letterSpacing: "0.01em",
             }}
           >
-            ✦ Pro soon
-          </a>
+            ✦ Pricing
+          </Link>
 
           <a
             href="https://github.com/Sitraka17/latexci-web"
@@ -219,6 +217,21 @@ export default function Navbar() {
               {t.label}
             </Link>
           ))}
+          <Link
+            href="/pricing"
+            onClick={() => setMenuOpen(false)}
+            style={{
+              display: "block",
+              padding: "0.65rem 0",
+              borderBottom: "1px solid var(--border)",
+              fontSize: "0.9rem",
+              color: pathname === "/pricing" ? "var(--accent)" : "var(--accent2)",
+              textDecoration: "none",
+              fontWeight: 700,
+            }}
+          >
+            ✦ Pricing
+          </Link>
           <a
             href="https://github.com/Sitraka17/latexci-web"
             target="_blank"
