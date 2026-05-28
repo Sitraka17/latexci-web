@@ -86,9 +86,21 @@ body {
 /* ─────────────────────────────────────────────────────
    Diff
 ───────────────────────────────────────────────────── */
-.diff-added   { background: rgba(52,211,153,0.12);  color: #34d399; display: block; padding: 0 0.5rem; }
-.diff-removed { background: rgba(248,113,113,0.12); color: #f87171; display: block; padding: 0 0.5rem; text-decoration: line-through; }
-.diff-neutral { color: var(--fg-muted); display: block; padding: 0 0.5rem; }
+.diff-added   { background: rgba(52,211,153,0.10); color: #34d399; padding: 0; white-space: pre; font-family: 'JetBrains Mono', monospace; }
+.diff-removed { background: rgba(248,113,113,0.10); color: #f87171; padding: 0; white-space: pre; font-family: 'JetBrains Mono', monospace; }
+.diff-neutral { color: var(--fg-muted); padding: 0; white-space: pre; font-family: 'JetBrains Mono', monospace; }
+
+/* ─────────────────────────────────────────────────────
+   Animations
+───────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
 
 /* ─────────────────────────────────────────────────────
    Tool cards
