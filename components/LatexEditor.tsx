@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
+import { createClient } from "@/lib/supabase/client";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
@@ -89,6 +91,9 @@ const SNIPPETS: { label: string; icon: string; insert: string }[] = [
 ];
 
 export default function LatexEditor({ initialValue }: { initialValue?: string }) {
+  const searchParams = useSearchParams();
+  const docId = searchParams.get("doc");
+
   const [source, setSource]           = useState(initialValue ?? SAMPLE);
   const [html, setHtml]               = useState("");
   const [warnings, setWarnings]       = useState<ParseWarning[]>([]);
@@ -99,8 +104,13 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [activePane, setActivePane]   = useState<"editor" | "preview">("editor");
   const [extensions, setExtensions]   = useState<unknown[]>([]);
   const [lineCount, setLineCount]     = useState(0);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [userId, setUserId]           = useState<string | null>(null);
+  const [docTitle, setDocTitle]       = useState("Untitled");
+  const previewRef  = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const supabase    = createClient();
 
   // Detect mobile
   useEffect(() => {
@@ -110,6 +120,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Get logged-in user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load CodeMirror extensions
   useEffect(() => {
     Promise.all([
@@ -118,9 +133,26 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     ]).then(([lang, theme]) => setExtensions([lang, theme]));
   }, []);
 
-  // Load from URL hash or localStorage
+  // Load document: priority = docId (cloud) > URL hash > localStorage
   useEffect(() => {
     if (initialValue) return;
+
+    if (docId && userId) {
+      supabase
+        .from("documents")
+        .select("title, content")
+        .eq("id", docId)
+        .eq("user_id", userId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setSource(data.content || SAMPLE);
+            setDocTitle(data.title || "Untitled");
+          }
+        });
+      return;
+    }
+
     const hash = window.location.hash.slice(1);
     if (hash.startsWith("s=")) {
       const dec = LZString.decompressFromEncodedURIComponent(hash.slice(2));
@@ -128,10 +160,27 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     }
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) setSource(saved);
-  }, [initialValue]);
+  }, [initialValue, docId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist to localStorage
+  // Persist to localStorage (always, as fallback)
   useEffect(() => { localStorage.setItem(STORAGE_KEY, source); }, [source]);
+
+  // Autosave to Supabase (debounced 2 s) when logged in with a docId
+  useEffect(() => {
+    if (!userId || !docId) return;
+    if (saveRef.current) clearTimeout(saveRef.current);
+    setSaveStatus("saving");
+    saveRef.current = setTimeout(async () => {
+      const { error } = await supabase
+        .from("documents")
+        .update({ content: source, updated_at: new Date().toISOString() })
+        .eq("id", docId)
+        .eq("user_id", userId);
+      setSaveStatus(error ? "error" : "saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    }, 2000);
+    return () => { if (saveRef.current) clearTimeout(saveRef.current); };
+  }, [source, userId, docId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track line count
   useEffect(() => { setLineCount(source.split("\n").length); }, [source]);
@@ -276,8 +325,18 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             ))}
           </div>
           <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
-            main.tex
+            {docId ? docTitle : "main.tex"}
           </span>
+          {/* Autosave status */}
+          {docId && saveStatus !== "idle" && (
+            <span style={{
+              fontSize: "0.68rem",
+              color: saveStatus === "saved" ? "#10b981" : saveStatus === "error" ? "#ef4444" : "var(--fg-muted)",
+              padding: "0.1rem 0.4rem",
+            }}>
+              {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved" : "Save failed"}
+            </span>
+          )}
           <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
           <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
           <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>

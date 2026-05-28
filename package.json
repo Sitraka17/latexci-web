@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2",
     "@types/diff": "^7.0.2",
     "@types/katex": "^0.16.8",
     "@types/lz-string": "^1.3.34",

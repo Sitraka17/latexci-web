@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import ToolLayout from "@/components/ToolLayout";
 import LatexEditor from "@/components/LatexEditor";
 
@@ -35,7 +36,9 @@ export default function PreviewPage() {
   return (
     <ToolLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      <LatexEditor />
+      <Suspense>
+        <LatexEditor />
+      </Suspense>
     </ToolLayout>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
+import AuthButton from "./AuthButton";
 
 const tools = [
   { href: "/tools/preview",      label: "Preview" },
@@ -99,6 +100,8 @@ export default function Navbar() {
           style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}
         >
           <ThemeToggle />
+
+          <AuthButton />
 
           <Link
             href="/pricing"
