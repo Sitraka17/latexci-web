@@ -1,25 +1,38 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
+import type { Metadata } from "next";
+import { getAdmin } from "@/lib/supabase/admin";
 import SharedEditor from "@/components/SharedEditor";
 
 export const dynamic = "force-dynamic";
-export const metadata = { robots: { index: false } };
-
-function getAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-  return createSupabaseAdmin<Database>(url, key);
-}
 
 type Props = { params: Promise<{ token: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params;
+  const admin = getAdmin();
+  if (!admin) return { title: "Shared document — latexci" };
+
+  const { data: doc } = await admin
+    .from("documents")
+    .select("title")
+    .eq("share_token", token)
+    .single();
+
+  const title = doc?.title ? `${doc.title} — latexci` : "Shared document — latexci";
+  return {
+    title,
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function SharedDocPage({ params }: Props) {
   const { token } = await params;
   const admin = getAdmin();
 
-  // Fetch document + owner profile by share token
+  // Service role key not configured → fail gracefully
+  if (!admin) notFound();
+
   const { data: doc } = await admin
     .from("documents")
     .select("id, title, content, is_public, public_can_edit, user_id")
@@ -71,7 +84,7 @@ export default async function SharedDocPage({ params }: Props) {
         )}
       </div>
 
-      {/* Editor (full remaining height) */}
+      {/* Editor */}
       <div style={{ flex: 1, overflow: "hidden" }}>
         <Suspense>
           <SharedEditor

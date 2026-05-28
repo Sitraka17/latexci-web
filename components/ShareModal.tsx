@@ -24,21 +24,27 @@ type Props = {
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://latexci-web.vercel.app";
 
 export default function ShareModal({ docId, docTitle, onClose }: Props) {
-  const [state, setState] = useState<ShareState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [state, setState]         = useState<ShareState | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [invitePerm, setInvitePerm] = useState<"view" | "edit">("view");
-  const [inviting, setInviting] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [invitePerm, setInvitePerm]   = useState<"view" | "edit">("view");
+  const [inviting, setInviting]   = useState(false);
+  const [copied, setCopied]       = useState(false);
+  const [error, setError]         = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  function showError(msg: string) {
+    setError(msg);
+    setTimeout(() => setError(null), 4000);
+  }
 
   // Load current share state
   useEffect(() => {
     fetch(`/api/documents/${docId}/share`)
       .then(r => r.json())
       .then(d => { setState(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(() => { showError("Failed to load sharing settings"); setLoading(false); });
   }, [docId]);
 
   // Close on overlay click
@@ -61,7 +67,11 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "set_public", is_public: isPublic, public_can_edit: state.public_can_edit }),
     });
-    if (res.ok) setState(s => s ? { ...s, is_public: isPublic } : s);
+    if (res.ok) {
+      setState(s => s ? { ...s, is_public: isPublic } : s);
+    } else {
+      showError("Failed to update link sharing");
+    }
     setSaving(false);
   }
 
@@ -73,7 +83,11 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "set_public", is_public: state.is_public, public_can_edit: canEdit }),
     });
-    if (res.ok) setState(s => s ? { ...s, public_can_edit: canEdit } : s);
+    if (res.ok) {
+      setState(s => s ? { ...s, public_can_edit: canEdit } : s);
+    } else {
+      showError("Failed to update edit permission");
+    }
     setSaving(false);
   }
 
@@ -92,19 +106,52 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
         permission: invitePerm,
         created_at: new Date().toISOString(),
       };
-      setState(s => s ? { ...s, collaborators: [...s.collaborators, newCollab] } : s);
+      // Update existing or add new
+      setState(s => {
+        if (!s) return s;
+        const exists = s.collaborators.find(c => c.email === newCollab.email);
+        return {
+          ...s,
+          collaborators: exists
+            ? s.collaborators.map(c => c.email === newCollab.email ? { ...c, permission: newCollab.permission } : c)
+            : [...s.collaborators, newCollab],
+        };
+      });
       setInviteEmail("");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      showError(data?.error || "Failed to send invite");
     }
     setInviting(false);
   }
 
+  async function changePermission(email: string, permission: "view" | "edit") {
+    const res = await fetch(`/api/documents/${docId}/share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "change_permission", email, permission }),
+    });
+    if (res.ok) {
+      setState(s => s ? {
+        ...s,
+        collaborators: s.collaborators.map(c => c.email === email ? { ...c, permission } : c),
+      } : s);
+    } else {
+      showError("Failed to change permission");
+    }
+  }
+
   async function removeCollaborator(email: string) {
-    await fetch(`/api/documents/${docId}/share`, {
+    const res = await fetch(`/api/documents/${docId}/share`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "remove", email }),
     });
-    setState(s => s ? { ...s, collaborators: s.collaborators.filter(c => c.email !== email) } : s);
+    if (res.ok) {
+      setState(s => s ? { ...s, collaborators: s.collaborators.filter(c => c.email !== email) } : s);
+    } else {
+      showError("Failed to remove collaborator");
+    }
   }
 
   function copyLink() {
@@ -115,6 +162,14 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
   }
 
   const shareUrl = state ? `${SITE}/shared/${state.share_token}` : "";
+
+  const inputStyle: React.CSSProperties = {
+    flex: 1, padding: "0.45rem 0.7rem",
+    background: "var(--surface, #1a1a1a)",
+    border: "1px solid var(--border, #333)",
+    borderRadius: 8, color: "var(--fg)",
+    fontSize: "0.82rem",
+  };
 
   return (
     <div
@@ -155,6 +210,18 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
           </button>
         </div>
 
+        {/* Error banner */}
+        {error && (
+          <div style={{
+            padding: "0.55rem 0.85rem",
+            background: "rgba(239,68,68,0.12)",
+            border: "1px solid rgba(239,68,68,0.3)",
+            borderRadius: 8, fontSize: "0.8rem", color: "#ef4444",
+          }}>
+            ⚠ {error}
+          </div>
+        )}
+
         {loading ? (
           <p style={{ textAlign: "center", color: "var(--fg-muted)", fontSize: "0.85rem" }}>Loading…</p>
         ) : !state ? (
@@ -174,10 +241,11 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
               <button
                 onClick={() => togglePublic(!state.is_public)}
                 disabled={saving}
+                aria-label={state.is_public ? "Disable public link" : "Enable public link"}
                 style={{
                   width: 44, height: 24, borderRadius: 12, border: "none",
                   background: state.is_public ? "var(--accent)" : "var(--border, #444)",
-                  position: "relative", cursor: "pointer", flexShrink: 0,
+                  position: "relative", cursor: saving ? "wait" : "pointer", flexShrink: 0,
                   transition: "background 0.2s",
                 }}
               >
@@ -247,13 +315,7 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && invite()}
-                style={{
-                  flex: 1, padding: "0.45rem 0.7rem",
-                  background: "var(--surface, #1a1a1a)",
-                  border: "1px solid var(--border, #333)",
-                  borderRadius: 8, color: "var(--fg)",
-                  fontSize: "0.82rem",
-                }}
+                style={inputStyle}
               />
               <select
                 value={invitePerm}
@@ -300,15 +362,22 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
                     <span style={{ flex: 1, fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {c.email}
                     </span>
-                    <span style={{
-                      padding: "0.15rem 0.5rem",
-                      background: c.permission === "edit" ? "rgba(99,102,241,0.2)" : "var(--surface2, #222)",
-                      borderRadius: 5, fontSize: "0.72rem", fontWeight: 600,
-                      color: c.permission === "edit" ? "#818cf8" : "var(--fg-muted)",
-                      flexShrink: 0,
-                    }}>
-                      {c.permission === "edit" ? "Can edit" : "Can view"}
-                    </span>
+                    {/* Editable permission dropdown */}
+                    <select
+                      value={c.permission}
+                      onChange={e => changePermission(c.email, e.target.value as "view" | "edit")}
+                      style={{
+                        padding: "0.2rem 0.4rem",
+                        background: c.permission === "edit" ? "rgba(99,102,241,0.15)" : "var(--surface2, #222)",
+                        border: "1px solid var(--border, #333)",
+                        borderRadius: 5, fontSize: "0.72rem", fontWeight: 600,
+                        color: c.permission === "edit" ? "#818cf8" : "var(--fg-muted)",
+                        cursor: "pointer", flexShrink: 0,
+                      }}
+                    >
+                      <option value="view">Can view</option>
+                      <option value="edit">Can edit</option>
+                    </select>
                     <button
                       onClick={() => removeCollaborator(c.email)}
                       title="Remove"
@@ -317,7 +386,10 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
                         cursor: "pointer", color: "var(--fg-muted)",
                         fontSize: "0.9rem", padding: "0 0.1rem",
                         lineHeight: 1, flexShrink: 0,
+                        transition: "color 0.15s",
                       }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "var(--fg-muted)")}
                     >
                       ×
                     </button>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 
@@ -15,7 +15,7 @@ export default function SharedEditor({ initialContent, title, readOnly }: Props)
   const [source, setSource] = useState(initialContent);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">(readOnly ? "preview" : "edit");
 
-  const { html, warnings } = useCallback(() => latexToHtml(source), [source])();
+  const { html, warnings } = useMemo(() => latexToHtml(source), [source]);
 
   const tabBtn = (tab: "edit" | "preview") => ({
     padding: "0.25rem 0.75rem",

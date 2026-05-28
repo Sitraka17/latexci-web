@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition, lazy, Suspense } from "react";
+import { useState, useMemo, useTransition, lazy, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +37,22 @@ function relativeTime(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// ── Simple toast component ───────────────────────────────────────────────────
+function Toast({ message, type }: { message: string; type: "error" | "success" }) {
+  return (
+    <div style={{
+      position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 9999,
+      padding: "0.75rem 1.1rem",
+      background: type === "error" ? "#ef4444" : "#10b981",
+      color: "#fff", borderRadius: 10, fontSize: "0.84rem", fontWeight: 600,
+      boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+      animation: "fadeIn 0.2s ease",
+    }}>
+      {type === "error" ? "⚠ " : "✓ "}{message}
+    </div>
+  );
+}
+
 export default function DashboardClient({
   userId,
   initialDocuments,
@@ -46,12 +62,18 @@ export default function DashboardClient({
   initialDocuments: DocRow[];
   sharedWithMe: SharedDoc[];
 }) {
-  const [docs, setDocs] = useState<DocRow[]>(initialDocuments);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [docs, setDocs]           = useState<DocRow[]>(initialDocuments);
+  const [deleting, setDeleting]   = useState<string | null>(null);
   const [sharingDoc, setSharingDoc] = useState<{ id: string; title: string } | null>(null);
+  const [toast, setToast]         = useState<{ message: string; type: "error" | "success" } | null>(null);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const supabase = createClient();
+  const router  = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
+  function showToast(message: string, type: "error" | "success" = "error") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }
 
   async function createDocument() {
     const { data, error } = await supabase
@@ -59,20 +81,31 @@ export default function DashboardClient({
       .insert({ user_id: userId, title: "Untitled", content: "" })
       .select("id")
       .single();
-    if (error || !data) return;
+    if (error || !data) { showToast("Failed to create document"); return; }
     router.push(`/tools/preview?doc=${data.id}`);
   }
 
   async function deleteDocument(id: string) {
     if (!confirm("Delete this document? This cannot be undone.")) return;
     setDeleting(id);
-    await supabase.from("documents").delete().eq("id", id);
-    setDocs(prev => prev.filter(d => d.id !== id));
+    const { error } = await supabase.from("documents").delete().eq("id", id);
+    if (error) {
+      showToast("Failed to delete document");
+    } else {
+      setDocs(prev => prev.filter(d => d.id !== id));
+      showToast("Document deleted", "success");
+    }
     setDeleting(null);
   }
 
   async function togglePin(doc: DocRow) {
-    await supabase.from("documents").update({ is_pinned: !doc.is_pinned }).eq("id", doc.id);
+    const { error } = await supabase
+      .from("documents")
+      .update({ is_pinned: !doc.is_pinned })
+      .eq("id", doc.id);
+
+    if (error) { showToast("Failed to update pin"); return; }
+
     startTransition(() => {
       setDocs(prev => {
         const updated = prev.map(d => d.id === doc.id ? { ...d, is_pinned: !d.is_pinned } : d);
@@ -92,6 +125,9 @@ export default function DashboardClient({
 
   return (
     <>
+      {/* ── Toast ─────────────────────────────────────────────────────────── */}
+      {toast && <Toast message={toast.message} type={toast.type} />}
+
       {/* ── My documents ─────────────────────────────────────────────────── */}
       <section>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
@@ -171,7 +207,7 @@ export default function DashboardClient({
                     {doc.is_public && (
                       <span style={{ marginLeft: 8, color: "#22c55e", fontWeight: 600 }}>🔗 Shared</span>
                     )}
-                    {doc.tags.length > 0 && (
+                    {doc.tags?.length > 0 && (
                       <> · {doc.tags.map(t => (
                         <span key={t} style={{ marginLeft: 4, padding: "0.05rem 0.35rem", background: "var(--surface2)", borderRadius: 4, fontSize: "0.7rem" }}>{t}</span>
                       ))}</>

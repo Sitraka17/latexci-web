@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
@@ -110,7 +110,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const previewRef  = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const supabase    = createClient();
+  const supabase    = useMemo(() => createClient(), []);
 
   // Detect mobile
   useEffect(() => {
