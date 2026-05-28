@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
-import DashboardClient from "@/components/DashboardClient";
+import DashboardClient, { type SharedDoc } from "@/components/DashboardClient";
 
 export const metadata: Metadata = {
   title: "Dashboard — latexci",
@@ -18,16 +18,28 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/auth");
 
-  // Load profile + documents in parallel
-  const [{ data: profile }, { data: documents }] = await Promise.all([
+  // Load profile, own docs, and docs shared with me — in parallel
+  const [{ data: profile }, { data: documents }, { data: sharedRaw }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
       .from("documents")
-      .select("id, title, updated_at, is_pinned, tags")
+      .select("id, title, updated_at, is_pinned, tags, is_public")
       .eq("user_id", user.id)
       .order("is_pinned", { ascending: false })
       .order("updated_at", { ascending: false })
       .limit(50),
+    supabase
+      .from("document_collaborators")
+      .select(`
+        document_id,
+        permission,
+        documents (
+          id, title, share_token, updated_at,
+          profiles ( display_name, email )
+        )
+      `)
+      .eq("email", user.email ?? "")
+      .limit(20),
   ]);
 
   const tier = profile?.subscription_tier ?? "free";
@@ -101,10 +113,11 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Document list */}
+        {/* Document list + shared with me */}
         <DashboardClient
           userId={user.id}
           initialDocuments={documents ?? []}
+          sharedWithMe={(sharedRaw ?? []) as SharedDoc[]}
         />
 
       </main>

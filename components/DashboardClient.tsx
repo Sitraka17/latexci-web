@@ -1,8 +1,10 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState, useTransition, lazy, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+const ShareModal = lazy(() => import("./ShareModal"));
 
 type DocRow = {
   id: string;
@@ -10,6 +12,19 @@ type DocRow = {
   updated_at: string;
   is_pinned: boolean;
   tags: string[];
+  is_public: boolean;
+};
+
+export type SharedDoc = {
+  document_id: string;
+  permission: "view" | "edit";
+  documents: {
+    id: string;
+    title: string;
+    share_token: string;
+    updated_at: string;
+    profiles: { display_name: string | null; email: string } | null;
+  } | null;
 };
 
 function relativeTime(iso: string) {
@@ -19,19 +34,21 @@ function relativeTime(iso: string) {
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 export default function DashboardClient({
   userId,
   initialDocuments,
+  sharedWithMe,
 }: {
   userId: string;
   initialDocuments: DocRow[];
+  sharedWithMe: SharedDoc[];
 }) {
   const [docs, setDocs] = useState<DocRow[]>(initialDocuments);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sharingDoc, setSharingDoc] = useState<{ id: string; title: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const supabase = createClient();
@@ -67,116 +84,202 @@ export default function DashboardClient({
     });
   }
 
-  if (docs.length === 0) {
-    return (
-      <div style={{
-        textAlign: "center",
-        padding: "4rem 1.5rem",
-        border: "2px dashed var(--border)",
-        borderRadius: 12,
-      }}>
-        <p style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>📄</p>
-        <p style={{ fontWeight: 700, marginBottom: "0.4rem" }}>No documents yet</p>
-        <p style={{ fontSize: "0.84rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
-          Open any tool to start editing — your work will be saved here automatically.
-        </p>
-        <button
-          onClick={createDocument}
-          style={{
-            padding: "0.65rem 1.5rem",
-            borderRadius: 8,
-            background: "var(--accent)",
-            color: "#fff",
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Create your first document
-        </button>
-      </div>
-    );
-  }
+  const btnStyle: React.CSSProperties = {
+    padding: "0.3rem 0.7rem", borderRadius: 6,
+    fontSize: "0.78rem", fontWeight: 600,
+    border: "1px solid var(--border)", cursor: "pointer",
+  };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      {docs.map(doc => (
-        <div
-          key={doc.id}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            padding: "0.85rem 1rem",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 10,
-            transition: "border-color 0.15s",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
-        >
-          {/* Pin */}
+    <>
+      {/* ── My documents ─────────────────────────────────────────────────── */}
+      <section>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+          <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>My documents</h2>
           <button
-            onClick={() => togglePin(doc)}
-            title={doc.is_pinned ? "Unpin" : "Pin to top"}
+            onClick={createDocument}
             style={{
-              background: "none", border: "none", cursor: "pointer",
-              fontSize: "0.95rem", opacity: doc.is_pinned ? 1 : 0.3,
-              flexShrink: 0, padding: "0.1rem",
-              transition: "opacity 0.15s",
+              padding: "0.4rem 1rem", borderRadius: 8,
+              background: "var(--accent)", color: "#fff",
+              fontWeight: 700, fontSize: "0.82rem",
+              border: "none", cursor: "pointer",
             }}
           >
-            📌
+            + New document
           </button>
+        </div>
 
-          {/* Title + meta */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-              fontWeight: 600, fontSize: "0.9rem", margin: 0,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {doc.title || "Untitled"}
+        {docs.length === 0 ? (
+          <div style={{
+            textAlign: "center", padding: "3rem 1.5rem",
+            border: "2px dashed var(--border)", borderRadius: 12,
+          }}>
+            <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📄</p>
+            <p style={{ fontWeight: 700, marginBottom: "0.4rem" }}>No documents yet</p>
+            <p style={{ fontSize: "0.84rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
+              Your saved LaTeX documents will appear here.
             </p>
-            <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
-              {relativeTime(doc.updated_at)}
-              {doc.tags.length > 0 && (
-                <> · {doc.tags.map(t => <span key={t} style={{ marginLeft: 4, padding: "0.05rem 0.35rem", background: "var(--surface2)", borderRadius: 4, fontSize: "0.7rem" }}>{t}</span>)}</>
-              )}
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-            <Link
-              href={`/tools/preview?doc=${doc.id}`}
-              style={{
-                padding: "0.3rem 0.7rem", borderRadius: 6,
-                background: "var(--accent)", color: "#fff",
-                fontSize: "0.78rem", fontWeight: 600, textDecoration: "none",
-              }}
-            >
-              Open
-            </Link>
             <button
-              onClick={() => deleteDocument(doc.id)}
-              disabled={deleting === doc.id}
-              title="Delete"
+              onClick={createDocument}
               style={{
-                padding: "0.3rem 0.55rem", borderRadius: 6,
-                background: "var(--surface2)", border: "1px solid var(--border)",
-                fontSize: "0.78rem", color: "var(--fg-muted)",
-                cursor: deleting === doc.id ? "wait" : "pointer",
+                padding: "0.65rem 1.5rem", borderRadius: 8,
+                background: "var(--accent)", color: "#fff",
+                fontWeight: 700, fontSize: "0.9rem",
+                border: "none", cursor: "pointer",
               }}
             >
-              {deleting === doc.id ? "…" : "🗑"}
+              Create your first document
             </button>
           </div>
-        </div>
-      ))}
-      {/* Void isPending warning */}
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {docs.map(doc => (
+              <div
+                key={doc.id}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.75rem",
+                  padding: "0.85rem 1rem",
+                  background: "var(--surface)", border: "1px solid var(--border)",
+                  borderRadius: 10, transition: "border-color 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
+              >
+                {/* Pin */}
+                <button
+                  onClick={() => togglePin(doc)}
+                  title={doc.is_pinned ? "Unpin" : "Pin to top"}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    fontSize: "0.95rem", opacity: doc.is_pinned ? 1 : 0.3,
+                    flexShrink: 0, padding: "0.1rem", transition: "opacity 0.15s",
+                  }}
+                >
+                  📌
+                </button>
+
+                {/* Title + meta */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontWeight: 600, fontSize: "0.9rem", margin: 0,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {doc.title || "Untitled"}
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
+                    {relativeTime(doc.updated_at)}
+                    {doc.is_public && (
+                      <span style={{ marginLeft: 8, color: "#22c55e", fontWeight: 600 }}>🔗 Shared</span>
+                    )}
+                    {doc.tags.length > 0 && (
+                      <> · {doc.tags.map(t => (
+                        <span key={t} style={{ marginLeft: 4, padding: "0.05rem 0.35rem", background: "var(--surface2)", borderRadius: 4, fontSize: "0.7rem" }}>{t}</span>
+                      ))}</>
+                    )}
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                  <Link
+                    href={`/tools/preview?doc=${doc.id}`}
+                    style={{ ...btnStyle, background: "var(--accent)", color: "#fff", border: "none", textDecoration: "none" }}
+                  >
+                    Open
+                  </Link>
+                  <button
+                    onClick={() => setSharingDoc({ id: doc.id, title: doc.title || "Untitled" })}
+                    title="Share"
+                    style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)" }}
+                  >
+                    🔗 Share
+                  </button>
+                  <button
+                    onClick={() => deleteDocument(doc.id)}
+                    disabled={deleting === doc.id}
+                    title="Delete"
+                    style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)", cursor: deleting === doc.id ? "wait" : "pointer" }}
+                  >
+                    {deleting === doc.id ? "…" : "🗑"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Shared with me ───────────────────────────────────────────────── */}
+      {sharedWithMe.length > 0 && (
+        <section style={{ marginTop: "2rem" }}>
+          <h2 style={{ margin: "0 0 0.75rem", fontSize: "1rem", fontWeight: 700 }}>Shared with me</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {sharedWithMe.map(item => {
+              const d = item.documents;
+              if (!d) return null;
+              const ownerName = d.profiles?.display_name || d.profiles?.email?.split("@")[0] || "Unknown";
+              return (
+                <div
+                  key={item.document_id}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.75rem",
+                    padding: "0.85rem 1rem",
+                    background: "var(--surface)", border: "1px solid var(--border)",
+                    borderRadius: 10,
+                  }}
+                >
+                  <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>👥</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      fontWeight: 600, fontSize: "0.9rem", margin: 0,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {d.title || "Untitled"}
+                    </p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
+                      by {ownerName} · {relativeTime(d.updated_at)} ·{" "}
+                      <span style={{ color: item.permission === "edit" ? "#818cf8" : "var(--fg-muted)", fontWeight: 600 }}>
+                        {item.permission === "edit" ? "Can edit" : "Can view"}
+                      </span>
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                    {item.permission === "edit" ? (
+                      <Link
+                        href={`/tools/preview?doc=${d.id}`}
+                        style={{ ...btnStyle, background: "var(--accent)", color: "#fff", border: "none", textDecoration: "none" }}
+                      >
+                        Edit
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/shared/${d.share_token}`}
+                        style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg)", textDecoration: "none" }}
+                      >
+                        View
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Suppress isPending lint warning */}
       {isPending && <span style={{ display: "none" }} />}
-    </div>
+
+      {/* ── Share modal ───────────────────────────────────────────────────── */}
+      {sharingDoc && (
+        <Suspense>
+          <ShareModal
+            docId={sharingDoc.id}
+            docTitle={sharingDoc.title}
+            onClose={() => setSharingDoc(null)}
+          />
+        </Suspense>
+      )}
+    </>
   );
 }
