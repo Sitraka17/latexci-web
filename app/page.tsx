@@ -13,14 +13,15 @@ const HERO_FORMULA = katex.renderToString(
 );
 
 export const metadata: Metadata = {
-  title: "Free Online LaTeX Tools — Preview, Diff, Table Generator & More",
+  title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
   description:
-    "latexci: live LaTeX preview with KaTeX math, side-by-side diff, Word-to-LaTeX conversion, table generator, and templates — all free, in your browser, no signup.",
+    "latexci: BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. The free utility belt every Overleaf user needs. No signup, no install, works in any browser.",
   keywords: [
-    "latex preview online", "latex diff tool", "word to latex converter",
-    "latex table generator", "latex equation preview", "online latex editor",
-    "free latex tools", "latex thesis template", "overleaf alternative",
-    "katex online renderer",
+    "bibtex cleaner online", "word to latex converter", "latex diff tool",
+    "doi to bibtex", "arxiv to bibtex", "latex preview online",
+    "overleaf alternative", "overleaf complement", "free latex tools",
+    "latex bibliography tool", "latex thesis template", "bibtex formatter",
+    "katex online renderer", "overleaf after graduation",
   ],
   alternates: { canonical: "/" },
 };
@@ -28,16 +29,18 @@ export const metadata: Metadata = {
 // ── Data ───────────────────────────────────────────────────────────────────
 
 const TOOLS = [
-  { href: "/tools/preview",       icon: "⚡", label: "Preview + PDF",  tag: "Live",    color: "#10b981",
-    desc: "Paste .tex → equations render instantly via KaTeX. Export to PDF with one click." },
-  { href: "/tools/diff",          icon: "↕",  label: "Diff",           tag: "Compare", color: "#7c6cf8",
-    desc: "Two .tex files, side by side. Additions green, deletions red. Drag to resize." },
-  { href: "/tools/word-to-latex", icon: "↗",  label: "Word → LaTeX",   tag: "Convert", color: "#f59e0b",
-    desc: ".docx converts in-browser via mammoth.js — headings, tables, lists. Nothing uploaded." },
+  { href: "/tools/word-to-latex", icon: "↗",  label: "Word → LaTeX",   tag: "★ Top pick", color: "#f59e0b",
+    desc: "Convert .docx with equation detection, image stubs, and a quality report. The converter Overleaf doesn't have." },
+  { href: "/tools/bibtex",        icon: "📚", label: "BibTeX Tools",    tag: "New",     color: "#10b981",
+    desc: "Clean .bib files, look up DOIs via CrossRef, fetch arXiv citations. One place for all your bibliography work." },
+  { href: "/tools/preview",       icon: "⚡", label: "Preview + PDF",  tag: "Live",    color: "#7c6cf8",
+    desc: "Paste .tex → equations render instantly via KaTeX. Export to PDF. Zero compile wait." },
+  { href: "/tools/diff",          icon: "↕",  label: "LaTeX Diff",     tag: "Compare", color: "#6366f1",
+    desc: "Two .tex files, side by side. Additions green, deletions red. Replaces Overleaf track changes." },
   { href: "/tools/table",         icon: "▦",  label: "Table Generator", tag: "Build",   color: "#06b6d4",
-    desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX instantly." },
+    desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX in one click." },
   { href: "/tools/templates",     icon: "▤",  label: "Templates",       tag: "Library", color: "#ec4899",
-    desc: "11 templates: CV, thesis, IEEE, Beamer, Centrale Marseille, AMSE. One-click open." },
+    desc: "PhD thesis, IEEE paper, CV, Beamer, Centrale Marseille, AMSE. Download .tex instantly." },
 ];
 
 const SCENARIOS = [
@@ -70,8 +73,8 @@ const FAQS = [
     a: ".docx (Word 2007+) converts directly in your browser via mammoth.js — the file is never uploaded anywhere. .odt and .rtf require pandoc installed locally; the tool shows you the exact command to run." },
   { q: "Is my LaTeX source stored anywhere?",
     a: "No. The preview, diff, table, and Word → LaTeX (.docx) tools all run entirely in your browser — nothing leaves your machine. The PDF export calls an external compile service (latexonline.cc) but sends only the LaTeX source text, not any identifying information." },
-  { q: "How is this different from Overleaf?",
-    a: "Overleaf is a full collaborative editor that compiles real LaTeX. latexci is for the quick in-between moments: checking if a formula renders, reviewing a diff, or converting a Word file — without logging in or waiting for compilation." },
+  { q: "I have free Overleaf from my university. Why use this?",
+    a: "latexci does things Overleaf Premium doesn't: convert Word (.docx) files to LaTeX with equation detection, clean and format .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files without track changes. Use Overleaf as your editor — use latexci for everything Overleaf forgot to build. And when you graduate and lose your institutional license, latexci is still free." },
   { q: "Can I use latexci offline?",
     a: "Preview, diff, and table work fully offline once the page is loaded. Word → LaTeX needs a connection. The preview tool also supports shareable URLs via LZ compression." },
 ];
@@ -123,10 +126,10 @@ export default function HomePage() {
       }}>
         <span style={{ marginRight: "0.4rem" }}>🆕</span>
         <strong style={{ color: "var(--accent2)" }}>New:</strong>
-        <span className="announce-long">{" "}Centrale Marseille &amp; AMSE templates, PDF export, and Word → LaTeX improvements —{" "}</span>
+        <span className="announce-long">{" "}BibTeX cleaner, DOI → BibTeX, and arXiv lookup — the tools Overleaf forgot —{" "}</span>
         <span className="announce-short">{" "}</span>
-        <a href="/tools/templates" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-          explore templates →
+        <a href="/tools/bibtex" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
+          try BibTeX tools →
         </a>
       </div>
 
@@ -148,6 +151,14 @@ export default function HomePage() {
         >
           {/* Left: text */}
           <div>
+            <div style={{
+              display: "inline-block", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.09em",
+              color: "var(--accent2)", background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+              padding: "0.25rem 0.8rem", borderRadius: 20, marginBottom: "1rem",
+              textTransform: "uppercase",
+            }}>The LaTeX Utility Belt</div>
+
             <h1
               style={{
                 fontSize: "clamp(2rem, 4.5vw, 3.2rem)",
@@ -158,7 +169,7 @@ export default function HomePage() {
                 color: "var(--fg)",
               }}
             >
-              LaTeX in your browser.
+              The tools Overleaf
               <br />
               <span
                 style={{
@@ -167,7 +178,7 @@ export default function HomePage() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                No setup.
+                forgot to build.
               </span>
             </h1>
 
@@ -180,13 +191,14 @@ export default function HomePage() {
                 marginBottom: "2rem",
               }}
             >
-              Preview equations, compare revisions, convert Word files, and
-              generate tables — all in a tab, all free, no account needed.
+              BibTeX cleaner, Word→LaTeX converter, instant preview, and diff —
+              the tools every researcher needs <em>alongside</em> Overleaf.
+              Free, no signup, nothing leaves your browser.
             </p>
 
             <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               <Link
-                href="/tools/preview"
+                href="/tools/bibtex"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.4rem",
                   padding: "0.72rem 1.6rem", borderRadius: 8,
@@ -196,10 +208,10 @@ export default function HomePage() {
                   boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 40%, transparent)",
                 }}
               >
-                Open Preview
+                BibTeX Tools
               </Link>
               <Link
-                href="/tools/templates"
+                href="/tools/word-to-latex"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.4rem",
                   padding: "0.72rem 1.4rem", borderRadius: 8,
@@ -208,12 +220,12 @@ export default function HomePage() {
                   border: "1px solid var(--border)",
                 }}
               >
-                Browse templates
+                Word → LaTeX
               </Link>
             </div>
 
             <p style={{ marginTop: "1.5rem", fontSize: "0.76rem", color: "var(--fg-muted)" }}>
-              Works in any browser · Files never stored · Open source
+              Works in any browser · Files never stored · Free forever
             </p>
           </div>
 
