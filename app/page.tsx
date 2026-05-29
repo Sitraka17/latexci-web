@@ -104,6 +104,24 @@ export default function HomePage() {
 
       <Navbar />
 
+      {/* ── Announcement strip ──────────────────────────────── */}
+      <div style={{
+        background: "linear-gradient(90deg, rgba(0,56,168,0.08), rgba(124,108,248,0.08))",
+        borderBottom: "1px solid rgba(124,108,248,0.18)",
+        padding: "0.55rem 1.5rem",
+        textAlign: "center",
+        fontSize: "0.78rem",
+        color: "var(--fg-muted)",
+        lineHeight: 1,
+      }}>
+        <span style={{ marginRight: "0.5rem" }}>🆕</span>
+        <strong style={{ color: "var(--accent2)" }}>New:</strong>
+        {" "}Centrale Marseille &amp; AMSE templates, PDF export, and Word → LaTeX improvements —{" "}
+        <a href="/tools/templates" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
+          explore templates →
+        </a>
+      </div>
+
       {/* ── Hero ────────────────────────────────────────────── */}
       <section
         className="has-grid"

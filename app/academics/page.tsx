@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import CopyButton from "@/components/CopyButton";
 import { TEMPLATES } from "@/lib/templates";
 import LZString from "lz-string";
 
@@ -323,9 +324,9 @@ export default function AcademicsPage() {
         }}>
           {ESSENTIAL_PACKAGES.map(p => (
             <div key={p.pkg} style={{
-              display: "flex", gap: "1rem", alignItems: "flex-start",
+              display: "flex", gap: "0.75rem", alignItems: "flex-start",
               background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 8, padding: "1rem",
+              borderRadius: 8, padding: "0.9rem 1rem",
             }}>
               <code style={{
                 background: "rgba(108,99,255,0.1)", color: "var(--accent2)",
@@ -334,7 +335,8 @@ export default function AcademicsPage() {
               }}>
                 {p.pkg.split(",")[0]}
               </code>
-              <span style={{ fontSize: "0.83rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>{p.use}</span>
+              <span style={{ fontSize: "0.83rem", color: "var(--fg-muted)", lineHeight: 1.5, flex: 1 }}>{p.use}</span>
+              <CopyButton text={`\\usepackage{${p.pkg}}`} label="\\usepackage" />
             </div>
           ))}
         </div>
