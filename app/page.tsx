@@ -1,228 +1,438 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import katex from "katex";
 import Navbar from "@/components/Navbar";
+import SiteFooter from "@/components/SiteFooter";
+import AdUnit from "@/components/AdUnit";
+import FaqAccordion from "@/components/FaqAccordion";
+
+// Pre-render at build time — no runtime cost, pixel-perfect math
+const HERO_FORMULA = katex.renderToString(
+  "\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}",
+  { displayMode: true, throwOnError: false, output: "html" }
+);
 
 export const metadata: Metadata = {
-  title: "Free Online LaTeX Preview, Diff & Word-to-LaTeX Converter",
+  title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
   description:
-    "latexci offers free browser-based LaTeX tools: live preview with KaTeX math, side-by-side diff highlighting, and instant Word (.docx) to LaTeX conversion. No account needed.",
-  alternates: { canonical: "https://latexci-web.vercel.app" },
+    "latexci: BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. The free utility belt every Overleaf user needs. No signup, no install, works in any browser.",
+  keywords: [
+    "bibtex cleaner online", "word to latex converter", "latex diff tool",
+    "doi to bibtex", "arxiv to bibtex", "latex preview online",
+    "overleaf alternative", "overleaf complement", "free latex tools",
+    "latex bibliography tool", "latex thesis template", "bibtex formatter",
+    "katex online renderer", "overleaf after graduation",
+  ],
+  alternates: { canonical: "/" },
 };
 
-const tools = [
+// ── Data ───────────────────────────────────────────────────────────────────
+
+const TOOLS = [
+  { href: "/tools/word-to-latex", icon: "↗",  label: "Word → LaTeX",   tag: "★ Top pick", color: "#f59e0b",
+    desc: "Convert .docx with equation detection, image stubs, and a quality report. The converter Overleaf doesn't have." },
+  { href: "/tools/bibtex",        icon: "📚", label: "BibTeX Tools",    tag: "New",     color: "#10b981",
+    desc: "Clean .bib files, look up DOIs via CrossRef, fetch arXiv citations. One place for all your bibliography work." },
+  { href: "/tools/preview",       icon: "⚡", label: "Preview + PDF",  tag: "Live",    color: "#7c6cf8",
+    desc: "Paste .tex → equations render instantly via KaTeX. Export to PDF. Zero compile wait." },
+  { href: "/tools/diff",          icon: "↕",  label: "LaTeX Diff",     tag: "Compare", color: "#6366f1",
+    desc: "Two .tex files, side by side. Additions green, deletions red. Replaces Overleaf track changes." },
+  { href: "/tools/table",         icon: "▦",  label: "Table Generator", tag: "Build",   color: "#06b6d4",
+    desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX in one click." },
+  { href: "/tools/templates",     icon: "▤",  label: "Templates",       tag: "Library", color: "#ec4899",
+    desc: "PhD thesis, IEEE paper, CV, Beamer, Centrale Marseille, AMSE. Download .tex instantly." },
+];
+
+const SCENARIOS = [
   {
+    quote: "Meeting in two hours. Just need to check this equation renders before I send the chapter.",
+    tool: "LaTeX Preview",
     href: "/tools/preview",
-    icon: "⚡",
-    title: "LaTeX Preview",
-    subtitle: "Instant live preview",
-    description:
-      "Paste your LaTeX source and see a live HTML preview with full KaTeX math rendering. Supports equations, sections, tables, lists, and more. Share your document via a URL.",
-    badge: "Live",
-    badgeColor: "#10b981",
-    keywords: ["latex preview online", "latex to html"],
+    color: "#10b981",
   },
   {
+    quote: "Advisor sent back my draft with changes. Need to see exactly what they edited.",
+    tool: "LaTeX Diff",
     href: "/tools/diff",
-    icon: "🔍",
-    title: "LaTeX Diff",
-    subtitle: "Track your changes",
-    description:
-      "Compare two .tex files side-by-side. See additions in green and deletions in red. Drag and drop .tex files directly. Perfect for paper revisions and co-authoring.",
-    badge: "Free",
-    badgeColor: "#6c63ff",
-    keywords: ["latex diff online", "latexdiff web"],
+    color: "#7c6cf8",
   },
   {
+    quote: "Collaborator left comments in a Word file. Need those back in LaTeX to merge.",
+    tool: "Word → LaTeX",
     href: "/tools/word-to-latex",
-    icon: "📄",
-    title: "Word → LaTeX",
-    subtitle: "Convert .docx instantly",
-    description:
-      "Upload a .docx, .odt, or .rtf file and get clean LaTeX source. Powered by pandoc. Edit the result inline before downloading.",
-    badge: "Upload",
-    badgeColor: "#f59e0b",
-    keywords: ["word to latex converter", "docx to tex"],
+    color: "#f59e0b",
+  },
+];
+
+const FAQS = [
+  { q: "Is latexci really free?",
+    a: "Yes. All tools are free, there is no paid plan, and no account is required. The code is open source on GitHub under the MIT license." },
+  { q: "Does the preview support math equations?",
+    a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, the same engine used by Khan Academy and Wikipedia." },
+  { q: "What file types does Word → LaTeX accept?",
+    a: ".docx (Word 2007+) converts directly in your browser via mammoth.js — the file is never uploaded anywhere. .odt and .rtf require pandoc installed locally; the tool shows you the exact command to run." },
+  { q: "Is my LaTeX source stored anywhere?",
+    a: "No. The preview, diff, table, and Word → LaTeX (.docx) tools all run entirely in your browser — nothing leaves your machine. The PDF export calls an external compile service (latexonline.cc) but sends only the LaTeX source text, not any identifying information." },
+  { q: "I have free Overleaf from my university. Why use this?",
+    a: "latexci does things Overleaf Premium doesn't: convert Word (.docx) files to LaTeX with equation detection, clean and format .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files without track changes. Use Overleaf as your editor — use latexci for everything Overleaf forgot to build. And when you graduate and lose your institutional license, latexci is still free." },
+  { q: "Can I use latexci offline?",
+    a: "Preview, diff, and table work fully offline once the page is loaded. Word → LaTeX needs a connection. The preview tool also supports shareable URLs via LZ compression." },
+];
+
+// ── Structured data ────────────────────────────────────────────────────────
+
+const SCHEMAS = [
+  {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: FAQS.map(f => ({ "@type": "Question", name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a } })),
   },
   {
-    href: "/tools/templates",
-    icon: "📋",
-    title: "LaTeX Templates",
-    subtitle: "Start from a template",
-    description:
-      "Browse ready-to-use LaTeX templates: academic papers, CVs, Beamer presentations, cover letters, and more. One click to open in the preview editor.",
-    badge: "New",
-    badgeColor: "#ec4899",
-    keywords: ["latex templates", "latex cv template"],
+    "@context": "https://schema.org", "@type": "SoftwareApplication",
+    name: "latexci", applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web Browser",
+    description: "Free browser-based LaTeX tools: live preview, diff, Word to LaTeX, table generator, templates.",
+    url: "https://latexci-web.vercel.app",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  },
+  {
+    "@context": "https://schema.org", "@type": "WebSite",
+    name: "latexci", url: "https://latexci-web.vercel.app",
+    description: "Free online LaTeX tools for researchers and students.",
   },
 ];
 
-const features = [
-  { icon: "🔒", title: "Privacy first", desc: "Uploaded files are processed and immediately discarded. Nothing is stored or logged." },
-  { icon: "🚀", title: "Zero friction", desc: "No signup, no account, no install. Open a tool and start working in seconds." },
-  { icon: "🧮", title: "Real math rendering", desc: "KaTeX renders your equations — inline, display, align environments, all supported." },
-  { icon: "🔗", title: "Shareable links", desc: "Every document in the preview editor can be shared via a URL. Works offline too." },
-  { icon: "📱", title: "Mobile friendly", desc: "All tools work on tablets and mobile phones, not just desktop." },
-  { icon: "⚙️", title: "Open source", desc: "The latexci CLI and this web app are fully open source on GitHub. Fork and self-host." },
-];
-
-const faqs = [
-  { q: "Is latexci free?", a: "Yes, completely free. There is no paid plan. All tools work without creating an account." },
-  { q: "Can I use latexci without Overleaf?", a: "Yes. latexci is a standalone set of tools that works entirely in your browser. No Overleaf connection is needed or used." },
-  { q: "Does the LaTeX preview support math equations?", a: "Yes. The preview renders inline math ($...$), display math (\\[...\\]), and environments like align, gather, and equation via KaTeX — the same engine used by Khan Academy." },
-  { q: "What file types does Word → LaTeX support?", a: "Currently .docx (Word 2007+), .odt (LibreOffice), and .rtf files. The conversion is powered by pandoc running on the server." },
-  { q: "Is my LaTeX source stored on your servers?", a: "No. For the preview and diff tools, all processing happens locally in your browser. For the Word → LaTeX tool, the file is sent to our server, converted, and immediately deleted." },
-  { q: "Can I use latexci offline?", a: "The preview and diff tools work fully offline after the page is loaded (math rendering uses the bundled KaTeX). The Word → LaTeX tool requires an internet connection." },
-];
+// ── Page ───────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqs.map(f => ({
-      "@type": "Question",
-      "name": f.q,
-      "acceptedAnswer": { "@type": "Answer", "text": f.a },
-    })),
-  };
-
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {SCHEMAS.map((s, i) => (
+        <script key={i} type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
+      ))}
+
       <Navbar />
 
-      {/* Hero */}
+      {/* ── Announcement strip ──────────────────────────────── */}
+      <div className="announce-strip" style={{
+        background: "linear-gradient(90deg, rgba(0,56,168,0.08), rgba(124,108,248,0.08))",
+        borderBottom: "1px solid rgba(124,108,248,0.18)",
+        padding: "0.55rem 1.5rem",
+        textAlign: "center",
+        fontSize: "0.78rem",
+        color: "var(--fg-muted)",
+        lineHeight: 1.4,
+      }}>
+        <span style={{ marginRight: "0.4rem" }}>🆕</span>
+        <strong style={{ color: "var(--accent2)" }}>New:</strong>
+        <span className="announce-long">{" "}BibTeX cleaner, DOI → BibTeX, and arXiv lookup — the tools Overleaf forgot —{" "}</span>
+        <span className="announce-short">{" "}</span>
+        <a href="/tools/bibtex" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
+          try BibTeX tools →
+        </a>
+      </div>
+
+      {/* ── Hero ────────────────────────────────────────────── */}
       <section
-        style={{
-          textAlign: "center",
-          padding: "5rem 1.5rem 4rem",
-          background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(108,99,255,0.18), transparent)",
-          position: "relative",
-          overflow: "hidden",
-        }}
+        className="has-grid"
+        style={{ padding: "4rem 1.5rem 3.5rem" }}
       >
         <div
-          aria-hidden="true"
           style={{
-            position: "absolute", inset: 0,
-            backgroundImage: "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
-            backgroundSize: "40px 40px", opacity: 0.25,
-            maskImage: "radial-gradient(ellipse 80% 60% at center, black, transparent)",
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "4rem",
+            alignItems: "center",
           }}
-        />
-        <div style={{ position: "relative", maxWidth: 760, margin: "0 auto" }}>
-          <span style={{
-            display: "inline-block", padding: "0.3rem 1rem", borderRadius: 999,
-            border: "1px solid var(--border)", background: "var(--surface)",
-            fontSize: "0.78rem", color: "var(--accent2)", fontWeight: 500,
-            marginBottom: "1.5rem", letterSpacing: "0.05em",
-          }}>
-            FREE · OPEN SOURCE · NO SIGNUP
-          </span>
-          <h1 style={{
-            fontSize: "clamp(2rem, 5vw, 3.4rem)", fontWeight: 900,
-            lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1.25rem",
-          }}>
-            Free Online{" "}
-            <span style={{
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>
-              LaTeX Tools
-            </span>
-            <br />for Researchers & Students
-          </h1>
-          <p style={{
-            fontSize: "1.05rem", color: "var(--fg-muted)", lineHeight: 1.75,
-            maxWidth: 560, margin: "0 auto 2.5rem",
-          }}>
-            Preview LaTeX with live math rendering, compare document versions with
-            our diff tool, and convert Word files to .tex instantly — all in your browser,
-            no account required.
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/tools/preview" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.75rem 1.75rem", borderRadius: 8,
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-              color: "#fff", fontWeight: 700, fontSize: "0.95rem", textDecoration: "none",
-              boxShadow: "0 0 30px rgba(108,99,255,0.35)",
-            }}>
-              ⚡ Try LaTeX Preview — free
-            </Link>
-            <a href="https://github.com/Sitraka17/latexci-web" target="_blank" rel="noopener noreferrer"
+          className="hero-grid"
+        >
+          {/* Left: text */}
+          <div>
+            <div style={{
+              display: "inline-block", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.09em",
+              color: "var(--accent2)", background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+              padding: "0.25rem 0.8rem", borderRadius: 20, marginBottom: "1rem",
+              textTransform: "uppercase",
+            }}>The LaTeX Utility Belt</div>
+
+            <h1
               style={{
-                display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                padding: "0.75rem 1.5rem", borderRadius: 8,
-                background: "var(--surface)", color: "var(--fg)", fontWeight: 600,
-                fontSize: "0.95rem", textDecoration: "none", border: "1px solid var(--border)",
-              }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-              </svg>
-              GitHub
-            </a>
+                fontSize: "clamp(2rem, 4.5vw, 3.2rem)",
+                fontWeight: 800,
+                lineHeight: 1.1,
+                letterSpacing: "-0.04em",
+                marginBottom: "1.1rem",
+                color: "var(--fg)",
+              }}
+            >
+              The tools Overleaf
+              <br />
+              <span
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                forgot to build.
+              </span>
+            </h1>
+
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "var(--fg-muted)",
+                lineHeight: 1.8,
+                maxWidth: 420,
+                marginBottom: "2rem",
+              }}
+            >
+              BibTeX cleaner, Word→LaTeX converter, instant preview, and diff —
+              the tools every researcher needs <em>alongside</em> Overleaf.
+              Free, no signup, nothing leaves your browser.
+            </p>
+
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+              <Link
+                href="/tools/bibtex"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.4rem",
+                  padding: "0.72rem 1.6rem", borderRadius: 8,
+                  background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                  color: "#fff", fontWeight: 700, fontSize: "0.92rem",
+                  textDecoration: "none",
+                  boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 40%, transparent)",
+                }}
+              >
+                BibTeX Tools
+              </Link>
+              <Link
+                href="/tools/word-to-latex"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.4rem",
+                  padding: "0.72rem 1.4rem", borderRadius: 8,
+                  background: "var(--surface)", color: "var(--fg)",
+                  fontWeight: 600, fontSize: "0.92rem", textDecoration: "none",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                Word → LaTeX
+              </Link>
+            </div>
+
+            <p style={{ marginTop: "1.5rem", fontSize: "0.76rem", color: "var(--fg-muted)" }}>
+              Works in any browser · Files never stored · Free forever
+            </p>
           </div>
 
-          {/* Social proof bar */}
-          <div style={{
-            display: "flex", gap: "2rem", justifyContent: "center", marginTop: "3rem",
-            flexWrap: "wrap",
-          }}>
-            {[
-              ["100%", "Free forever"],
-              ["0", "Signup required"],
-              ["4", "Tools available"],
-              ["∞", "Documents processed"],
-            ].map(([stat, label]) => (
-              <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--accent2)" }}>{stat}</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--fg-muted)", marginTop: "0.2rem" }}>{label}</div>
+          {/* Right: product mockup — hidden on mobile (too tall) */}
+          <div className="hero-mockup" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {/* Editor card */}
+            <div
+              style={{
+                background: "#1e1e1e",
+                borderRadius: 10,
+                overflow: "hidden",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05)",
+              }}
+            >
+              {/* Window chrome */}
+              <div
+                style={{
+                  background: "#141419",
+                  padding: "0.55rem 0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  borderBottom: "1px solid #2c2c3e",
+                }}
+              >
+                {["#ff5f57", "#ffbd2e", "#28c840"].map((c) => (
+                  <span key={c}
+                    style={{ width: 10, height: 10, borderRadius: "50%", background: c, display: "inline-block" }} />
+                ))}
+                <span
+                  style={{
+                    marginLeft: 8, fontSize: "0.68rem",
+                    color: "#5a5878",
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                >
+                  main.tex
+                </span>
               </div>
-            ))}
+              {/* Code */}
+              <div
+                style={{
+                  padding: "0.9rem 1rem",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.72rem",
+                  lineHeight: 1.75,
+                }}
+              >
+                <div><span style={{ color: "#569cd6" }}>{"\\section"}</span><span style={{ color: "#ce9178" }}>{"{"}</span><span style={{ color: "#d4d4d4" }}>Gaussian Integral</span><span style={{ color: "#ce9178" }}>{"}"}</span></div>
+                <div style={{ color: "#d4d4d4" }}>A beautiful result in analysis:</div>
+                <div style={{ color: "#9cdcfe", marginTop: "0.2rem" }}>{"\\["}</div>
+                <div style={{ paddingLeft: "1.2rem", color: "#b5cea8" }}>{"  \\int_{-\\infty}^{\\infty}"}</div>
+                <div style={{ paddingLeft: "1.2rem", color: "#b5cea8" }}>{"    e^{-x^2}\\,dx = \\sqrt{\\pi}"}</div>
+                <div style={{ color: "#9cdcfe" }}>{"\\]"}</div>
+              </div>
+            </div>
+
+            {/* Preview card */}
+            <div
+              style={{
+                background: "#fdfcf8",
+                borderRadius: 10,
+                padding: "1.1rem 1.4rem",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                color: "#111",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  marginBottom: "0.65rem",
+                  paddingBottom: "0.45rem",
+                  borderBottom: "1px solid #e0dcd6",
+                }}
+              >
+                <span style={{
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "#10b981", display: "inline-block",
+                  boxShadow: "0 0 5px #10b981",
+                }} />
+                <span style={{ fontSize: "0.65rem", color: "#8a8078", fontFamily: "system-ui, sans-serif" }}>
+                  Preview · live
+                </span>
+              </div>
+              <div style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.35rem" }}>
+                Gaussian Integral
+              </div>
+              <div style={{ fontSize: "0.82rem", color: "#333", marginBottom: "0.5rem" }}>
+                A beautiful result in analysis:
+              </div>
+              {/* KaTeX-rendered formula — pre-built at compile time */}
+              <div
+                style={{ color: "#111", overflowX: "auto" }}
+                dangerouslySetInnerHTML={{ __html: HERO_FORMULA }}
+              />
+            </div>
           </div>
         </div>
+
       </section>
 
-      {/* Tools grid */}
-      <section style={{ padding: "4rem 1.5rem 2rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
-        <h2 style={{
-          fontSize: "1.4rem", fontWeight: 700, textAlign: "center",
-          marginBottom: "0.5rem", letterSpacing: "-0.01em",
+      {/* ── Mobile-only formula preview ─────────────────────── */}
+      <div className="hero-mobile-preview" style={{
+        display: "none",
+        margin: "0 1.5rem 1.5rem",
+        background: "#fdfcf8",
+        borderRadius: 10,
+        padding: "1rem 1.25rem",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)",
+        color: "#111",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.5rem", paddingBottom: "0.4rem", borderBottom: "1px solid #e0dcd6" }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block", boxShadow: "0 0 5px #10b981" }} />
+          <span style={{ fontSize: "0.63rem", color: "#8a8078", fontFamily: "system-ui, sans-serif" }}>Preview · live</span>
+        </div>
+        <div style={{ fontSize: "0.92rem", fontWeight: 700, marginBottom: "0.3rem" }}>Gaussian Integral</div>
+        <div style={{ fontSize: "0.79rem", color: "#444", marginBottom: "0.25rem" }}>A beautiful result in analysis:</div>
+        <div style={{ color: "#111", overflowX: "auto" }} dangerouslySetInnerHTML={{ __html: HERO_FORMULA }} />
+      </div>
+
+      {/* ── Stats band ──────────────────────────────────────── */}
+      <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
+        <div className="stats-band" style={{
+          maxWidth: 1100, margin: "0 auto", padding: "1rem 1.5rem",
+          display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
         }}>
-          All tools — free, no login
-        </h2>
-        <p style={{ textAlign: "center", color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2rem" }}>
-          Click any tool to start instantly. No account or install needed.
+          {[
+            { n: "11",   label: "Templates" },
+            { n: "5",    label: "Tools" },
+            { n: "0",    label: "Setup needed" },
+            { n: "100%", label: "Free forever" },
+          ].map(({ n, label }) => (
+            <div key={label} style={{ textAlign: "center", padding: "0.35rem 1rem" }}>
+              <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--accent2)", lineHeight: 1 }}>{n}</div>
+              <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)", marginTop: "0.2rem" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Tools ───────────────────────────────────────────── */}
+      <section
+        style={{
+          padding: "2.5rem 1.5rem 2.5rem",
+          maxWidth: 1100,
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            color: "var(--fg-muted)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            marginBottom: "1rem",
+          }}
+        >
+          Everything you need
         </p>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: "1.25rem",
-        }}>
-          {tools.map((tool) => (
-            <Link key={tool.href} href={tool.href} className="tool-card" style={{ textDecoration: "none" }}>
-              <div style={{
-                background: "var(--surface)", border: "1px solid var(--border)",
-                borderRadius: 12, padding: "1.75rem", height: "100%",
-                display: "flex", flexDirection: "column", gap: "0.6rem",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <span style={{ fontSize: "1.6rem" }}>{tool.icon}</span>
-                  <span style={{
-                    fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.06em",
-                    padding: "0.2rem 0.55rem", borderRadius: 999,
-                    background: `${tool.badgeColor}22`, color: tool.badgeColor,
-                    border: `1px solid ${tool.badgeColor}44`,
-                  }}>{tool.badge}</span>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "0.75rem",
+          }}
+        >
+          {TOOLS.map((t) => (
+            <Link key={t.href} href={t.href} className="tool-card" style={{ textDecoration: "none" }}>
+              <div
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
+                  padding: "1.25rem",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.45rem",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "1.1rem", color: "var(--fg-muted)", fontFamily: "monospace" }}>
+                    {t.icon}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.05em",
+                      padding: "0.15rem 0.45rem", borderRadius: 999,
+                      background: `${t.color}1a`, color: t.color,
+                      border: `1px solid ${t.color}33`,
+                    }}
+                  >
+                    {t.tag}
+                  </span>
                 </div>
-                <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--fg)" }}>{tool.title}</h3>
-                <div style={{ fontSize: "0.78rem", color: "var(--accent2)", fontWeight: 500 }}>{tool.subtitle}</div>
-                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--fg-muted)", lineHeight: 1.6 }}>{tool.description}</p>
-                <span style={{ marginTop: "auto", paddingTop: "0.5rem", fontSize: "0.82rem", color: "var(--accent)", fontWeight: 600 }}>
-                  Open tool →
+                <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--fg)" }}>{t.label}</div>
+                <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--fg-muted)", lineHeight: 1.6, flex: 1 }}>
+                  {t.desc}
+                </p>
+                <span style={{ fontSize: "0.75rem", color: "var(--accent)", fontWeight: 600, marginTop: "0.25rem" }}>
+                  Open →
                 </span>
               </div>
             </Link>
@@ -230,73 +440,252 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section style={{ padding: "3rem 1.5rem", maxWidth: 900, margin: "0 auto", width: "100%", textAlign: "center" }}>
-        <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem" }}>Why latexci?</h2>
-        <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2.5rem", maxWidth: 540, margin: "0 auto 2.5rem" }}>
-          Overleaf is great for collaborative editing, but sometimes you just need a quick preview or a diff. latexci fills that gap — no signup, no friction.
+      {/* ── Ad unit ─────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", width: "100%", padding: "0 1.5rem" }}>
+        <AdUnit />
+      </div>
+
+      {/* ── Scenarios ───────────────────────────────────────── */}
+      <section
+        style={{
+          padding: "2.5rem 1.5rem 3rem",
+          maxWidth: 1100,
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            color: "var(--fg-muted)",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            marginBottom: "1rem",
+          }}
+        >
+          Built for these moments
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-          {features.map(f => (
-            <div key={f.title} style={{
-              padding: "1.25rem", background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 10, display: "flex", gap: "0.75rem", alignItems: "flex-start", textAlign: "left",
-            }}>
-              <span style={{ fontSize: "1.3rem", flexShrink: 0 }}>{f.icon}</span>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: "0.88rem", marginBottom: "0.25rem" }}>{f.title}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--fg-muted)", lineHeight: 1.55 }}>{f.desc}</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "0.75rem",
+          }}
+        >
+          {SCENARIOS.map((s) => (
+            <Link
+              key={s.href}
+              href={s.href}
+              style={{ textDecoration: "none" }}
+              className="scenario-card"
+            >
+              <div
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderLeft: `3px solid ${s.color}`,
+                  borderRadius: "0 10px 10px 0",
+                  padding: "1.3rem 1.4rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.9rem",
+                  height: "100%",
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "0.9rem",
+                    color: "var(--fg)",
+                    lineHeight: 1.65,
+                    fontStyle: "italic",
+                    flex: 1,
+                  }}
+                >
+                  &ldquo;{s.quote}&rdquo;
+                </p>
+                <span
+                  style={{
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    color: s.color,
+                  }}
+                >
+                  → {s.tool}
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* FAQ */}
-      <section style={{ padding: "3rem 1.5rem 5rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
-        <h2 style={{ fontSize: "1.4rem", fontWeight: 700, textAlign: "center", marginBottom: "2rem" }}>
-          Frequently asked questions
+      {/* ── Grande École callout ────────────────────────────────── */}
+      <section style={{ padding: "0 1.5rem 1.25rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
+        <Link href="/tools/templates?cat=Grande+%C3%89cole" style={{ textDecoration: "none", display: "block" }}>
+          <div className="ge-callout" style={{
+            background: "linear-gradient(135deg, rgba(0,56,168,0.07) 0%, rgba(95,106,122,0.04) 100%)",
+            border: "1px solid rgba(0,56,168,0.2)",
+            borderLeft: "4px solid #003BA0",
+            borderRadius: "0 10px 10px 0",
+            padding: "1.1rem 1.5rem",
+            display: "flex", alignItems: "center", gap: "1.25rem", flexWrap: "wrap",
+            transition: "box-shadow 0.18s",
+          }}>
+            <span style={{ fontSize: "1.5rem", flexShrink: 0 }}>🏛️</span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ margin: "0 0 0.2rem", fontWeight: 700, fontSize: "0.9rem", color: "#003BA0" }}>
+                Centrale Marseille &amp; AMSE templates
+              </p>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--fg-muted)" }}>
+                Rapport de projet, rapport de stage, AMSE working paper — avec la mise en page officielle.
+              </p>
+            </div>
+            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#003BA0", flexShrink: 0 }}>
+              Voir les templates →
+            </span>
+          </div>
+        </Link>
+      </section>
+
+      {/* ── Academics callout ────────────────────────────────── */}
+      <section
+        style={{
+          padding: "0 1.5rem 3rem",
+          maxWidth: 1100,
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
+        <Link href="/academics" style={{ textDecoration: "none", display: "block" }}>
+          <div
+            className="callout-card"
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: 12,
+              padding: "2rem 2.25rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "2rem",
+              flexWrap: "wrap",
+              transition: "border-color 0.18s",
+            }}
+          >
+            <div>
+              <p style={{
+                margin: "0 0 0.4rem",
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                color: "var(--accent2)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}>
+                For PhD students & researchers
+              </p>
+              <h2 style={{ margin: "0 0 0.4rem", fontSize: "1.2rem", fontWeight: 700, color: "var(--fg)" }}>
+                Writing a thesis?
+              </h2>
+              <p style={{
+                margin: 0, fontSize: "0.85rem",
+                color: "var(--fg-muted)", lineHeight: 1.7, maxWidth: 460,
+              }}>
+                PhD thesis templates, 12-package reference guide, advisor diff
+                workflow, and every tool you need for heavy LaTeX documents.
+              </p>
+            </div>
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center",
+                padding: "0.65rem 1.4rem", borderRadius: 8,
+                background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                color: "#fff", fontWeight: 700, fontSize: "0.88rem", flexShrink: 0,
+              }}
+            >
+              Academics hub →
+            </span>
+          </div>
+        </Link>
+      </section>
+
+      {/* ── FAQ ─────────────────────────────────────────────── */}
+      <section
+        style={{
+          padding: "0 1.5rem 5rem",
+          maxWidth: 740,
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "1.2rem",
+            fontWeight: 700,
+            marginBottom: "1.25rem",
+            color: "var(--fg)",
+          }}
+        >
+          Questions
         </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {faqs.map(({ q, a }) => (
-            <div key={q} style={{
-              padding: "1.25rem 1.5rem", background: "var(--surface)",
-              border: "1px solid var(--border)", borderRadius: 10,
-            }}>
-              <div style={{ fontWeight: 600, fontSize: "0.92rem", marginBottom: "0.4rem" }}>{q}</div>
-              <div style={{ fontSize: "0.85rem", color: "var(--fg-muted)", lineHeight: 1.65 }}>{a}</div>
-            </div>
-          ))}
-        </div>
+        <FaqAccordion items={FAQS} />
       </section>
 
-      {/* Footer */}
-      <footer style={{
-        marginTop: "auto", borderTop: "1px solid var(--border)",
-        padding: "1.5rem", background: "var(--surface)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <span style={{ fontWeight: 800, background: "linear-gradient(135deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>latexci</span>
-            <span style={{ color: "var(--fg-muted)", fontSize: "0.8rem", marginLeft: "0.5rem" }}>Free LaTeX tools for everyone</span>
-          </div>
-          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-            {[
-              ["Preview", "/tools/preview"],
-              ["Diff", "/tools/diff"],
-              ["Word → LaTeX", "/tools/word-to-latex"],
-              ["Templates", "/tools/templates"],
-              ["GitHub", "https://github.com/Sitraka17/latexci-web"],
-            ].map(([label, href]) => (
-              <a key={label} href={href} style={{ fontSize: "0.82rem", color: "var(--fg-muted)", textDecoration: "none" }}
-                {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-                {label}
-              </a>
-            ))}
-          </div>
-          <div style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>Open source · MIT License</div>
-        </div>
-      </footer>
+      <SiteFooter />
+
+      <style>{`
+        /* Hover effects */
+        .callout-card:hover { border-color: var(--accent) !important; }
+        .scenario-card > div { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
+        .scenario-card:hover > div { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .ge-callout:hover { box-shadow: var(--shadow-md); }
+
+        /* KaTeX hero formula — keep it compact inside the preview card */
+        .katex-display { margin: 0.4rem 0 !important; overflow-x: auto; }
+        .katex-display > .katex { font-size: 1.05em !important; }
+
+        /* Responsive: hero grid → single column */
+        @media (max-width: 760px) {
+          .hero-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+          .hero-mockup { display: none !important; }
+          .hero-mobile-preview { display: block !important; }
+        }
+
+        /* Responsive: stats band — tighter on small screens */
+        @media (max-width: 480px) {
+          .stats-band { padding: 0.75rem 0.75rem !important; gap: 0 !important; }
+          .stats-band > div { padding: 0.4rem 0.5rem !important; }
+        }
+
+        /* Announcement strip — hide long copy on tiny screens */
+        .announce-short { display: none; }
+        @media (max-width: 520px) {
+          .announce-long { display: none; }
+          .announce-short { display: inline; }
+          .announce-strip { font-size: 0.72rem !important; }
+        }
+
+        /* Tool cards — 2 columns on mobile instead of 1 */
+        @media (max-width: 540px) {
+          .tool-card { min-width: 0 !important; }
+        }
+
+        /* Scenarios — full width on mobile */
+        @media (max-width: 640px) {
+          .scenario-card > div { border-left-width: 4px !important; }
+        }
+
+        /* GE callout — stack on mobile */
+        @media (max-width: 540px) {
+          .ge-callout { padding: 0.9rem 1rem !important; gap: 0.75rem !important; }
+        }
+
+        /* Academics callout — stack on mobile */
+        @media (max-width: 640px) {
+          .callout-card { padding: 1.4rem !important; gap: 1.25rem !important; }
+          .callout-card > div:last-child { width: 100% !important; text-align: center !important; }
+        }
+      `}</style>
     </div>
   );
 }

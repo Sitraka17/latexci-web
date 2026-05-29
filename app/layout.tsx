@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
-const BASE_URL = "https://latexci-web.vercel.app";
+// NEXT_PUBLIC_SITE_URL is set in Vercel → Settings → Environment Variables
+// Fallback: your Vercel project URL. Update this when you add a custom domain.
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://latexci-web.vercel.app");
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -20,6 +24,12 @@ export const metadata: Metadata = {
     "latex to html",
     "latex equation preview",
     "free latex tools",
+    "latex thesis template",
+    "phd thesis latex",
+    "academic latex tools",
+    "latex for researchers",
+    "bibtex online",
+    "overleaf alternative",
   ],
   authors: [{ name: "Sitraka Forler", url: "https://github.com/Sitraka17" }],
   creator: "Sitraka Forler",
@@ -52,12 +62,16 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
+        {/* Anti-flash: read saved theme before first paint — must be synchronous */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('latexci_theme');if(t==='light'||(t==null&&window.matchMedia('(prefers-color-scheme:light)').matches)){document.documentElement.classList.add('light');}}catch(e){}})();` }} />
+        {/* KaTeX CSS — used by server-rendered math in hero and preview tool */}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </head>
