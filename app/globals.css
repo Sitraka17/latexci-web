@@ -73,7 +73,22 @@ body {
 .katex-display { overflow-x: auto; padding: 0.5rem 0; }
 
 /* ─────────────────────────────────────────────────────
-   CodeMirror (editor — always dark)
+   Editor panel — warm/parchment palette
+   Scoped override so Btn + sidebar vars resolve to
+   warm values in BOTH dark and light app modes.
+───────────────────────────────────────────────────── */
+.editor-panel {
+  --surface:  #f7f3ea;
+  --surface2: #ede8e0;
+  --border:   #d4c8bc;
+  --fg:       #2c2018;
+  --fg-muted: #7a6a5a;
+  --accent:   #6d3fa0;
+  --accent2:  #9070c8;
+}
+
+/* ─────────────────────────────────────────────────────
+   CodeMirror (editor — always warm parchment)
 ───────────────────────────────────────────────────── */
 .cm-editor {
   height: 100%;
@@ -82,6 +97,8 @@ body {
 }
 .cm-editor.cm-focused { outline: none !important; }
 .cm-scroller { overflow: auto; }
+/* Ensure gutter stays warm when editor has focus ring etc. */
+.cm-gutters { border-right: 1px solid #d8cfc4 !important; }
 
 /* ─────────────────────────────────────────────────────
    Diff

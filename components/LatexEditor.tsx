@@ -126,11 +126,44 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load CodeMirror extensions
+  // Load CodeMirror extensions — warm parchment theme
   useEffect(() => {
     Promise.all([
       import("@codemirror/lang-markdown").then(m => m.markdown()),
-      import("@uiw/codemirror-theme-vscode").then(m => m.vscodeDark),
+      (async () => {
+        const { createTheme } = await import("@uiw/codemirror-themes");
+        const { tags }        = await import("@lezer/highlight");
+        return createTheme({
+          theme: "light",
+          settings: {
+            background:      "#faf6f0",
+            foreground:      "#2c2018",
+            caret:           "#7a5c40",
+            selection:       "rgba(180,150,110,0.28)",
+            selectionMatch:  "rgba(180,150,110,0.16)",
+            lineHighlight:   "#f5efea",
+            gutterBackground:"#f0ebe3",
+            gutterForeground:"#b0a090",
+            gutterBorder:    "transparent",
+          },
+          styles: [
+            { tag: tags.comment,                color: "#9a8070", fontStyle: "italic" },
+            { tag: tags.keyword,                color: "#6d3fa0", fontWeight: "600" },
+            { tag: tags.operator,               color: "#6d3fa0" },
+            { tag: tags.string,                 color: "#3d7a50" },
+            { tag: tags.number,                 color: "#c06020" },
+            { tag: tags.escape,                 color: "#c06020" },
+            { tag: [tags.bracket, tags.paren, tags.brace], color: "#7a5c3c" },
+            { tag: tags.meta,                   color: "#a04040" },
+            { tag: tags.tagName,                color: "#6d3fa0" },
+            { tag: tags.heading,                fontWeight: "700" },
+            { tag: tags.emphasis,               fontStyle: "italic" },
+            { tag: tags.strong,                 fontWeight: "bold" },
+            { tag: [tags.url, tags.link],       color: "#3d5fa0" },
+            { tag: tags.invalid,                color: "#cc2222" },
+          ],
+        });
+      })(),
     ]).then(([lang, theme]) => setExtensions([lang, theme]));
   }, []);
 
@@ -293,12 +326,12 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const containerH = "calc(100vh - 56px)";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: containerH, background: "var(--surface)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: containerH, background: "#f2ede5" }}>
 
       {/* ── Top toolbar ──────────────────────────────────────────────── */}
       {isMobile ? (
         /* ── Mobile: two-row toolbar ─────────────────────────────────── */
-        <div style={{ flexShrink: 0, background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+        <div className="editor-panel" style={{ flexShrink: 0, background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
           {/* Row 1: filename + pane tabs */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 0.75rem", height: 40 }}>
             <div style={{ display: "flex", gap: 5, marginRight: 2 }}>
@@ -342,7 +375,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         </div>
       ) : (
         /* ── Desktop: single-row toolbar ─────────────────────────────── */
-        <div style={{
+        <div className="editor-panel" style={{
           display: "flex", alignItems: "center", gap: "0.5rem",
           padding: "0 0.75rem", height: 44,
           background: "var(--surface)", borderBottom: "1px solid var(--border)",
@@ -426,11 +459,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
 
         {/* Editor pane */}
         {(!isMobile || activePane === "editor") && (
-          <div style={{
+          <div className="editor-panel" style={{
             width: isMobile ? "100%" : showSnippets ? "calc(50% - 160px)" : "50%",
             display: "flex", flexDirection: "column",
-            borderRight: "1px solid var(--border)",
-            background: "#1e1e1e", /* VSCode dark */
+            borderRight: "1px solid #d4c8bc",
+            background: "#faf6f0",
             transition: "width 0.2s",
             flexShrink: 0,
           }}>
@@ -456,7 +489,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                   onChange={e => setSource(e.target.value)}
                   spellCheck={false}
                   style={{
-                    width: "100%", height: "100%", background: "#1e1e1e", color: "#d4d4d4",
+                    width: "100%", height: "100%", background: "#faf6f0", color: "#2c2018",
                     border: "none", outline: "none", padding: "1rem",
                     fontFamily: "JetBrains Mono, monospace", fontSize: "13px",
                     lineHeight: 1.65, resize: "none",
@@ -465,25 +498,25 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               )}
             </div>
 
-            {/* Status bar */}
+            {/* Status bar — warm dark strip */}
             <div style={{
               padding: "0.2rem 0.75rem",
-              background: "#007acc", /* VSCode blue status bar */
-              fontSize: "0.68rem", color: "#ffffffcc",
+              background: "#2d1e12",
+              fontSize: "0.68rem", color: "#c0b2a2cc",
               display: "flex", gap: "1rem", alignItems: "center", flexShrink: 0,
             }}>
               <span>Ln {lineCount}</span>
               <span>{source.length} chars</span>
-              <span style={{ marginLeft: "auto", fontWeight: 600, letterSpacing: "0.04em" }}>LaTeX</span>
+              <span style={{ marginLeft: "auto", fontWeight: 600, letterSpacing: "0.04em", color: "#d4c0a8cc" }}>LaTeX</span>
             </div>
           </div>
         )}
 
         {/* Snippets sidebar */}
         {showSnippets && !isMobile && (
-          <div style={{
-            width: 160, borderRight: "1px solid var(--border)",
-            background: "var(--surface2)", display: "flex", flexDirection: "column",
+          <div className="editor-panel" style={{
+            width: 160, borderRight: "1px solid #d4c8bc",
+            background: "#f0ebe3", display: "flex", flexDirection: "column",
             flexShrink: 0, overflowY: "auto",
           }}>
             <div style={{
@@ -517,30 +550,30 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         {(!isMobile || activePane === "preview") && (
           <div style={{
             flex: 1, display: "flex", flexDirection: "column",
-            background: "var(--surface2)", /* outer "desk" background */
+            background: "#e8e2d8", /* warm parchment desk */
             minWidth: 0, overflowY: "auto",
           }}>
             {/* Preview header */}
             <div style={{
               padding: "0.35rem 1rem",
-              background: "var(--surface2)",
-              borderBottom: "1px solid var(--border)",
+              background: "#ddd8ce",
+              borderBottom: "1px solid #ccc6bc",
               display: "flex", alignItems: "center", gap: "0.5rem",
               flexShrink: 0,
             }}>
               <span style={{
                 width: 7, height: 7, borderRadius: "50%",
-                background: "var(--green)", display: "inline-block",
-                boxShadow: "0 0 6px var(--green)",
+                background: "#2d7a45", display: "inline-block",
+                boxShadow: "0 0 6px rgba(45,122,69,0.6)",
               }} />
-              <span style={{ fontSize: "0.71rem", color: "var(--fg-muted)", fontWeight: 500 }}>Preview · live</span>
+              <span style={{ fontSize: "0.71rem", color: "#7a6a5a", fontWeight: 500 }}>Preview · live</span>
               <div style={{ flex: 1 }} />
-              <span style={{ fontSize: "0.68rem", color: "var(--fg-muted)" }}>
+              <span style={{ fontSize: "0.68rem", color: "#9a8a7a" }}>
                 {html.length > 0 ? `${html.split(/<\/p>|<\/h[1-6]>|<\/li>/).length} blocks` : ""}
               </span>
             </div>
 
-            {/* Paper / document */}
+            {/* Paper / document — warm shadow on warm desk */}
             <div style={{ flex: 1, overflowY: "auto", padding: "2rem 1.5rem" }}>
               <div
                 ref={previewRef}
@@ -550,8 +583,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                   maxWidth: 720,
                   margin: "0 auto",
                   background: "#ffffff",
-                  boxShadow: "0 2px 24px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)",
-                  borderRadius: 4,
+                  boxShadow: "0 4px 32px rgba(60,40,20,0.14), 0 0 0 1px rgba(60,40,20,0.06)",
+                  borderRadius: 3,
                   padding: "3.5rem 4rem",
                   minHeight: "calc(100vh - 140px)",
                   fontFamily: "Georgia, 'Times New Roman', serif",
