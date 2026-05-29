@@ -20,6 +20,22 @@
   --nav-border:   rgba(40, 40, 58, 0.9);
   --shadow-sm:    0 1px 4px rgba(0,0,0,0.5);
   --shadow-md:    0 4px 20px rgba(0,0,0,0.4);
+
+  /* Preview / paper — dark mode */
+  --preview-desk:      #0c0c15;
+  --preview-hdr:       #090910;
+  --preview-hdr-bdr:   #17172a;
+  --preview-hdr-muted: #56547a;
+  --preview-hdr-dot:   #2d7a45;
+  --paper-bg:          #14142a;
+  --paper-fg:          #c8c5e0;
+  --paper-shadow:      0 4px 40px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05);
+  --editor-bg:         #13131e;
+  --editor-border:     #28283a;
+  --editor-sidebar-bg: #0f0f1a;
+  --editor-statusbar:  #09090f;
+  --editor-statusbar-fg: rgba(106,104,136,0.85);
+  --editor-statusbar-lang: rgba(138,136,164,0.9);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -41,6 +57,22 @@ html.light {
   --nav-border:   rgba(207, 200, 188, 0.9);
   --shadow-sm:    0 1px 4px rgba(0,0,0,0.08);
   --shadow-md:    0 4px 20px rgba(0,0,0,0.1);
+
+  /* Preview / paper — light mode (warm parchment desk) */
+  --preview-desk:      #e8e2d8;
+  --preview-hdr:       #ddd8ce;
+  --preview-hdr-bdr:   #ccc6bc;
+  --preview-hdr-muted: #7a6a5a;
+  --preview-hdr-dot:   #2d7a45;
+  --paper-bg:          #ffffff;
+  --paper-fg:          #18140f;
+  --paper-shadow:      0 4px 32px rgba(60,40,20,0.14), 0 0 0 1px rgba(60,40,20,0.06);
+  --editor-bg:         #faf6f0;
+  --editor-border:     #d4c8bc;
+  --editor-sidebar-bg: #f0ebe3;
+  --editor-statusbar:  #2d1e12;
+  --editor-statusbar-fg: rgba(192,178,162,0.85);
+  --editor-statusbar-lang: rgba(212,192,168,0.9);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -73,11 +105,10 @@ body {
 .katex-display { overflow-x: auto; padding: 0.5rem 0; }
 
 /* ─────────────────────────────────────────────────────
-   Editor panel — warm/parchment palette
-   Scoped override so Btn + sidebar vars resolve to
-   warm values in BOTH dark and light app modes.
+   Editor panel — warm/parchment palette (light only)
+   In dark mode the panel inherits the app's dark vars.
 ───────────────────────────────────────────────────── */
-.editor-panel {
+html.light .editor-panel {
   --surface:  #f7f3ea;
   --surface2: #ede8e0;
   --border:   #d4c8bc;
@@ -88,7 +119,7 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────
-   CodeMirror (editor — always warm parchment)
+   CodeMirror (editor)
 ───────────────────────────────────────────────────── */
 .cm-editor {
   height: 100%;
@@ -97,8 +128,8 @@ body {
 }
 .cm-editor.cm-focused { outline: none !important; }
 .cm-scroller { overflow: auto; }
-/* Ensure gutter stays warm when editor has focus ring etc. */
-.cm-gutters { border-right: 1px solid #d8cfc4 !important; }
+/* Warm gutter border in light mode only; dark mode uses the theme */
+html.light .cm-gutters { border-right: 1px solid #d8cfc4 !important; }
 
 /* ─────────────────────────────────────────────────────
    Diff
@@ -140,67 +171,96 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────
-   LaTeX Preview — paper card (always looks like print)
+   LaTeX Preview — dark (default)
 ───────────────────────────────────────────────────── */
 .latex-preview {
   line-height: 1.8;
-  color: #18140f;
+  color: var(--paper-fg);
   font-family: Georgia, 'Times New Roman', serif;
 }
 .latex-preview h1, .latex-preview h2,
-.latex-preview h3, .latex-preview h4 { color: #111; font-family: Georgia, serif; }
+.latex-preview h3, .latex-preview h4 { color: #dddaf0; font-family: Georgia, serif; }
 .latex-preview h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.6rem; }
 .latex-preview h2 {
   font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.5rem;
-  border-bottom: 1px solid #ddd8d0; padding-bottom: 0.25rem;
+  border-bottom: 1px solid #27273e; padding-bottom: 0.25rem;
 }
 .latex-preview h3 { font-size: 1.05rem; font-weight: 600; margin: 1.4rem 0 0.3rem; }
 .latex-preview h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.25rem; }
 .latex-preview p  { margin: 0.7rem 0; }
-
 .latex-preview code {
-  background: #f0ede5; color: #3c2c1c;
+  background: #22223a; color: #b49ff5;
   padding: 0.1em 0.35em; border-radius: 3px;
   font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
 }
 .latex-preview pre {
-  background: #f5f1ea; border: 1px solid #d9d4c9;
+  background: #1a1a2e; border: 1px solid #27273e;
   border-radius: 5px; padding: 0.85rem 1rem; overflow-x: auto; margin: 0.75rem 0;
 }
 .latex-preview ul, .latex-preview ol { margin: 0.7rem 0; padding-left: 1.6rem; }
 .latex-preview li { margin: 0.25rem 0; }
 .latex-preview table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.91em; }
-.latex-preview th { background: #f0ece5; border: 1px solid #cec9c0; padding: 0.45rem 0.75rem; font-weight: 600; text-align: left; }
-.latex-preview td { border: 1px solid #cec9c0; padding: 0.45rem 0.75rem; }
+.latex-preview th { background: #1e1e34; border: 1px solid #27273e; padding: 0.45rem 0.75rem; font-weight: 600; text-align: left; color: #dddaf0; }
+.latex-preview td { border: 1px solid #27273e; padding: 0.45rem 0.75rem; }
 .latex-preview .math-block  { margin: 1.4rem 0; text-align: center; overflow-x: auto; }
-.latex-preview .doc-title   { font-size: 1.85rem; font-weight: 700; text-align: center; margin-bottom: 0.4rem; }
-.latex-preview .doc-author  { text-align: center; color: #555; font-size: 0.94rem; margin: 0.2rem 0; }
-.latex-preview .doc-date    { text-align: center; color: #888; font-size: 0.87rem; margin: 0.2rem 0; }
-.latex-preview .doc-rule    { border: none; border-top: 1px solid #ccc; margin: 1rem 0 1.5rem; }
+.latex-preview .doc-title   { font-size: 1.85rem; font-weight: 700; text-align: center; margin-bottom: 0.4rem; color: #eeeaf8; }
+.latex-preview .doc-author  { text-align: center; color: #8e8aaa; font-size: 0.94rem; margin: 0.2rem 0; }
+.latex-preview .doc-date    { text-align: center; color: #6a6888; font-size: 0.87rem; margin: 0.2rem 0; }
+.latex-preview .doc-rule    { border: none; border-top: 1px solid #27273e; margin: 1rem 0 1.5rem; }
 .latex-preview .abstract    {
-  background: #f5f1ea; border-left: 3px solid #b5b0a8;
+  background: #1c1c34; border-left: 3px solid #4a4890;
   padding: 0.75rem 1rem; margin: 1rem 0;
-  border-radius: 0 4px 4px 0; font-size: 0.93em; color: #28201a;
+  border-radius: 0 4px 4px 0; font-size: 0.93em; color: #b0aece;
 }
 .latex-preview .thm-box     {
-  border: 1px solid #cec9c0; border-radius: 4px;
-  padding: 0.75rem 1rem; margin: 1rem 0; background: #faf7f1;
+  border: 1px solid #27273e; border-radius: 4px;
+  padding: 0.75rem 1rem; margin: 1rem 0; background: #1a1a2e;
 }
-.latex-preview .thm-label   { font-weight: 700; font-style: italic; color: #3a3028; }
+.latex-preview .thm-label   { font-weight: 700; font-style: italic; color: #b49ff5; }
 .latex-preview .fig-block   { text-align: center; margin: 1.5rem 0; }
 .latex-preview .fig-placeholder {
-  background: #f0ede5; border: 2px dashed #c5c0b8;
-  padding: 2rem; border-radius: 6px; color: #8a8078; font-size: 0.88em;
+  background: #1c1c2e; border: 2px dashed #303050;
+  padding: 2rem; border-radius: 6px; color: #5e5c7a; font-size: 0.88em;
 }
-.latex-preview figcaption   { font-size: 0.87em; color: #666; margin-top: 0.5rem; font-style: italic; }
-.latex-preview .ref         { color: #4a38a8; }
+.latex-preview figcaption   { font-size: 0.87em; color: #7070a0; margin-top: 0.5rem; font-style: italic; }
+.latex-preview .ref         { color: #b49ff5; }
 .latex-preview .unknown-env {
-  background: #fff8e6; border: 1px solid #f0d98a;
-  border-radius: 4px; padding: 0.35rem 0.7rem; color: #7a6020; font-size: 0.84em;
+  background: #1e1a0a; border: 1px solid #3a3000;
+  border-radius: 4px; padding: 0.35rem 0.7rem; color: #d4a06a; font-size: 0.84em;
 }
-.latex-preview .toc-placeholder { text-align: center; color: #888; padding: 1rem; font-style: italic; }
-.latex-preview .appendix-marker { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid #cec9c0; }
-.latex-preview sup.footnote { cursor: help; color: #4a38a8; }
+.latex-preview .toc-placeholder { text-align: center; color: #5e5c7a; padding: 1rem; font-style: italic; }
+.latex-preview .appendix-marker { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid #27273e; }
+.latex-preview sup.footnote { cursor: help; color: #b49ff5; }
+
+/* ─────────────────────────────────────────────────────
+   LaTeX Preview — light mode overrides (warm cream paper)
+───────────────────────────────────────────────────── */
+html.light .latex-preview { color: #18140f; }
+html.light .latex-preview h1,
+html.light .latex-preview h2,
+html.light .latex-preview h3,
+html.light .latex-preview h4 { color: #111; }
+html.light .latex-preview h2 { border-bottom-color: #ddd8d0; }
+html.light .latex-preview code { background: #f0ede5; color: #3c2c1c; }
+html.light .latex-preview pre { background: #f5f1ea; border-color: #d9d4c9; }
+html.light .latex-preview th { background: #f0ece5; border-color: #cec9c0; color: #111; }
+html.light .latex-preview td { border-color: #cec9c0; }
+html.light .latex-preview .doc-title  { color: #111; }
+html.light .latex-preview .doc-author { color: #555; }
+html.light .latex-preview .doc-date   { color: #888; }
+html.light .latex-preview .doc-rule   { border-top-color: #ccc; }
+html.light .latex-preview .abstract   {
+  background: #f5f1ea; border-left-color: #b5b0a8; color: #28201a;
+}
+html.light .latex-preview .thm-box    { border-color: #cec9c0; background: #faf7f1; }
+html.light .latex-preview .thm-label  { color: #3a3028; }
+html.light .latex-preview .fig-placeholder { background: #f0ede5; border-color: #c5c0b8; color: #8a8078; }
+html.light .latex-preview figcaption  { color: #666; }
+html.light .latex-preview .ref        { color: #4a38a8; }
+html.light .latex-preview .unknown-env { background: #fff8e6; border-color: #f0d98a; color: #7a6020; }
+html.light .latex-preview .toc-placeholder { color: #888; }
+html.light .latex-preview .appendix-marker { border-bottom-color: #cec9c0; }
+html.light .latex-preview sup.footnote { color: #4a38a8; }
 
 /* ─────────────────────────────────────────────────────
    Dot-grid background pattern
