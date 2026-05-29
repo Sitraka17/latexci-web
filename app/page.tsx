@@ -21,16 +21,16 @@ export const metadata: Metadata = {
 // ── Data ───────────────────────────────────────────────────────────────────
 
 const TOOLS = [
-  { href: "/tools/preview",       icon: "⚡", label: "Preview",       tag: "Live",    color: "#10b981",
-    desc: "Paste .tex → see equations render via KaTeX. Shareable URL." },
-  { href: "/tools/diff",          icon: "↕",  label: "Diff",          tag: "Compare", color: "#7c6cf8",
-    desc: "Two .tex files, side by side. Additions green, deletions red." },
-  { href: "/tools/word-to-latex", icon: "↗",  label: "Word → LaTeX",  tag: "Convert", color: "#f59e0b",
+  { href: "/tools/preview",       icon: "⚡", label: "Preview + PDF",  tag: "Live",    color: "#10b981",
+    desc: "Paste .tex → equations render instantly via KaTeX. Export to PDF with one click." },
+  { href: "/tools/diff",          icon: "↕",  label: "Diff",           tag: "Compare", color: "#7c6cf8",
+    desc: "Two .tex files, side by side. Additions green, deletions red. Drag to resize." },
+  { href: "/tools/word-to-latex", icon: "↗",  label: "Word → LaTeX",   tag: "Convert", color: "#f59e0b",
     desc: ".docx converts in-browser via mammoth.js — headings, tables, lists. Nothing uploaded." },
-  { href: "/tools/table",         icon: "▦",  label: "Table",         tag: "New",     color: "#06b6d4",
-    desc: "Visual grid → booktabs or simple tabular environment." },
-  { href: "/tools/templates",     icon: "▤",  label: "Templates",     tag: "Library", color: "#ec4899",
-    desc: "CV, thesis, IEEE paper, Beamer, cover letter. One-click open." },
+  { href: "/tools/table",         icon: "▦",  label: "Table Generator", tag: "Build",   color: "#06b6d4",
+    desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX instantly." },
+  { href: "/tools/templates",     icon: "▤",  label: "Templates",       tag: "Library", color: "#ec4899",
+    desc: "11 templates: CV, thesis, IEEE, Beamer, Centrale Marseille, AMSE. One-click open." },
 ];
 
 const SCENARIOS = [
@@ -303,10 +303,30 @@ export default function HomePage() {
         `}</style>
       </section>
 
+      {/* ── Stats band ──────────────────────────────────────── */}
+      <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
+        <div style={{
+          maxWidth: 1100, margin: "0 auto", padding: "1rem 1.5rem",
+          display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
+        }}>
+          {[
+            { n: "11",   label: "Templates" },
+            { n: "5",    label: "Tools" },
+            { n: "0",    label: "Setup needed" },
+            { n: "100%", label: "Free forever" },
+          ].map(({ n, label }) => (
+            <div key={label} style={{ textAlign: "center", padding: "0.35rem 1rem" }}>
+              <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--accent2)", lineHeight: 1 }}>{n}</div>
+              <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)", marginTop: "0.2rem" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Tools ───────────────────────────────────────────── */}
       <section
         style={{
-          padding: "2rem 1.5rem 2.5rem",
+          padding: "2.5rem 1.5rem 2.5rem",
           maxWidth: 1100,
           margin: "0 auto",
           width: "100%",
@@ -322,7 +342,7 @@ export default function HomePage() {
             marginBottom: "1rem",
           }}
         >
-          Five tools
+          Everything you need
         </p>
         <div
           style={{
@@ -453,6 +473,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Grande École callout ────────────────────────────────── */}
+      <section style={{ padding: "0 1.5rem 1.25rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
+        <Link href="/tools/templates?cat=Grande+%C3%89cole" style={{ textDecoration: "none", display: "block" }}>
+          <div className="ge-callout" style={{
+            background: "linear-gradient(135deg, rgba(0,56,168,0.07) 0%, rgba(95,106,122,0.04) 100%)",
+            border: "1px solid rgba(0,56,168,0.2)",
+            borderLeft: "4px solid #003BA0",
+            borderRadius: "0 10px 10px 0",
+            padding: "1.1rem 1.5rem",
+            display: "flex", alignItems: "center", gap: "1.25rem", flexWrap: "wrap",
+            transition: "box-shadow 0.18s",
+          }}>
+            <span style={{ fontSize: "1.5rem", flexShrink: 0 }}>🏛️</span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ margin: "0 0 0.2rem", fontWeight: 700, fontSize: "0.9rem", color: "#003BA0" }}>
+                Centrale Marseille &amp; AMSE templates
+              </p>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--fg-muted)" }}>
+                Rapport de projet, rapport de stage, AMSE working paper — avec la mise en page officielle.
+              </p>
+            </div>
+            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#003BA0", flexShrink: 0 }}>
+              Voir les templates →
+            </span>
+          </div>
+        </Link>
+      </section>
+
       {/* ── Academics callout ────────────────────────────────── */}
       <section
         style={{
@@ -542,6 +590,7 @@ export default function HomePage() {
         .callout-card:hover { border-color: var(--accent) !important; }
         .scenario-card > div { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
         .scenario-card:hover > div { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .ge-callout:hover { box-shadow: var(--shadow-md); }
       `}</style>
     </div>
   );

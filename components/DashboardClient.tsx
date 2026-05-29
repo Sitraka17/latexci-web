@@ -67,6 +67,9 @@ export default function DashboardClient({
   const [sharingDoc, setSharingDoc] = useState<{ id: string; title: string } | null>(null);
   const [toast, setToast]         = useState<{ message: string; type: "error" | "success" } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [search, setSearch]       = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const router  = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
@@ -96,6 +99,14 @@ export default function DashboardClient({
       showToast("Document deleted", "success");
     }
     setDeleting(null);
+  }
+
+  async function renameDocument(id: string, title: string) {
+    const trimmed = title.trim() || "Untitled";
+    const { error } = await supabase.from("documents").update({ title: trimmed }).eq("id", id);
+    if (error) { showToast("Failed to rename document"); }
+    else { setDocs(prev => prev.map(d => d.id === id ? { ...d, title: trimmed } : d)); }
+    setEditingId(null);
   }
 
   async function togglePin(doc: DocRow) {
@@ -130,18 +141,45 @@ export default function DashboardClient({
 
       {/* ── My documents ─────────────────────────────────────────────────── */}
       <section>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-          <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>My documents</h2>
+        {/* Header row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.85rem", flexWrap: "wrap" }}>
+          <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, flex: 1 }}>My documents</h2>
+
+          {/* Search */}
+          {docs.length > 2 && (
+            <div style={{ position: "relative" }}>
+              <svg style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)", opacity: 0.4, pointerEvents: "none" }}
+                width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="search"
+                placeholder="Filter…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{
+                  paddingLeft: "1.8rem", paddingRight: "0.65rem",
+                  paddingTop: "0.3rem", paddingBottom: "0.3rem",
+                  borderRadius: 7, fontSize: "0.8rem",
+                  background: "var(--surface2)", color: "var(--fg)",
+                  border: "1px solid var(--border)", outline: "none", width: 140,
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.currentTarget.style.borderColor = "var(--border)")}
+              />
+            </div>
+          )}
+
           <button
             onClick={createDocument}
             style={{
               padding: "0.4rem 1rem", borderRadius: 8,
               background: "var(--accent)", color: "#fff",
               fontWeight: 700, fontSize: "0.82rem",
-              border: "none", cursor: "pointer",
+              border: "none", cursor: "pointer", flexShrink: 0,
             }}
           >
-            + New document
+            + New
           </button>
         </div>
 
@@ -153,7 +191,7 @@ export default function DashboardClient({
             <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📄</p>
             <p style={{ fontWeight: 700, marginBottom: "0.4rem" }}>No documents yet</p>
             <p style={{ fontSize: "0.84rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
-              Your saved LaTeX documents will appear here.
+              Create a document to save and sync your LaTeX across devices.
             </p>
             <button
               onClick={createDocument}
@@ -167,82 +205,125 @@ export default function DashboardClient({
               Create your first document
             </button>
           </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {docs.map(doc => (
-              <div
-                key={doc.id}
-                style={{
-                  display: "flex", alignItems: "center", gap: "0.75rem",
-                  padding: "0.85rem 1rem",
-                  background: "var(--surface)", border: "1px solid var(--border)",
-                  borderRadius: 10, transition: "border-color 0.15s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
-              >
-                {/* Pin */}
-                <button
-                  onClick={() => togglePin(doc)}
-                  title={doc.is_pinned ? "Unpin" : "Pin to top"}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    fontSize: "0.95rem", opacity: doc.is_pinned ? 1 : 0.3,
-                    flexShrink: 0, padding: "0.1rem", transition: "opacity 0.15s",
-                  }}
-                >
-                  📌
+        ) : (() => {
+          const filteredDocs = search
+            ? docs.filter(d => (d.title || "Untitled").toLowerCase().includes(search.toLowerCase()))
+            : docs;
+
+          if (filteredDocs.length === 0) {
+            return (
+              <div style={{ textAlign: "center", padding: "2rem", color: "var(--fg-muted)", fontSize: "0.85rem" }}>
+                No documents match <strong>&ldquo;{search}&rdquo;</strong>.
+                <button onClick={() => setSearch("")} style={{ marginLeft: 8, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}>
+                  Clear
                 </button>
-
-                {/* Title + meta */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    fontWeight: 600, fontSize: "0.9rem", margin: 0,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
-                    {doc.title || "Untitled"}
-                  </p>
-                  <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
-                    {relativeTime(doc.updated_at)}
-                    {doc.is_public && (
-                      <span style={{ marginLeft: 8, color: "#22c55e", fontWeight: 600 }}>🔗 Shared</span>
-                    )}
-                    {doc.tags?.length > 0 && (
-                      <> · {doc.tags.map(t => (
-                        <span key={t} style={{ marginLeft: 4, padding: "0.05rem 0.35rem", background: "var(--surface2)", borderRadius: 4, fontSize: "0.7rem" }}>{t}</span>
-                      ))}</>
-                    )}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-                  <Link
-                    href={`/tools/preview?doc=${doc.id}`}
-                    style={{ ...btnStyle, background: "var(--accent)", color: "#fff", border: "none", textDecoration: "none" }}
-                  >
-                    Open
-                  </Link>
-                  <button
-                    onClick={() => setSharingDoc({ id: doc.id, title: doc.title || "Untitled" })}
-                    title="Share"
-                    style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)" }}
-                  >
-                    🔗 Share
-                  </button>
-                  <button
-                    onClick={() => deleteDocument(doc.id)}
-                    disabled={deleting === doc.id}
-                    title="Delete"
-                    style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)", cursor: deleting === doc.id ? "wait" : "pointer" }}
-                  >
-                    {deleting === doc.id ? "…" : "🗑"}
-                  </button>
-                </div>
               </div>
-            ))}
-          </div>
-        )}
+            );
+          }
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {filteredDocs.map(doc => (
+                <div
+                  key={doc.id}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.75rem",
+                    padding: "0.85rem 1rem",
+                    background: "var(--surface)", border: "1px solid var(--border)",
+                    borderRadius: 10, transition: "border-color 0.15s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
+                >
+                  {/* Pin */}
+                  <button
+                    onClick={() => togglePin(doc)}
+                    title={doc.is_pinned ? "Unpin" : "Pin to top"}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      fontSize: "0.95rem", opacity: doc.is_pinned ? 1 : 0.3,
+                      flexShrink: 0, padding: "0.1rem", transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = doc.is_pinned ? "1" : "0.3")}
+                  >
+                    📌
+                  </button>
+
+                  {/* Title + meta — click title to rename */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {editingId === doc.id ? (
+                      <input
+                        autoFocus
+                        value={editTitle}
+                        onChange={e => setEditTitle(e.target.value)}
+                        onBlur={() => renameDocument(doc.id, editTitle)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") renameDocument(doc.id, editTitle);
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        style={{
+                          width: "100%", padding: "0.18rem 0.45rem",
+                          fontSize: "0.9rem", fontWeight: 600,
+                          border: "1px solid var(--accent)", borderRadius: 5,
+                          background: "var(--surface2)", color: "var(--fg)", outline: "none",
+                        }}
+                      />
+                    ) : (
+                      <p
+                        title="Click to rename"
+                        onClick={() => { setEditingId(doc.id); setEditTitle(doc.title || "Untitled"); }}
+                        style={{
+                          fontWeight: 600, fontSize: "0.9rem", margin: 0,
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          cursor: "text",
+                        }}
+                      >
+                        {doc.title || <span style={{ color: "var(--fg-muted)", fontStyle: "italic" }}>Untitled</span>}
+                      </p>
+                    )}
+                    <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
+                      {relativeTime(doc.updated_at)}
+                      {doc.is_public && (
+                        <span style={{ marginLeft: 8, color: "#22c55e", fontWeight: 600 }}>🔗 Shared</span>
+                      )}
+                      {doc.tags?.length > 0 && (
+                        <> · {doc.tags.map(t => (
+                          <span key={t} style={{ marginLeft: 4, padding: "0.05rem 0.35rem", background: "var(--surface2)", borderRadius: 4, fontSize: "0.7rem" }}>{t}</span>
+                        ))}</>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                    <Link
+                      href={`/tools/preview?doc=${doc.id}`}
+                      style={{ ...btnStyle, background: "var(--accent)", color: "#fff", border: "none", textDecoration: "none" }}
+                    >
+                      Open
+                    </Link>
+                    <button
+                      onClick={() => setSharingDoc({ id: doc.id, title: doc.title || "Untitled" })}
+                      title="Share"
+                      style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)" }}
+                    >
+                      🔗
+                    </button>
+                    <button
+                      onClick={() => deleteDocument(doc.id)}
+                      disabled={deleting === doc.id}
+                      title="Delete"
+                      style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)", cursor: deleting === doc.id ? "wait" : "pointer" }}
+                    >
+                      {deleting === doc.id ? "…" : "🗑"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </section>
 
       {/* ── Shared with me ───────────────────────────────────────────────── */}
