@@ -387,14 +387,37 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             {copied ? "✓ HTML!" : "Copy HTML"}
           </Btn>
           <Btn onClick={downloadHtml} title="Download as HTML file">↓ HTML</Btn>
-          <Btn
+          {/* PDF button — always red so it stands out */}
+          <button
             onClick={exportPdf}
+            disabled={pdfStatus === "compiling"}
             title={pdfStatus === "error" ? "Compilation failed — check your LaTeX syntax" : "Compile & download PDF via LaTeX.Online"}
-            active={pdfStatus === "error"}
-            activeColor="#f87171"
+            style={{
+              background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
+              border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
+              borderRadius: 5,
+              color: "#fff",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              padding: "0.22rem 0.7rem",
+              cursor: pdfStatus === "compiling" ? "wait" : "pointer",
+              transition: "background 0.15s",
+              whiteSpace: "nowrap",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.3rem",
+            }}
+            onMouseEnter={e => { if (pdfStatus !== "compiling") (e.currentTarget as HTMLButtonElement).style.background = "#b91c1c"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = pdfStatus === "error" ? "#7f1d1d" : "#dc2626"; }}
           >
-            {pdfStatus === "compiling" ? "⏳ PDF…" : pdfStatus === "error" ? "✗ PDF failed" : "↓ PDF"}
-          </Btn>
+            {pdfStatus === "compiling" ? (
+              <><span style={{ display: "inline-block", animation: "spin 1s linear infinite", fontSize: "0.7rem" }}>⏳</span> PDF…</>
+            ) : pdfStatus === "error" ? (
+              <>✗ PDF failed</>
+            ) : (
+              <>↓ PDF</>
+            )}
+          </button>
         </div>
       )}
 
