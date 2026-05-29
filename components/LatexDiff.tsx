@@ -1,6 +1,7 @@
 "use client";
 import {
   useState, useMemo, useCallback, useEffect, useRef, type ReactNode,
+  type CSSProperties,
 } from "react";
 import * as Diff from "diff";
 import { useDropzone } from "react-dropzone";
@@ -427,6 +428,7 @@ function TBtn({
 type DiffMode  = "lines" | "words";
 type ViewMode  = "unified" | "sidebyside";
 type Layout    = "stacked" | "columns";
+type MobileTab = "original" | "revised" | "diff";
 
 export default function LatexDiff() {
   const [original, setOriginal] = useState(ORIGINAL);
@@ -435,6 +437,15 @@ export default function LatexDiff() {
   const [viewMode, setViewMode] = useState<ViewMode>("unified");
   const [layout,   setLayout]   = useState<Layout>("stacked");
   const [copied,   setCopied]   = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("original");
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Resizable panels
   // "stacked" layout: editorSplit = % of height for editors row
@@ -588,6 +599,86 @@ export default function LatexDiff() {
       }
     </div>
   );
+
+  // ── Mobile layout ─────────────────────────────────────────────────────────
+  if (isMobile) {
+    const tabBtn = (tab: MobileTab): CSSProperties => ({
+      flex: 1, padding: "0.5rem 0.25rem", border: "none", cursor: "pointer",
+      fontSize: "0.78rem", fontWeight: 600,
+      background: mobileTab === tab ? "var(--accent)" : "transparent",
+      color: mobileTab === tab ? "#fff" : "var(--fg-muted)",
+      borderRadius: 0, transition: "background 0.15s",
+    });
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        {/* Tab bar */}
+        <div style={{
+          display: "flex", borderBottom: "1px solid var(--border)",
+          background: "var(--surface2)", flexShrink: 0,
+        }}>
+          <button style={tabBtn("original")} onClick={() => setMobileTab("original")}>
+            <span style={{ color: "#f87171", marginRight: 4 }}>●</span> Original
+          </button>
+          <button style={tabBtn("revised")} onClick={() => setMobileTab("revised")}>
+            <span style={{ color: "#34d399", marginRight: 4 }}>●</span> Revised
+          </button>
+          <button style={tabBtn("diff")} onClick={() => setMobileTab("diff")}>
+            Diff {stats.added > 0 || stats.removed > 0
+              ? <span style={{ fontSize: "0.68rem", opacity: 0.85 }}>+{stats.added}/−{stats.removed}</span>
+              : null}
+          </button>
+        </div>
+
+        {/* Mobile stats + actions bar */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
+          padding: "0.35rem 0.75rem", borderBottom: "1px solid var(--border)",
+          background: "var(--surface)", flexShrink: 0, fontSize: "0.73rem",
+        }}>
+          <span style={{ color: "#34d399", fontWeight: 700 }}>+{stats.added}</span>
+          <span style={{ color: "#f87171", fontWeight: 700 }}>−{stats.removed}</span>
+          <span style={{ color: "var(--fg-muted)" }}>{stats.unchanged} same</span>
+          <div style={{ flex: 1 }} />
+          {/* Diff mode */}
+          {(["lines", "words"] as DiffMode[]).map(m => (
+            <TBtn key={m} active={diffMode === m} onClick={() => setDiffMode(m)}>{m}</TBtn>
+          ))}
+          <TBtn onClick={swap} title="Swap original ↔ revised">⇄</TBtn>
+          <TBtn active={copied} onClick={copyDiff}>{copied ? "✓" : "copy"}</TBtn>
+        </div>
+
+        {/* Content area */}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {mobileTab === "original" && (
+            <EditorPane
+              value={original} onChange={setOriginal}
+              label="original.tex" color="#f87171"
+              onClear={() => setOriginal("")}
+            />
+          )}
+          {mobileTab === "revised" && (
+            <EditorPane
+              value={revised} onChange={setRevised}
+              label="revised.tex" color="#34d399"
+              onClear={() => setRevised("")}
+            />
+          )}
+          {mobileTab === "diff" && (
+            <div style={{
+              flex: 1, overflowY: "auto", overflowX: "hidden",
+              background: "var(--bg)",
+            }}>
+              {viewMode === "sidebyside"
+                ? <UnifiedDiff diff={diff} mode={diffMode} /> // sidebyside doesn't fit mobile
+                : <UnifiedDiff diff={diff} mode={diffMode} />
+              }
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // ── Stacked layout ────────────────────────────────────────────────────────
   if (layout === "stacked") {

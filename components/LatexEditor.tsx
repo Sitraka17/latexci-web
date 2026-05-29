@@ -105,6 +105,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [extensions, setExtensions]   = useState<unknown[]>([]);
   const [lineCount, setLineCount]     = useState(0);
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [pdfStatus, setPdfStatus]     = useState<"idle" | "compiling" | "error">("idle");
   const [userId, setUserId]           = useState<string | null>(null);
   const [docTitle, setDocTitle]       = useState("Untitled");
   const previewRef  = useRef<HTMLDivElement>(null);
@@ -243,6 +244,34 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     setSource(prev => prev + (prev.endsWith("\n") ? "" : "\n") + text + "\n");
   }, []);
 
+  const exportPdf = useCallback(async () => {
+    setPdfStatus("compiling");
+    try {
+      const res = await fetch("/api/compile-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(error);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), {
+        href: url,
+        download: (docId && docTitle !== "Untitled" ? docTitle : "document") + ".pdf",
+      });
+      a.click();
+      URL.revokeObjectURL(url);
+      setPdfStatus("idle");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      setPdfStatus("error");
+      setTimeout(() => setPdfStatus("idle"), 3500);
+    }
+  }, [source, docId, docTitle]);
+
   const downloadHtml = useCallback(() => {
     const full = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>latexci export</title>` +
       `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">` +
@@ -358,6 +387,14 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             {copied ? "✓ HTML!" : "Copy HTML"}
           </Btn>
           <Btn onClick={downloadHtml} title="Download as HTML file">↓ HTML</Btn>
+          <Btn
+            onClick={exportPdf}
+            title={pdfStatus === "error" ? "Compilation failed — check your LaTeX syntax" : "Compile & download PDF via LaTeX.Online"}
+            active={pdfStatus === "error"}
+            activeColor="#f87171"
+          >
+            {pdfStatus === "compiling" ? "⏳ PDF…" : pdfStatus === "error" ? "✗ PDF failed" : "↓ PDF"}
+          </Btn>
         </div>
       )}
 

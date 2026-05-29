@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "magic" | "password";
@@ -20,7 +20,7 @@ export default function AuthForm() {
     if (p.get("error")) setError("Authentication failed. Please try again.");
   }, []);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   async function handleMagicLink() {
     setLoading(true);
