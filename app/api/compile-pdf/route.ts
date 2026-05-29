@@ -23,30 +23,50 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let res: Response;
+  // Primary: latex.ytotech.com  (returns 201 + application/pdf on success)
+  let pdf: ArrayBuffer | null = null;
+  let lastError = "";
+
   try {
-    res = await fetch("https://latexonline.cc/compile", {
+    const r = await fetch("https://latex.ytotech.com/builds/sync", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `text=${encodeURIComponent(source)}`,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        compiler: "pdflatex",
+        resources: [{ main: true, content: source }],
+      }),
     });
+    if (r.ok) {
+      pdf = await r.arrayBuffer();
+    } else {
+      const txt = await r.text().catch(() => "");
+      lastError = txt.slice(0, 300).replace(/<[^>]+>/g, " ").trim() || `HTTP ${r.status}`;
+    }
   } catch {
-    return NextResponse.json(
-      { error: "Could not reach the LaTeX compilation service. Try again." },
-      { status: 502 }
-    );
+    lastError = "Compilation service unreachable. Check your internet connection.";
   }
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    const preview = text.slice(0, 300).replace(/<[^>]+>/g, " ").trim();
+  // Fallback: latex.ytotech.com async endpoint (different path)
+  if (!pdf) {
+    try {
+      const r = await fetch("https://latex.ytotech.com/builds/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          compiler: "xelatex",
+          resources: [{ main: true, content: source }],
+        }),
+      });
+      if (r.ok) pdf = await r.arrayBuffer();
+    } catch { /* ignore */ }
+  }
+
+  if (!pdf) {
     return NextResponse.json(
-      { error: `LaTeX compilation failed: ${preview || `HTTP ${res.status}`}` },
+      { error: `LaTeX compilation failed: ${lastError}` },
       { status: 422 }
     );
   }
-
-  const pdf = await res.arrayBuffer();
   return new NextResponse(pdf, {
     headers: {
       "Content-Type": "application/pdf",

@@ -36,10 +36,10 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   body = body.replace(/\\(renewcommand|setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
   body = body.replace(/\\newtheorem\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
 
-  // ── Extract title metadata ──────────────────────────────────────────────
-  const rawTitle  = (src.match(/\\title\{([\s\S]*?)\}(?:\s*\\)/)  || src.match(/\\title\{([^}]*)\}/) || [])[1] || "";
-  const rawAuthor = (src.match(/\\author\{([^}]*)\}/)  || [])[1] || "";
-  const rawDate   = (src.match(/\\date\{([^}]*)\}/)    || [])[1] || "";
+  // ── Extract title metadata (balanced-brace aware) ──────────────────────
+  const rawTitle  = extractBracedContent(src, "title");
+  const rawAuthor = extractBracedContent(src, "author");
+  const rawDate   = extractBracedContent(src, "date");
 
   const cleanTitle = escapeForDisplay(rawTitle);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -304,11 +304,39 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;");
 }
 
+/** Extract the content of \cmd{...} respecting nested braces. */
+function extractBracedContent(src: string, cmd: string): string {
+  const tag = `\\${cmd}{`;
+  const idx = src.indexOf(tag);
+  if (idx === -1) return "";
+  let depth = 1;
+  let i = idx + tag.length;
+  while (i < src.length && depth > 0) {
+    if (src[i] === "{") depth++;
+    else if (src[i] === "}") depth--;
+    if (depth > 0) i++;
+  }
+  return depth === 0 ? src.slice(idx + tag.length, i) : "";
+}
+
 function escapeForDisplay(text: string): string {
-  // Strip LaTeX commands but keep the text content
-  return text
-    .replace(/\\[a-zA-Z]+\{([^}]*)\}/g, "$1")
-    .replace(/\\[a-zA-Z]+/g, "")
-    .replace(/\{([^}]*)\}/g, "$1")
-    .trim();
+  // Strip \thanks{...} entirely (keep author line clean)
+  text = text.replace(/\\thanks\{[^{}]*\}/g, "");
+  // Collapse LaTeX line-break commands: \\[skip] or \\
+  text = text.replace(/\\\\(\[[^\]]*\])?/g, " ");
+  // Iteratively unwrap \cmd{content} → content (handles nesting like {\large …})
+  let prev = "";
+  while (prev !== text) {
+    prev = text;
+    text = text.replace(/\\[a-zA-Z]+\*?\{([^{}]*)\}/g, "$1");
+  }
+  // Strip remaining stand-alone \cmd tokens
+  text = text.replace(/\\[a-zA-Z]+\*?\b/g, "");
+  // Unwrap bare {content} → content
+  text = text.replace(/\{([^{}]*)\}/g, "$1");
+  // Drop any leftover stray braces (e.g. unmatched { from nested commands)
+  text = text.replace(/[{}]/g, "");
+  // Collapse extra whitespace
+  text = text.replace(/\s+/g, " ");
+  return text.trim();
 }
