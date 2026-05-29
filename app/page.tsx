@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import katex from "katex";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import AdUnit from "@/components/AdUnit";
 import FaqAccordion from "@/components/FaqAccordion";
+
+// Pre-render at build time — no runtime cost, pixel-perfect math
+const HERO_FORMULA = katex.renderToString(
+  "\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}",
+  { displayMode: true, throwOnError: false, output: "html" }
+);
 
 export const metadata: Metadata = {
   title: "Free Online LaTeX Tools — Preview, Diff, Table Generator & More",
@@ -105,18 +112,19 @@ export default function HomePage() {
       <Navbar />
 
       {/* ── Announcement strip ──────────────────────────────── */}
-      <div style={{
+      <div className="announce-strip" style={{
         background: "linear-gradient(90deg, rgba(0,56,168,0.08), rgba(124,108,248,0.08))",
         borderBottom: "1px solid rgba(124,108,248,0.18)",
         padding: "0.55rem 1.5rem",
         textAlign: "center",
         fontSize: "0.78rem",
         color: "var(--fg-muted)",
-        lineHeight: 1,
+        lineHeight: 1.4,
       }}>
-        <span style={{ marginRight: "0.5rem" }}>🆕</span>
+        <span style={{ marginRight: "0.4rem" }}>🆕</span>
         <strong style={{ color: "var(--accent2)" }}>New:</strong>
-        {" "}Centrale Marseille &amp; AMSE templates, PDF export, and Word → LaTeX improvements —{" "}
+        <span className="announce-long">{" "}Centrale Marseille &amp; AMSE templates, PDF export, and Word → LaTeX improvements —{" "}</span>
+        <span className="announce-short">{" "}</span>
         <a href="/tools/templates" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
           explore templates →
         </a>
@@ -209,8 +217,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Right: product mockup */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {/* Right: product mockup — hidden on mobile (too tall) */}
+          <div className="hero-mockup" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {/* Editor card */}
             <div
               style={{
@@ -299,31 +307,40 @@ export default function HomePage() {
               <div style={{ fontSize: "0.82rem", color: "#333", marginBottom: "0.5rem" }}>
                 A beautiful result in analysis:
               </div>
+              {/* KaTeX-rendered formula — pre-built at compile time */}
               <div
-                style={{
-                  textAlign: "center",
-                  fontSize: "1.05rem",
-                  padding: "0.5rem 0",
-                  color: "#111",
-                  letterSpacing: "0.01em",
-                }}
-              >
-                ∫<sub>−∞</sub><sup>+∞</sup> e<sup>−x²</sup> dx = √π
-              </div>
+                style={{ color: "#111", overflowX: "auto" }}
+                dangerouslySetInnerHTML={{ __html: HERO_FORMULA }}
+              />
             </div>
           </div>
         </div>
 
-        <style>{`
-          @media (max-width: 760px) {
-            .hero-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
-          }
-        `}</style>
       </section>
+
+      {/* ── Mobile-only formula preview ─────────────────────── */}
+      <div className="hero-mobile-preview" style={{
+        display: "none",
+        margin: "0 1.5rem 1.5rem",
+        background: "#fdfcf8",
+        borderRadius: 10,
+        padding: "1rem 1.25rem",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)",
+        color: "#111",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.5rem", paddingBottom: "0.4rem", borderBottom: "1px solid #e0dcd6" }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block", boxShadow: "0 0 5px #10b981" }} />
+          <span style={{ fontSize: "0.63rem", color: "#8a8078", fontFamily: "system-ui, sans-serif" }}>Preview · live</span>
+        </div>
+        <div style={{ fontSize: "0.92rem", fontWeight: 700, marginBottom: "0.3rem" }}>Gaussian Integral</div>
+        <div style={{ fontSize: "0.79rem", color: "#444", marginBottom: "0.25rem" }}>A beautiful result in analysis:</div>
+        <div style={{ color: "#111", overflowX: "auto" }} dangerouslySetInnerHTML={{ __html: HERO_FORMULA }} />
+      </div>
 
       {/* ── Stats band ──────────────────────────────────────── */}
       <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
-        <div style={{
+        <div className="stats-band" style={{
           maxWidth: 1100, margin: "0 auto", padding: "1rem 1.5rem",
           display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
         }}>
@@ -605,10 +622,57 @@ export default function HomePage() {
       <SiteFooter />
 
       <style>{`
+        /* Hover effects */
         .callout-card:hover { border-color: var(--accent) !important; }
         .scenario-card > div { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
         .scenario-card:hover > div { box-shadow: var(--shadow-md); transform: translateY(-1px); }
         .ge-callout:hover { box-shadow: var(--shadow-md); }
+
+        /* KaTeX hero formula — keep it compact inside the preview card */
+        .katex-display { margin: 0.4rem 0 !important; overflow-x: auto; }
+        .katex-display > .katex { font-size: 1.05em !important; }
+
+        /* Responsive: hero grid → single column */
+        @media (max-width: 760px) {
+          .hero-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+          .hero-mockup { display: none !important; }
+          .hero-mobile-preview { display: block !important; }
+        }
+
+        /* Responsive: stats band — tighter on small screens */
+        @media (max-width: 480px) {
+          .stats-band { padding: 0.75rem 0.75rem !important; gap: 0 !important; }
+          .stats-band > div { padding: 0.4rem 0.5rem !important; }
+        }
+
+        /* Announcement strip — hide long copy on tiny screens */
+        .announce-short { display: none; }
+        @media (max-width: 520px) {
+          .announce-long { display: none; }
+          .announce-short { display: inline; }
+          .announce-strip { font-size: 0.72rem !important; }
+        }
+
+        /* Tool cards — 2 columns on mobile instead of 1 */
+        @media (max-width: 540px) {
+          .tool-card { min-width: 0 !important; }
+        }
+
+        /* Scenarios — full width on mobile */
+        @media (max-width: 640px) {
+          .scenario-card > div { border-left-width: 4px !important; }
+        }
+
+        /* GE callout — stack on mobile */
+        @media (max-width: 540px) {
+          .ge-callout { padding: 0.9rem 1rem !important; gap: 0.75rem !important; }
+        }
+
+        /* Academics callout — stack on mobile */
+        @media (max-width: 640px) {
+          .callout-card { padding: 1.4rem !important; gap: 1.25rem !important; }
+          .callout-card > div:last-child { width: 100% !important; text-align: center !important; }
+        }
       `}</style>
     </div>
   );
