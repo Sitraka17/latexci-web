@@ -37,7 +37,10 @@ export const metadata: Metadata = {
   },
 };
 
-const THESIS_TEMPLATES = TEMPLATES.filter(t => t.category === "Thesis" || t.id === "article" || t.id === "ieee-paper");
+const THESIS_TEMPLATES = TEMPLATES.filter(t =>
+  t.category === "Thesis" || t.id === "article" || t.id === "ieee-paper"
+);
+const GRANDE_ECOLE_TEMPLATES = TEMPLATES.filter(t => t.category === "Grande École");
 
 const ESSENTIAL_PACKAGES = [
   { pkg: "amsmath, amssymb, amsthm", use: "All math — equations, symbols, theorem environments" },
@@ -199,7 +202,7 @@ export default function AcademicsPage() {
             {[
               ["200+", "Pages handled easily"],
               ["0", "LaTeX install needed"],
-              ["4", "Thesis templates"],
+              ["10+", "LaTeX templates"],
               ["Free", "No subscription"],
             ].map(([stat, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
@@ -334,6 +337,70 @@ export default function AcademicsPage() {
               <span style={{ fontSize: "0.83rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>{p.use}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Grande École spotlight ──────────────────── */}
+      <section style={{
+        padding: "3.5rem 1.5rem",
+        background: "linear-gradient(135deg, rgba(0,56,168,0.06) 0%, rgba(95,106,122,0.04) 100%)",
+        borderTop: "1px solid var(--border)",
+        borderBottom: "1px solid var(--border)",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, margin: 0 }}>
+              🏛️ Centrale Marseille &amp; AMSE templates
+            </h2>
+            <span style={{
+              fontSize: "0.7rem", fontWeight: 700, padding: "0.2rem 0.6rem",
+              borderRadius: 999, background: "rgba(0,56,168,0.12)",
+              color: "#003BA0", border: "1px solid rgba(0,56,168,0.25)",
+              letterSpacing: "0.06em",
+            }}>GRANDE ÉCOLE</span>
+          </div>
+          <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2rem" }}>
+            Ready-to-compile templates with the correct title pages, headers, and colour schemes
+            for Centrale Méditerranée reports, internship documents, and AMSE working papers.
+          </p>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "1rem",
+          }}>
+            {GRANDE_ECOLE_TEMPLATES.map(t => {
+              const compressed = LZString.compressToEncodedURIComponent(t.source);
+              return (
+                <a
+                  key={t.id}
+                  href={`/tools/preview#s=${compressed}`}
+                  className="thesis-card"
+                  style={{
+                    display: "flex", gap: "1rem", alignItems: "flex-start",
+                    background: "var(--surface)", border: "1px solid var(--border)",
+                    borderRadius: 10, padding: "1.25rem", textDecoration: "none",
+                    borderLeft: "3px solid #003BA0",
+                  }}
+                >
+                  <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>{t.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "0.93rem", color: "var(--fg)", marginBottom: "0.25rem" }}>
+                      {t.title}
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.81rem", color: "var(--fg-muted)", lineHeight: 1.55 }}>{t.desc}</p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", marginTop: "1.25rem" }}>
+            💡 Each template opens in the live editor. Replace placeholder text, add{" "}
+            <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.75em" }}>
+              \includegraphics
+            </code>{" "}
+            for the real logo, and export to PDF with the{" "}
+            <a href="/tools/preview" style={{ color: "var(--accent)" }}>↓ PDF button</a>.
+          </p>
         </div>
       </section>
 
