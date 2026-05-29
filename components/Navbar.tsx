@@ -10,6 +10,7 @@ const tools = [
   { href: "/tools/diff",         label: "Diff" },
   { href: "/tools/word-to-latex",label: "Word → LaTeX" },
   { href: "/tools/bibtex",       label: "BibTeX" },
+  { href: "/tools/symbols",      label: "Symbols" },
   { href: "/tools/table",        label: "Table" },
   { href: "/tools/templates",    label: "Templates" },
   { href: "/academics",          label: "Academics" },
