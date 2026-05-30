@@ -176,6 +176,9 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   body = body.replace(/\\newcommand\{[^}]*\}(\[.*?\])?\{[^}]*\}/g, "");
   body = body.replace(/\\(renewcommand|setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
   body = body.replace(/\\newtheorem\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
+  // Strip \title{}, \author{}, \date{} if they appear inside the document body
+  // (standard LaTeX puts them in the preamble, but some templates don't)
+  body = body.replace(/\\(?:title|author|date)\{(?:[^{}]|\{[^{}]*\})*\}/g, "");
 
   // ── Title metadata ───────────────────────────────────────────────────────
   const rawTitle  = extractBracedContent(src, "title");
@@ -292,26 +295,24 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     );
   });
 
-  // Table float (wraps tabular)
-  body = body.replace(/\\begin\{table\}([\s\S]*?)\\end\{table\}/g, (match) => {
+  // Table float — render caption as a block placeholder, then pass inner
+  // LaTeX (the \begin{tabular}…\end{tabular}) back into `body` so the
+  // tabular handler below can process it normally.
+  body = body.replace(/\\begin\{table\}(?:\[[^\]]*\])?([\s\S]*?)\\end\{table\}/g, (_, inner) => {
     const num = ++tblCounter;
-    const captionMatch = match.match(/\\caption(?:\[[^\]]*\])?\{([^}]*)\}/);
+    const captionMatch = inner.match(/\\caption(?:\[[^\]]*\])?\{([^}]*)\}/);
     const caption = captionMatch ? captionMatch[1] : "";
-    // Extract inner tabular (if any) and process it
-    let inner = match;
-    inner = inner.replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}/g, "");
-    inner = inner.replace(/\\label\{[^}]*\}/g, "");
-    inner = inner.replace(/\\begin\{table\}[^]*?\\end\{table\}/g, m => m); // don't double-replace
-    // Process the inner tabular separately — it'll be handled below if not yet replaced
-    return block(
-      `<div class="table-float">` +
-      (caption
-        ? `<div class="table-caption"><strong>Table ${num}:</strong> ${inline(caption)}</div>`
-        : `<div class="table-caption"><strong>Table ${num}</strong></div>`) +
-      inner.replace(/\\begin\{table\}[\s\S]*?(?=\\begin\{tabular\}|$)/, "")
-           .replace(/(?<=\\end\{tabular\})[\s\S]*?\\end\{table\}/, "") +
-      `</div>`
-    );
+    // Strip caption, label, position specs — keep only tabular LaTeX
+    const tabularBody = inner
+      .replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}/g, "")
+      .replace(/\\label\{[^}]*\}/g, "")
+      .replace(/\\centering\b/g, "")
+      .trim();
+    const captionBlock = caption
+      ? block(`<div class="table-caption"><strong>Table ${num}:</strong> ${inline(caption)}</div>`)
+      : block(`<div class="table-caption"><strong>Table ${num}</strong></div>`);
+    // Return caption placeholder + raw tabular LaTeX — tabular handler runs next
+    return captionBlock + "\n" + tabularBody;
   });
 
   // Tabular (standalone or inside already-block table)
@@ -364,24 +365,26 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     return content;
   });
 
-  // Sections
-  body = body.replace(/\\chapter\*?\{([^}]*)\}/g, (_, t) =>
-    block(`<h1 class="chapter">${inline(t)}</h1>`)
-  );
-  body = body.replace(/\\section\*?\{([^}]*)\}/g, (full, t) => {
-    if (!full.includes("*")) { secCounter++; subCounter = 0; subSubCounter = 0; }
-    const num = full.includes("*") ? "" : `<span class="sec-num">${secCounter}</span> `;
-    return block(`<h2>${num}${inline(t)}</h2>`);
-  });
-  body = body.replace(/\\subsection\*?\{([^}]*)\}/g, (full, t) => {
-    if (!full.includes("*")) { subCounter++; subSubCounter = 0; }
-    const num = full.includes("*") ? "" : `<span class="sec-num">${secCounter}.${subCounter}</span> `;
-    return block(`<h3>${num}${inline(t)}</h3>`);
-  });
-  body = body.replace(/\\subsubsection\*?\{([^}]*)\}/g, (full, t) => {
-    if (!full.includes("*")) subSubCounter++;
-    const num = full.includes("*") ? "" : `<span class="sec-num">${secCounter}.${subCounter}.${subSubCounter}</span> `;
-    return block(`<h4>${num}${inline(t)}</h4>`);
+  // Sections — single combined pass to preserve document order.
+  // Three separate body.replace() calls would process ALL sections before
+  // ANY subsections, making secCounter stale by the time subsections run.
+  body = body.replace(/\\(chapter|(?:sub){0,2}section)(\*?)\{([^}]*)\}/g, (_, cmd, star, t) => {
+    const starred = star === "*";
+    if (cmd === "chapter") {
+      return block(`<h1 class="chapter">${inline(t)}</h1>`);
+    } else if (cmd === "section") {
+      if (!starred) { secCounter++; subCounter = 0; subSubCounter = 0; }
+      const num = starred ? "" : `<span class="sec-num">${secCounter}</span> `;
+      return block(`<h2>${num}${inline(t)}</h2>`);
+    } else if (cmd === "subsection") {
+      if (!starred) { subCounter++; subSubCounter = 0; }
+      const num = starred ? "" : `<span class="sec-num">${secCounter}.${subCounter}</span> `;
+      return block(`<h3>${num}${inline(t)}</h3>`);
+    } else { // subsubsection
+      if (!starred) subSubCounter++;
+      const num = starred ? "" : `<span class="sec-num">${secCounter}.${subCounter}.${subSubCounter}</span> `;
+      return block(`<h4>${num}${inline(t)}</h4>`);
+    }
   });
 
   // TOC / list placeholders
