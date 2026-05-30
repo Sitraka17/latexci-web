@@ -262,6 +262,122 @@ html.light .latex-preview .toc-placeholder { color: #888; }
 html.light .latex-preview .appendix-marker { border-bottom-color: #cec9c0; }
 html.light .latex-preview sup.footnote { color: #4a38a8; }
 
+/* ── Equation numbering ──────────────────────────────────────────────── */
+.math-numbered {
+  display: flex;
+  align-items: center;
+  margin: 1.4rem 0;
+  gap: 0.5rem;
+}
+.math-numbered .math-numbered__inner {
+  flex: 1;
+  text-align: center;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+}
+.eq-number {
+  flex-shrink: 0;
+  width: 3.5rem;
+  text-align: right;
+  font-size: 0.88em;
+  color: var(--paper-fg);
+  opacity: 0.65;
+  font-family: Georgia, serif;
+}
+
+/* ── Section numbers ─────────────────────────────────────────────────── */
+.latex-preview .sec-num {
+  display: inline;
+  margin-right: 0.45em;
+  opacity: 0.6;
+  font-weight: inherit;
+}
+
+/* ── Unresolved references ───────────────────────────────────────────── */
+.latex-preview .ref.unresolved {
+  color: #f59e0b;
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* ── Footnotes ───────────────────────────────────────────────────────── */
+.latex-preview sup.footnote {
+  cursor: help;
+  font-size: 0.72em;
+  vertical-align: super;
+  line-height: 1;
+}
+.latex-preview .footnote-bar {
+  margin-top: 2.5rem;
+  padding-top: 0;
+}
+.latex-preview .footnote-rule {
+  border: none;
+  border-top: 1px solid currentColor;
+  opacity: 0.2;
+  margin: 0 0 0.75rem;
+  width: 40%;
+}
+.latex-preview .footnote-item {
+  font-size: 0.82em;
+  color: var(--paper-fg);
+  opacity: 0.8;
+  margin: 0.3rem 0;
+  display: flex;
+  gap: 0.4rem;
+  line-height: 1.5;
+}
+.latex-preview .footnote-num {
+  flex-shrink: 0;
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 1;
+}
+
+/* ── Bibliography ────────────────────────────────────────────────────── */
+.latex-preview .bib-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid currentColor;
+  opacity: 0.85;
+}
+.latex-preview .bib-heading {
+  font-size: 1.15rem !important;
+  font-weight: 700;
+  margin: 0 0 0.85rem !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+.latex-preview .bib-entry {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+  font-size: 0.87em;
+  line-height: 1.6;
+}
+.latex-preview .bib-num {
+  flex-shrink: 0;
+  min-width: 2rem;
+  text-align: right;
+  opacity: 0.7;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+.latex-preview .bib-text {
+  flex: 1;
+}
+
+/* ── Table float ─────────────────────────────────────────────────────── */
+.latex-preview .table-float {
+  margin: 1.2rem 0;
+}
+.latex-preview .table-caption {
+  font-size: 0.88em;
+  margin-bottom: 0.4rem;
+  text-align: center;
+  opacity: 0.85;
+}
+
 /* ─────────────────────────────────────────────────────
    Dot-grid background pattern
    Usage: add className="has-grid" to any section.

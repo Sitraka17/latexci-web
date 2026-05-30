@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
 import { createClient } from "@/lib/supabase/client";
+import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
@@ -109,10 +110,15 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [userId, setUserId]           = useState<string | null>(null);
   const [docTitle, setDocTitle]       = useState("Untitled");
   const [isLight, setIsLight]         = useState(false);
-  const previewRef  = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const saveRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const supabase    = useMemo(() => createClient(), []);
+  const [splitPct, setSplitPct]       = useState(50); // editor width %
+  const previewRef    = useRef<HTMLDivElement>(null);
+  const previewScroll = useRef<HTMLDivElement>(null);
+  const editorRef     = useRef<ReactCodeMirrorRef>(null);
+  const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const splitRef      = useRef<HTMLDivElement>(null);
+  const isDragging    = useRef(false);
+  const supabase      = useMemo(() => createClient(), []);
 
   // Track theme (dark/light toggle)
   useEffect(() => {
@@ -130,6 +136,40 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Column resize drag
+  useEffect(() => {
+    const handle = splitRef.current;
+    if (!handle || isMobile) return;
+    const container = handle.parentElement;
+    if (!container) return;
+    const onMouseDown = (e: MouseEvent) => {
+      isDragging.current = true;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      e.preventDefault();
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const rect = container.getBoundingClientRect();
+      const pct = Math.min(75, Math.max(25, ((e.clientX - rect.left) / rect.width) * 100));
+      setSplitPct(pct);
+    };
+    const onMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    handle.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      handle.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isMobile]);
 
   // Get logged-in user
   useEffect(() => {
@@ -264,20 +304,26 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   // Track line count
   useEffect(() => { setLineCount(source.split("\n").length); }, [source]);
 
-  // Debounced render
+  // Debounced render — preserve preview scroll position
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
+      const savedScroll = previewScroll.current?.scrollTop ?? 0;
       const { html: rendered, warnings: w } = latexToHtml(source);
       setHtml(rendered);
       setWarnings(w);
-    }, 250);
+      // Restore scroll after React commits the new DOM
+      requestAnimationFrame(() => {
+        if (previewScroll.current) previewScroll.current.scrollTop = savedScroll;
+      });
+    }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [source]);
 
-  // KaTeX hydration
+  // KaTeX hydration — restore scroll after rendering
   useEffect(() => {
     if (!previewRef.current || !html) return;
+    const savedScroll = previewScroll.current?.scrollTop ?? 0;
     (async () => {
       const katex = (await import("katex")).default;
       await import("katex/dist/katex.min.css");
@@ -300,6 +346,10 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           el.removeAttribute("data-math");
         } catch { /* ignore */ }
       });
+      // Restore scroll after KaTeX layout settles
+      requestAnimationFrame(() => {
+        if (previewScroll.current) previewScroll.current.scrollTop = savedScroll;
+      });
     })();
   }, [html]);
 
@@ -319,7 +369,21 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   }, [source]);
 
   const insertSnippet = useCallback((text: string) => {
-    setSource(prev => prev + (prev.endsWith("\n") ? "" : "\n") + text + "\n");
+    const view = editorRef.current?.view;
+    if (view) {
+      const { state } = view;
+      const cursor = state.selection.main.head;
+      const before = state.doc.sliceString(Math.max(0, cursor - 1), cursor);
+      const insert = (before === "\n" || cursor === 0 ? "" : "\n") + text + "\n";
+      view.dispatch({
+        changes: { from: cursor, insert },
+        selection: { anchor: cursor + insert.length },
+      });
+      view.focus();
+    } else {
+      // Fallback: append to end
+      setSource(prev => prev + (prev.endsWith("\n") ? "" : "\n") + text + "\n");
+    }
   }, []);
 
   const exportPdf = useCallback(async () => {
@@ -464,7 +528,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <button
             onClick={exportPdf}
             disabled={pdfStatus === "compiling"}
-            title={pdfStatus === "error" ? "Compilation failed — check your LaTeX syntax" : "Compile & download PDF via LaTeX.Online"}
+            title={pdfStatus === "error" ? "Compilation failed — check your LaTeX syntax" : "Compile & download PDF via YToTech"}
             style={{
               background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
               border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
@@ -500,7 +564,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         {/* Editor pane */}
         {(!isMobile || activePane === "editor") && (
           <div className="editor-panel" style={{
-            width: isMobile ? "100%" : showSnippets ? "calc(50% - 160px)" : "50%",
+            width: isMobile ? "100%" : showSnippets ? `calc(${splitPct}% - 160px)` : `${splitPct}%`,
             display: "flex", flexDirection: "column",
             borderRight: `1px solid var(--editor-border)`,
             background: "var(--editor-bg)",
@@ -510,6 +574,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             <div style={{ flex: 1, overflow: "hidden" }}>
               {extensions.length > 0 ? (
                 <CodeMirror
+                  ref={editorRef}
                   value={source}
                   onChange={setSource}
                   extensions={extensions as import("@uiw/react-codemirror").ReactCodeMirrorProps["extensions"]}
@@ -598,6 +663,22 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           </div>
         )}
 
+        {/* ── Resize handle (desktop only) ─────────────────────────── */}
+        {!isMobile && (
+          <div
+            ref={splitRef}
+            title="Drag to resize"
+            style={{
+              width: 5, flexShrink: 0, cursor: "col-resize",
+              background: "var(--border)",
+              transition: "background 0.15s",
+              zIndex: 10,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--accent)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--border)")}
+          />
+        )}
+
         {/* ── Preview pane ─────────────────────────────────────────── */}
         {(!isMobile || activePane === "preview") && (
           <div style={{
@@ -636,7 +717,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             </div>
 
             {/* Paper / document */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "2rem 1.5rem" }}>
+            <div ref={previewScroll} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "1rem 0.5rem" : "2rem 1.5rem" }}>
               <div
                 ref={previewRef}
                 className="latex-preview"
@@ -646,11 +727,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                   margin: "0 auto",
                   background: "var(--paper-bg)",
                   boxShadow: "var(--paper-shadow)",
-                  borderRadius: 3,
-                  padding: "3.5rem 4rem",
+                  borderRadius: isMobile ? 0 : 3,
+                  padding: isMobile ? "1.25rem 1rem" : "3.5rem 4rem",
                   minHeight: "calc(100vh - 140px)",
                   fontFamily: "Georgia, 'Times New Roman', serif",
-                  fontSize: "15px",
+                  fontSize: isMobile ? "14px" : "15px",
                   lineHeight: 1.8,
                 }}
               />
