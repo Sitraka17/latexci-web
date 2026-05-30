@@ -19,20 +19,24 @@ function renderKaTeX(tex: string): string {
   }
 }
 
-// ── Package badge colors ──────────────────────────────────────────────────────
-const PKG_COLORS: Record<string, { bg: string; fg: string }> = {
-  base:      { bg: "#e8f5e9", fg: "#2e7d32" },
-  amsmath:   { bg: "#e3f2fd", fg: "#1565c0" },
-  amssymb:   { bg: "#f3e5f5", fg: "#6a1b9a" },
-  mathtools: { bg: "#fff3e0", fg: "#e65100" },
-  textcomp:  { bg: "#fce4ec", fg: "#b71c1c" },
+// ── Package badge colors — HSL + alpha, works on both dark and light bg ──────
+// Using hsl(h s% l% / alpha) avoids SSR/DOM access and adapts to any theme.
+const PKG_HSL: Record<string, [number, string, string]> = {
+  base:      [122, "39%", "44%"],  // green
+  amsmath:   [213, "79%", "52%"],  // blue
+  amssymb:   [271, "68%", "55%"],  // purple
+  mathtools: [ 25, "90%", "50%"],  // orange
+  textcomp:  [  0, "72%", "51%"],  // red
 };
 
-function pkgStyle(pkg: string) {
-  const dark = typeof window !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark";
-  const c = PKG_COLORS[pkg] ?? { bg: "#f5f5f5", fg: "#555" };
-  if (dark) return { background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent2)" };
-  return { background: c.bg, color: c.fg };
+function pkgStyle(pkg: string): React.CSSProperties {
+  const hsl = PKG_HSL[pkg];
+  if (!hsl) return { background: "var(--surface2)", color: "var(--fg-muted)" };
+  const [h, s, l] = hsl;
+  return {
+    background: `hsl(${h} ${s} ${l} / 0.14)`,
+    color:      `hsl(${h} ${s} ${l})`,
+  };
 }
 
 // ── Symbol Card ───────────────────────────────────────────────────────────────

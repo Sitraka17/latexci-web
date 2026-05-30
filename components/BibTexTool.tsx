@@ -69,9 +69,31 @@ function OutputBox({ value, label }: { value: string; label?: string }) {
   );
 }
 
+// ── Sample BibTeX (used as default content so Clean works on page load) ──────
+const SAMPLE_BIB = `@article{smith2023,
+  author   = {John Smith and Jane Doe},
+  title    = {A Study of Distributed Systems},
+  journal  = {Journal of Computer Science},
+  year     = {2023},
+  volume   = {45},
+  number   = {2},
+  pages    = {100--120},
+  abstract = {We study distributed systems and their properties.},
+  file     = {smith2023.pdf},
+  doi      = {10.1234/jcs.2023.45.2.100}
+}
+
+@inproceedings{jones2022,
+  author    = {Alice Jones},
+  title     = {Fast Graph Algorithms},
+  booktitle = {Proc. ACM STOC},
+  year      = {2022},
+  pages     = {500--512}
+}`;
+
 // ── Clean tab ─────────────────────────────────────────────────────────────────
 function CleanTab() {
-  const [input, setInput]       = useState("");
+  const [input, setInput]       = useState(SAMPLE_BIB);
   const [output, setOutput]     = useState("");
   const [stats, setStats]       = useState<{ total: number; removed: number; fieldsStripped: number } | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);

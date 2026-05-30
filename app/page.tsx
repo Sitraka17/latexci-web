@@ -126,12 +126,12 @@ export default function HomePage() {
         color: "var(--fg-muted)",
         lineHeight: 1.4,
       }}>
-        <span style={{ marginRight: "0.4rem" }}>🆕</span>
+        <span style={{ marginRight: "0.4rem" }}>✨</span>
         <strong style={{ color: "var(--accent2)" }}>New:</strong>
-        <span className="announce-long">{" "}BibTeX cleaner, DOI → BibTeX, and arXiv lookup — the tools Overleaf forgot —{" "}</span>
+        <span className="announce-long">{" "}Symbol Search — 200+ LaTeX symbols with live KaTeX preview, one-click copy —{" "}</span>
         <span className="announce-short">{" "}</span>
-        <a href="/tools/bibtex" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-          try BibTeX tools →
+        <a href="/tools/symbols" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
+          try Symbol Search →
         </a>
       </div>
 
@@ -359,8 +359,8 @@ export default function HomePage() {
           display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
         }}>
           {[
-            { n: "11",   label: "Templates" },
-            { n: "5",    label: "Tools" },
+            { n: "13+",  label: "Templates" },
+            { n: "7",    label: "Tools" },
             { n: "0",    label: "Setup needed" },
             { n: "100%", label: "Free forever" },
           ].map(({ n, label }) => (
