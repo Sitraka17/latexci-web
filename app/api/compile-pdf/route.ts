@@ -1,9 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
+/** Returns true when this user's tier allows PDF export. */
+async function checkPdfAccess(): Promise<{ allowed: boolean; reason?: string }> {
+  // Dev / unconfigured: open access so local development works.
+  if (!isSupabaseConfigured) return { allowed: true };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { allowed: false, reason: "sign_in_required" };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("subscription_tier, subscription_status")
+    .eq("id", user.id)
+    .single();
+
+  const tier = profile?.subscription_tier ?? "free";
+  const status = profile?.subscription_status;
+
+  // Active paid subscription → allow
+  const paid =
+    (tier === "pro" || tier === "lab" || tier === "institution") &&
+    (status === "active" || status === "trialing");
+
+  if (!paid) {
+    return { allowed: false, reason: "upgrade_required" };
+  }
+
+  return { allowed: true };
+}
+
 export async function POST(req: NextRequest) {
+  // ── Auth gate ──────────────────────────────────────────────────────────────
+  const access = await checkPdfAccess();
+  if (!access.allowed) {
+    return NextResponse.json(
+      { error: "upgrade_required", reason: access.reason, feature: "pdf_export" },
+      { status: 403 }
+    );
+  }
+
+  // ── Validate body ──────────────────────────────────────────────────────────
   let source: string;
   try {
     const body = await req.json();
@@ -23,10 +70,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Primary: latex.ytotech.com  (returns 201 + application/pdf on success)
+  // ── Compile ────────────────────────────────────────────────────────────────
   let pdf: ArrayBuffer | null = null;
   let lastError = "";
 
+  // Primary: pdflatex
   try {
     const r = await fetch("https://latex.ytotech.com/builds/sync", {
       method: "POST",
@@ -40,13 +88,14 @@ export async function POST(req: NextRequest) {
       pdf = await r.arrayBuffer();
     } else {
       const txt = await r.text().catch(() => "");
-      lastError = txt.slice(0, 300).replace(/<[^>]+>/g, " ").trim() || `HTTP ${r.status}`;
+      lastError =
+        txt.slice(0, 300).replace(/<[^>]+>/g, " ").trim() || `HTTP ${r.status}`;
     }
   } catch {
     lastError = "Compilation service unreachable. Check your internet connection.";
   }
 
-  // Fallback: latex.ytotech.com async endpoint (different path)
+  // Fallback: xelatex
   if (!pdf) {
     try {
       const r = await fetch("https://latex.ytotech.com/builds/sync", {
@@ -67,6 +116,7 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
+
   return new NextResponse(pdf, {
     headers: {
       "Content-Type": "application/pdf",

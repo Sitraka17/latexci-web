@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import dynamic from "next/dynamic";
+import UpgradeModal from "@/components/UpgradeModal";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
@@ -289,6 +290,12 @@ export default function WordToLatex() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [report,   setReport]   = useState<QualityReport | null>(null);
   const [cmExtensions, setCmExtensions] = useState<unknown[]>([]);
+  const [convUsed, setConvUsed] = useState<number | null>(null);   // free-tier usage counter
+  const [upgradeModal, setUpgradeModal] = useState<{
+    reason: "sign_in_required" | "upgrade_required";
+    used?: number;
+    limit?: number;
+  } | null>(null);
 
   const loadCm = useCallback(() => {
     if (cmExtensions.length > 0) return;
@@ -301,11 +308,38 @@ export default function WordToLatex() {
   const convert = useCallback(async (file: File) => {
     setFileName(file.name);
     setFileSize(file.size);
-    setStatus("converting");
     setError(""); setResult(""); setWarnings([]); setReport(null);
     loadCm();
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "docx";
+
+    // ── Gate check (only for .docx — pandoc path is always just a command tip) ──
+    if (ext === "docx") {
+      try {
+        const gateRes = await fetch("/api/word-conversion", { method: "POST" });
+        if (gateRes.status === 403) {
+          const body = await gateRes.json().catch(() => ({}));
+          setUpgradeModal({
+            reason: body.error === "sign_in_required" ? "sign_in_required" : "upgrade_required",
+            used: body.used,
+            limit: body.limit,
+          });
+          setStatus("idle");
+          return;
+        }
+        if (gateRes.ok) {
+          const body = await gateRes.json().catch(() => ({}));
+          // Show remaining conversions if on free tier
+          if (body.remaining !== null && body.remaining !== undefined) {
+            setConvUsed(body.used);
+          }
+        }
+      } catch {
+        // Network error — allow offline use gracefully, don't block conversion
+      }
+    }
+
+    setStatus("converting");
 
     if (ext !== "docx") {
       const cmd = `pandoc "${file.name}" --from ${ext} --to latex --output output.tex --wrap=none`;
@@ -600,6 +634,45 @@ export default function WordToLatex() {
             <strong>Privacy:</strong> Your file is read entirely in your browser. Nothing is uploaded to any server.
           </div>
         </div>
+      )}
+
+      {/* ── Free-tier usage indicator ────────────────────────────────────── */}
+      {convUsed !== null && convUsed > 0 && (
+        <div style={{
+          marginTop: "1rem",
+          padding: "0.65rem 1rem",
+          background: convUsed >= 3
+            ? "color-mix(in srgb, var(--red) 8%, transparent)"
+            : "color-mix(in srgb, var(--accent) 8%, transparent)",
+          border: `1px solid ${convUsed >= 3 ? "color-mix(in srgb, var(--red) 25%, transparent)" : "color-mix(in srgb, var(--accent) 25%, transparent)"}`,
+          borderRadius: 8,
+          fontSize: "0.82rem",
+          color: "var(--fg-muted)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span>
+            {convUsed >= 3
+              ? "⚠ You've used all 3 free conversions this month."
+              : `${convUsed} / 3 free conversions used this month.`}
+          </span>
+          <a
+            href="/pricing"
+            style={{ color: "var(--accent)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}
+          >
+            Upgrade for unlimited →
+          </a>
+        </div>
+      )}
+
+      {/* ── Upgrade modal ────────────────────────────────────────────────── */}
+      {upgradeModal && (
+        <UpgradeModal
+          feature="word_conversion"
+          reason={upgradeModal.reason}
+          used={upgradeModal.used}
+          limit={upgradeModal.limit}
+          onClose={() => setUpgradeModal(null)}
+        />
       )}
     </div>
   );
