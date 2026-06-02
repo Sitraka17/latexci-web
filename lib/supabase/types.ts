@@ -24,6 +24,7 @@ export interface Database {
           subscription_status: SubscriptionStatus | null;
           subscription_period_end: string | null;
           word_conversions_this_month: number;
+          word_conversions_reset_at: string;   // timestamptz — trigger resets counter each new month
           created_at: string;
           updated_at: string;
         };
@@ -37,6 +38,7 @@ export interface Database {
           subscription_status?: SubscriptionStatus | null;
           subscription_period_end?: string | null;
           word_conversions_this_month?: number;
+          word_conversions_reset_at?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -50,6 +52,7 @@ export interface Database {
           subscription_status?: SubscriptionStatus | null;
           subscription_period_end?: string | null;
           word_conversions_this_month?: number;
+          word_conversions_reset_at?: string;
           created_at?: string;
           updated_at?: string;
         };

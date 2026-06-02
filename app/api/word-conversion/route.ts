@@ -59,7 +59,7 @@ export async function POST(_req: NextRequest) {
   const { data: profile, error: fetchErr } = await supabase
     .from("profiles")
     .select(
-      "subscription_tier, subscription_status, word_conversions_this_month, updated_at"
+      "subscription_tier, subscription_status, word_conversions_this_month, word_conversions_reset_at"
     )
     .eq("id", user.id)
     .single();
@@ -89,12 +89,12 @@ export async function POST(_req: NextRequest) {
   }
 
   // ── Free users: check monthly counter ─────────────────────────────────────
-  // Detect new month by comparing current YYYY-MM with the month embedded in
-  // updated_at. This is a heuristic — add word_conversions_reset_at for precision.
-  const updatedMonth = profile.updated_at
-    ? profile.updated_at.slice(0, 7)  // "YYYY-MM"
-    : null;
-  const needsReset = updatedMonth !== currentPeriod();
+  // The DB trigger (trg_reset_word_conversions) auto-resets on the next UPDATE
+  // after a new month starts. Here we just check the column directly.
+  const resetAt = profile.word_conversions_reset_at ?? null;
+  const needsReset = resetAt
+    ? resetAt.slice(0, 7) !== currentPeriod()   // "YYYY-MM" comparison
+    : true;                                       // null → treat as needing reset
 
   // If a new month has started, treat count as 0
   const used = needsReset ? 0 : (profile.word_conversions_this_month ?? 0);
@@ -113,11 +113,13 @@ export async function POST(_req: NextRequest) {
     );
   }
 
-  // Increment counter (and reset if new month)
+  // Increment counter. The DB trigger will auto-zero it if a new month started,
+  // but we also set word_conversions_reset_at here to keep it accurate.
   await supabase
     .from("profiles")
     .update({
-      word_conversions_this_month: used + 1,
+      word_conversions_this_month: needsReset ? 1 : used + 1,
+      word_conversions_reset_at: needsReset ? new Date().toISOString() : undefined,
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id);
