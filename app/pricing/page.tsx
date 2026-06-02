@@ -6,17 +6,17 @@ import PricingCards from "@/components/PricingCards";
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://latexci-web.vercel.app";
 
 export const metadata: Metadata = {
-  title: "Pricing — latexci Pro & Lab Plans",
+  title: "Pricing — latexci Pro at $49/year",
   description:
-    "Upgrade to latexci Pro ($129/yr) for unlimited Word→LaTeX conversions and PDF export. Lab plan ($449/yr) for 5-seat research groups. No compile timeouts. Ever.",
+    "latexci Pro: $49/year or $9/month. Unlimited Word→LaTeX, PDF export, all 13+ templates, priority support. Lab plan $199/year for 5-seat research groups. Grant-reimbursable.",
   keywords: [
-    "latex subscription", "latex pro plan", "latex editor pricing",
-    "overleaf alternative pricing", "academic latex tool", "research lab latex",
+    "latex tools pricing", "latex pro plan", "cheap overleaf alternative",
+    "academic software grant fundable", "research lab latex tools", "latex pdf export",
   ],
   alternates: { canonical: `${BASE}/pricing` },
   openGraph: {
-    title: "latexci Pricing — Pro & Lab Plans for Academics",
-    description: "No compile timeouts. Ever. Pro at $129/yr or Lab at $449/yr for 5 seats.",
+    title: "latexci Pricing — Pro at $49/year",
+    description: "Unlimited Word→LaTeX, PDF export, priority support. $49/year. Grant-reimbursable.",
     url: `${BASE}/pricing`,
     type: "website",
   },

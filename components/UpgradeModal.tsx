@@ -144,7 +144,7 @@ export default function UpgradeModal({ feature, reason = "upgrade_required", use
               feature === "pdf_export" ? "✓ PDF export — no timeouts" : "✓ Unlimited Word → LaTeX",
               "✓ All 13+ templates",
               "✓ Priority support (24 h)",
-              "✓ $129 / year or $15 / month",
+              "✓ $49 / year or $9 / month",
             ].map(f => (
               <div key={f} style={{ fontSize: "0.84rem", color: "var(--fg)", padding: "0.15rem 0" }}>{f}</div>
             ))}
@@ -194,7 +194,7 @@ export default function UpgradeModal({ feature, reason = "upgrade_required", use
                   boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)",
                 }}
               >
-                Upgrade to Pro — $129 / year →
+                Upgrade to Pro — $49 / year →
               </Link>
               <Link
                 href="/auth"

@@ -67,18 +67,20 @@ const SCENARIOS = [
 ];
 
 const FAQS = [
-  { q: "Is latexci really free?",
-    a: "Yes. All tools are free, there is no paid plan, and no account is required. The code is open source on GitHub under the MIT license." },
+  { q: "What's free and what requires Pro?",
+    a: "Preview, diff, symbol search, table generator, and all templates are free forever — no account needed. Word → LaTeX is free for 3 conversions/month (sign in required). PDF export and unlimited Word → LaTeX require Pro ($49/year or $9/month)." },
   { q: "Does the preview support math equations?",
-    a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, the same engine used by Khan Academy and Wikipedia." },
+    a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, with automatic equation numbering, \\ref cross-references, and bibliography rendering." },
   { q: "What file types does Word → LaTeX accept?",
-    a: ".docx (Word 2007+) converts directly in your browser via mammoth.js — the file is never uploaded anywhere. .odt and .rtf require pandoc installed locally; the tool shows you the exact command to run." },
+    a: ".docx (Word 2007+) converts directly in your browser — the file is never uploaded. Equations are detected via OMML and converted to LaTeX math stubs. .odt and .rtf need local pandoc; the tool shows you the exact command." },
   { q: "Is my LaTeX source stored anywhere?",
-    a: "No. The preview, diff, table, and Word → LaTeX (.docx) tools all run entirely in your browser — nothing leaves your machine. The PDF export calls an external compile service (latexonline.cc) but sends only the LaTeX source text, not any identifying information." },
-  { q: "I have free Overleaf from my university. Why use this?",
-    a: "latexci does things Overleaf Premium doesn't: convert Word (.docx) files to LaTeX with equation detection, clean and format .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files without track changes. Use Overleaf as your editor — use latexci for everything Overleaf forgot to build. And when you graduate and lose your institutional license, latexci is still free." },
-  { q: "Can I use latexci offline?",
-    a: "Preview, diff, and table work fully offline once the page is loaded. Word → LaTeX needs a connection. The preview tool also supports shareable URLs via LZ compression." },
+    a: "No. Preview, diff, table, symbol search, and Word → LaTeX all run entirely in your browser. Nothing is uploaded. PDF export sends only your LaTeX source to YToTech's compile server and downloads the result directly." },
+  { q: "I have Overleaf through my university. Why use this?",
+    a: "latexci does things Overleaf doesn't: convert Word files with equation detection, clean and deduplicate .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files side by side. Use Overleaf as your editor — latexci for the rest. When you graduate and lose institutional access, latexci is still here." },
+  { q: "Is Pro grant-fundable?",
+    a: "Yes. Pro at $49/year fits in most lab software budgets and comes with an invoice you can submit. Lab plan ($199/year, 5 seats) works for a whole research group and includes budget justification language for NSF, NIH, or ERC applications." },
+  { q: "Can I try Pro before paying?",
+    a: "Yes — you get the first PDF export and Word → LaTeX conversion free after signing in. If the output isn't right for your document, don't upgrade." },
 ];
 
 // ── Structured data ────────────────────────────────────────────────────────
