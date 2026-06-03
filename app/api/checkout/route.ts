@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { NextRequest } from "next/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 // Lazy getter — only instantiated at request time, never at build time
 function getStripe() {
@@ -27,6 +28,15 @@ const ALLOWED_PRICE_IDS = new Set([
 
 export async function POST(req: NextRequest) {
   try {
+    // Require authentication — prevents anonymous bots from spamming Stripe sessions
+    if (isSupabaseConfigured) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return Response.json({ error: "Authentication required" }, { status: 401 });
+      }
+    }
+
     const stripe = getStripe();
     const BASE_URL = getBaseUrl();
     const { priceId } = (await req.json()) as { priceId: string };

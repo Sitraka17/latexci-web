@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { SYMBOLS, CATEGORIES, searchSymbols, type SymbolEntry } from "@/lib/symbols";
 
 // ── KaTeX lazy loader ────────────────────────────────────────────────────────
@@ -129,11 +129,22 @@ function SymbolCard({ sym, onCopy }: { sym: SymbolEntry; onCopy: (cmd: string) =
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function SymbolSearch() {
-  const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState(""); // raw keystroke value
+  const [query, setQuery]           = useState(""); // debounced search query
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [katexReady, setKatexReady] = useState(false);
   const [lastCopied, setLastCopied] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce search: only run the O(n) filter 120 ms after the user stops typing
+  const handleQueryChange = useCallback((value: string) => {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setQuery(value), 120);
+  }, []);
+
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   // Load KaTeX on mount
   useEffect(() => {
@@ -181,8 +192,8 @@ export default function SymbolSearch() {
         <input
           ref={inputRef}
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={inputValue}
+          onChange={(e) => handleQueryChange(e.target.value)}
           placeholder='Search by name ("integral"), command ("\\sum"), or Unicode ("∑")'
           autoFocus
           style={{
@@ -202,7 +213,7 @@ export default function SymbolSearch() {
         />
         {query && (
           <button
-            onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+            onClick={() => { setInputValue(""); setQuery(""); inputRef.current?.focus(); }}
             style={{
               position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)",
               background: "none", border: "none", color: "var(--fg-muted)", cursor: "pointer",
@@ -278,7 +289,7 @@ export default function SymbolSearch() {
           <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>∅</div>
           <div>No symbols found for <strong>"{query}"</strong></div>
           <button
-            onClick={() => { setQuery(""); setActiveCategory("All"); }}
+            onClick={() => { setInputValue(""); setQuery(""); setActiveCategory("All"); }}
             style={{
               marginTop: "0.75rem", padding: "0.4rem 1rem",
               borderRadius: 6, border: "1px solid var(--border)",

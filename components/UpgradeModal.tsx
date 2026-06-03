@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 export type UpgradeFeature = "pdf_export" | "word_conversion";
@@ -29,22 +29,47 @@ const FEATURE_COPY: Record<UpgradeFeature, { icon: string; title: string; free: 
   },
 };
 
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
 export default function UpgradeModal({ feature, reason = "upgrade_required", used, limit, onClose }: Props) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef  = useRef<HTMLDivElement>(null);
   const copy = FEATURE_COPY[feature];
   const needsSignIn = reason === "sign_in_required";
 
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+  // Close on Escape; trap Tab focus inside the dialog
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") { onClose(); return; }
+    if (e.key !== "Tab" || !dialogRef.current) return;
+
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)
+    ).filter(el => el.offsetParent !== null); // skip hidden elements
+
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last  = focusable[focusable.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }, [onClose]);
 
-  // Trap focus inside modal
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Move focus into modal on open; restore previous focus on close
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    overlayRef.current?.focus();
+    // Focus the first focusable element inside the dialog
+    const first = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE);
+    (first ?? overlayRef.current)?.focus();
     return () => prev?.focus();
   }, []);
 
@@ -63,6 +88,7 @@ export default function UpgradeModal({ feature, reason = "upgrade_required", use
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Upgrade required for ${copy.title}`}

@@ -62,10 +62,11 @@ export async function POST(req: NextRequest) {
         if (!customerId || !customerEmail) break;
 
         // Store stripe_customer_id on profile (lookup by email)
-        await db
+        const { error: e1 } = await db
           .from("profiles")
           .update({ stripe_customer_id: customerId })
           .eq("email", customerEmail);
+        if (e1) console.error("[webhook] checkout.session.completed — profile update failed:", e1.message);
 
         console.log("[webhook] checkout.session.completed", session.id);
         break;
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
           ? new Date(sub.cancel_at * 1000).toISOString()
           : null;
 
-        await db
+        const { error: e2 } = await db
           .from("profiles")
           .update({
             subscription_tier: tier,
@@ -91,6 +92,10 @@ export async function POST(req: NextRequest) {
             subscription_period_end: periodEnd,
           })
           .eq("stripe_customer_id", customerId);
+        if (e2) {
+          console.error("[webhook] subscription upsert failed:", e2.message, { sub: sub.id, customerId });
+          return new Response("DB update failed", { status: 500 }); // Force Stripe retry
+        }
 
         console.log("[webhook] subscription upserted", sub.id, tier, status);
         break;
@@ -101,7 +106,7 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
 
-        await db
+        const { error: e3 } = await db
           .from("profiles")
           .update({
             subscription_tier: "free",
@@ -109,6 +114,10 @@ export async function POST(req: NextRequest) {
             subscription_period_end: null,
           })
           .eq("stripe_customer_id", customerId);
+        if (e3) {
+          console.error("[webhook] subscription cancel failed:", e3.message, { sub: sub.id, customerId });
+          return new Response("DB update failed", { status: 500 }); // Force Stripe retry
+        }
 
         console.log("[webhook] subscription cancelled", sub.id);
         break;
@@ -120,10 +129,11 @@ export async function POST(req: NextRequest) {
         const customerId = invoice.customer as string;
 
         // Reset monthly Word-conversion counter on every successful billing cycle
-        await db
+        const { error: e4 } = await db
           .from("profiles")
           .update({ word_conversions_this_month: 0 })
           .eq("stripe_customer_id", customerId);
+        if (e4) console.error("[webhook] invoice.payment_succeeded counter reset failed:", e4.message);
 
         console.log("[webhook] invoice paid, counters reset", invoice.id);
         break;
@@ -134,10 +144,11 @@ export async function POST(req: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
 
-        await db
+        const { error: e5 } = await db
           .from("profiles")
           .update({ subscription_status: "past_due" })
           .eq("stripe_customer_id", customerId);
+        if (e5) console.error("[webhook] invoice.payment_failed status update failed:", e5.message);
 
         console.warn("[webhook] invoice payment failed", invoice.id);
         break;

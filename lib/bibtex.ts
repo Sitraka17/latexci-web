@@ -34,7 +34,9 @@ function readBraced(src: string, start: number): { value: string; end: number } 
     else if (src[i] === "}") depth--;
     if (depth > 0) i++;
   }
-  return { value: src.slice(start, i), end: i + 1 };
+  // If depth never reached 0 (unmatched brace), i === src.length.
+  // Clamp end to src.length so callers never step past the buffer.
+  return { value: src.slice(start, i), end: Math.min(i + 1, src.length) };
 }
 
 /** Read a quoted substring starting just after `"`. */
@@ -44,7 +46,9 @@ function readQuoted(src: string, start: number): { value: string; end: number } 
     if (src[i] === "\\") i++; // skip escaped char
     i++;
   }
-  return { value: src.slice(start, i), end: i + 1 };
+  // If no closing `"` found (malformed BibTeX), i === src.length.
+  // Clamp end to src.length so callers never step past the buffer.
+  return { value: src.slice(start, i), end: Math.min(i + 1, src.length) };
 }
 
 /** Parse key=value fields from the body string after `@type{key,`. */

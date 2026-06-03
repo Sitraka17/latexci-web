@@ -113,16 +113,30 @@ export async function POST(_req: NextRequest) {
     );
   }
 
-  // Increment counter. The DB trigger will auto-zero it if a new month started,
-  // but we also set word_conversions_reset_at here to keep it accurate.
-  await supabase
+  // Increment counter with optimistic locking:
+  // Only update if the DB value still matches what we read (prevents TOCTOU race).
+  // If a concurrent request already incremented, count won't match and we return 0 rows.
+  const currentCount = profile.word_conversions_this_month ?? 0;
+  const { data: updatedRows } = await supabase
     .from("profiles")
     .update({
       word_conversions_this_month: needsReset ? 1 : used + 1,
       word_conversions_reset_at: needsReset ? new Date().toISOString() : undefined,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    // Optimistic lock: only write if the row hasn't changed since we read it
+    .eq("word_conversions_this_month", currentCount)
+    .select("id");
+
+  if (!updatedRows || updatedRows.length === 0) {
+    // Another concurrent request won the race — treat as limit reached to be safe
+    return NextResponse.json(
+      { allowed: false, used: FREE_LIMIT, limit: FREE_LIMIT, remaining: 0,
+        error: "upgrade_required", feature: "word_conversion" },
+      { status: 403 }
+    );
+  }
 
   return NextResponse.json({
     allowed: true,

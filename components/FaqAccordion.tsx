@@ -27,6 +27,8 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
             <button
               onClick={() => setOpen(isOpen ? null : i)}
               aria-expanded={isOpen}
+              aria-controls={`faq-panel-${i}`}
+              id={`faq-btn-${i}`}
               style={{
                 width: "100%",
                 padding: "1rem 1.25rem",
@@ -76,6 +78,9 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
             >
               <div style={{ overflow: "hidden" }}>
                 <div
+                  id={`faq-panel-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-btn-${i}`}
                   style={{
                     padding: "0.75rem 1.25rem 1rem",
                     background: "var(--surface)",

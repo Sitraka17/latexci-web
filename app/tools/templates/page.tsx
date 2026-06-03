@@ -6,8 +6,34 @@ import TemplatesFilter from "@/components/TemplatesFilter";
 export const metadata: Metadata = {
   title: "Free LaTeX Templates — Academic, CV, Beamer & More",
   description:
-    "Browse free LaTeX templates: academic papers, CVs, Beamer presentations, math assignments, cover letters, and lab reports. Open any template in the browser — no download, no signup.",
-  alternates: { canonical: "https://latexci-web.vercel.app/tools/templates" },
+    "Browse 16 free LaTeX templates: PhD thesis, academic papers, CVs with photo, Beamer presentations, ML conference papers (NeurIPS/ICML), math assignments, and Centrale Marseille / AMSE templates. Open any template in the browser — no download, no signup.",
+  keywords: [
+    "free latex templates",
+    "latex cv template",
+    "beamer presentation template",
+    "phd thesis latex template",
+    "latex academic paper template",
+    "neurips latex template",
+    "icml paper template",
+    "latex cover letter",
+    "math assignment latex",
+    "centrale marseille latex",
+    "amse working paper template",
+  ],
+  alternates: { canonical: "/tools/templates" },
+  openGraph: {
+    title: "Free LaTeX Templates — Academic, CV, Beamer & More",
+    description:
+      "16 free LaTeX templates for academics: thesis, CV, Beamer, ML conference papers, and Grande École reports. Click to open in the live editor.",
+    url: "/tools/templates",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free LaTeX Templates — latexci",
+    description:
+      "PhD thesis, CV with photo, Beamer with logo, NeurIPS/ICML paper, and more. All free, open in browser.",
+  },
 };
 
 export default function TemplatesPage() {
