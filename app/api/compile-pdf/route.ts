@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   let pdf: ArrayBuffer | null = null;
   let lastError = "";
 
-  // Primary: pdflatex
+  // Primary: pdflatex (25 s timeout — YToTech can be slow on first compile)
   try {
     const r = await fetch("https://latex.ytotech.com/builds/sync", {
       method: "POST",
@@ -83,19 +83,23 @@ export async function POST(req: NextRequest) {
         compiler: "pdflatex",
         resources: [{ main: true, content: source }],
       }),
+      signal: AbortSignal.timeout(25_000),
     });
     if (r.ok) {
-      pdf = await r.arrayBuffer();
+      const buf = await r.arrayBuffer();
+      if (buf.byteLength > 0) pdf = buf; // guard: reject empty-body 200
     } else {
       const txt = await r.text().catch(() => "");
       lastError =
         txt.slice(0, 300).replace(/<[^>]+>/g, " ").trim() || `HTTP ${r.status}`;
     }
-  } catch {
-    lastError = "Compilation service unreachable. Check your internet connection.";
+  } catch (err) {
+    lastError = err instanceof Error && err.name === "TimeoutError"
+      ? "Compilation timed out (>25 s). Try simplifying your document."
+      : "Compilation service unreachable. Check your internet connection.";
   }
 
-  // Fallback: xelatex
+  // Fallback: xelatex (handles Unicode / fontspec)
   if (!pdf) {
     try {
       const r = await fetch("https://latex.ytotech.com/builds/sync", {
@@ -105,9 +109,13 @@ export async function POST(req: NextRequest) {
           compiler: "xelatex",
           resources: [{ main: true, content: source }],
         }),
+        signal: AbortSignal.timeout(25_000),
       });
-      if (r.ok) pdf = await r.arrayBuffer();
-    } catch { /* ignore */ }
+      if (r.ok) {
+        const buf = await r.arrayBuffer();
+        if (buf.byteLength > 0) pdf = buf;
+      }
+    } catch { /* ignore xelatex fallback errors */ }
   }
 
   if (!pdf) {

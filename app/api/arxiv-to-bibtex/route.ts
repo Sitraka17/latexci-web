@@ -28,9 +28,15 @@ export async function GET(req: NextRequest) {
     .replace(/v\d+$/, "");
   const url = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(id)}`;
 
+  // Sanity-check length — valid arXiv IDs are ≤ 20 chars (e.g. "2301.07041")
+  if (id.length > 50) {
+    return NextResponse.json({ error: "Invalid arXiv ID" }, { status: 400 });
+  }
+
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "latexci/1.0 (https://latexci-web.vercel.app)" },
+      signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) return NextResponse.json({ error: `arXiv returned ${res.status}` }, { status: res.status });
 
@@ -87,7 +93,10 @@ export async function GET(req: NextRequest) {
     return new NextResponse(bibtex, {
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" },
     });
-  } catch {
-    return NextResponse.json({ error: "Network error reaching arXiv" }, { status: 502 });
+  } catch (err) {
+    const msg = err instanceof Error && err.name === "TimeoutError"
+      ? "arXiv request timed out. Try again in a moment."
+      : "Network error reaching arXiv";
+    return NextResponse.json({ error: msg }, { status: 502 });
   }
 }

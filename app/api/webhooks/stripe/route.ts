@@ -27,7 +27,11 @@ const PRICE_TO_TIER: Record<string, SubscriptionTier> = {
 
 function tierFromSubscription(sub: Stripe.Subscription): SubscriptionTier {
   const priceId = sub.items.data[0]?.price?.id ?? "";
-  return PRICE_TO_TIER[priceId] ?? "pro";
+  const tier = PRICE_TO_TIER[priceId];
+  if (!tier) {
+    console.warn("[webhook] Unknown priceId — defaulting to 'pro':", priceId);
+  }
+  return tier ?? "pro";
 }
 
 // ── Webhook handler ───────────────────────────────────────────────────────────

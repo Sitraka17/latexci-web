@@ -15,6 +15,12 @@ const LEARN = [
   { label: "GitHub",         href: "https://github.com/Sitraka17/latexci-web", external: true },
 ];
 
+const COMMUNITY = [
+  { label: "💬 Discord",     href: "https://discord.gg/latexci", external: true, accent: true },
+  { label: "GitHub Issues",  href: "https://github.com/Sitraka17/latexci-web/issues", external: true },
+  { label: "Feature Requests", href: "https://github.com/Sitraka17/latexci-web/discussions", external: true },
+];
+
 const YEAR = new Date().getFullYear();
 
 export default function SiteFooter() {
@@ -106,6 +112,32 @@ export default function SiteFooter() {
               </div>
             </nav>
           </div>
+
+          {/* Community column */}
+          <div>
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.9rem" }}>
+              Community
+            </p>
+            <nav aria-label="Footer community links">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                {COMMUNITY.map(({ label, href, external, accent }) => (
+                  <Link key={href} href={href}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    style={{
+                      fontSize: "0.84rem",
+                      color: accent ? "#5865F2" : "var(--fg-muted)",
+                      textDecoration: "none",
+                      transition: "color 0.15s",
+                      fontWeight: accent ? 600 : 400,
+                    }}
+                    onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = accent ? "#7983f5" : "var(--fg)")}
+                    onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = accent ? "#5865F2" : "var(--fg-muted)")}>
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          </div>
         </div>
 
         {/* ── Bottom bar ─────────────────────────────────────────────── */}
@@ -136,8 +168,8 @@ export default function SiteFooter() {
       </div>
 
       <style>{`
-        .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
-        @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+        @media (max-width: 800px) {
           .footer-grid { grid-template-columns: 1fr 1fr; }
           .footer-grid > div:first-child { grid-column: 1 / -1; }
         }

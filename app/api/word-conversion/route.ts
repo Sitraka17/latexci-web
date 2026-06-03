@@ -31,9 +31,9 @@ export const runtime = "nodejs";
 const FREE_LIMIT = 3;
 
 function currentPeriod(): string {
-  // "YYYY-MM" — used to detect when to reset the monthly counter
+  // "YYYY-MM" in UTC — avoids month-boundary drift across timezones
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 export async function POST(_req: NextRequest) {
@@ -130,11 +130,12 @@ export async function POST(_req: NextRequest) {
     .select("id");
 
   if (!updatedRows || updatedRows.length === 0) {
-    // Another concurrent request won the race — treat as limit reached to be safe
+    // Optimistic lock failed — a concurrent request already incremented the counter.
+    // Return 429 (transient) instead of 403 (permanent) so the client can retry.
     return NextResponse.json(
-      { allowed: false, used: FREE_LIMIT, limit: FREE_LIMIT, remaining: 0,
-        error: "upgrade_required", feature: "word_conversion" },
-      { status: 403 }
+      { allowed: false, error: "concurrent_request", feature: "word_conversion",
+        message: "Too many simultaneous requests. Please try again." },
+      { status: 429 }
     );
   }
 

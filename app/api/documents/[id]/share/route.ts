@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdmin } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 type Params = { params: Promise<{ id: string }> };
 
 const NOT_CONFIGURED = NextResponse.json(
@@ -54,7 +56,12 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const admin = getAdmin();
   if (!admin) return NOT_CONFIGURED;
 
@@ -86,6 +93,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     const email      = String(body.email ?? "").toLowerCase().trim();
     const permission = body.permission === "edit" ? "edit" : "view";
     if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+    if (!EMAIL_RE.test(email))
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     if (email === user.email?.toLowerCase())
       return NextResponse.json({ error: "Cannot invite yourself" }, { status: 400 });
 

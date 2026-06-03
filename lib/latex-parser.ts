@@ -234,7 +234,8 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   // Numbered align  (whole block gets one number if it has ≤ 1 label)
   body = body.replace(/\\begin\{align\}([\s\S]*?)\\end\{align\}/g, (_, m) => {
-    const lines = m.split("\\\\");
+    // filter(Boolean) removes the empty string created by a trailing \\
+    const lines = m.split("\\\\").filter(Boolean);
     const nonNumbered = lines.filter((l: string) => /\\nonumber/.test(l));
     const numLines = lines.length - nonNumbered.length;
     // Build aligned math, strip \nonumber
@@ -337,23 +338,33 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
         tbl += `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
       }
     });
-    tbl += `</tbody></table>`;
+    // Guard: if no data rows were processed (e.g. table had only \hline rows),
+    // close only <table> to avoid orphaned </tbody></table>.
+    tbl += firstDataRow ? `</table>` : `</tbody></table>`;
     return block(tbl);
   });
 
-  // Itemize
-  body = body.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (_, items) => {
-    const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
-      .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
-    return block(`<ul>${lis}</ul>`);
-  });
-
-  // Enumerate
-  body = body.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (_, items) => {
-    const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
-      .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
-    return block(`<ol>${lis}</ol>`);
-  });
+  // Itemize + Enumerate — processed in a loop so nested lists work correctly.
+  // Each pass converts the INNERMOST remaining list (non-greedy regex).
+  // After conversion the inner list is a placeholder; the outer list then
+  // sees only a single placeholder token inside its \item text, which
+  // is restored correctly when placeholders are expanded in Phase 4.
+  {
+    let prev = "";
+    while (prev !== body) {
+      prev = body;
+      body = body.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (_, items) => {
+        const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
+          .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
+        return block(`<ul>${lis}</ul>`);
+      });
+      body = body.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (_, items) => {
+        const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
+          .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
+        return block(`<ol>${lis}</ol>`);
+      });
+    }
+  }
 
   // Bibliography block — use pre-rendered HTML from prescan
   body = body.replace(/\\begin\{thebibliography\}[\s\S]*?\\end\{thebibliography\}/g, () =>
