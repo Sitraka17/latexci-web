@@ -498,7 +498,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0 0.75rem 0.5rem" }}>
             <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨ Snippets</Btn>
             <Btn onClick={() => setSource(SAMPLE)} title="Restore demo">Reset</Btn>
-            <Btn onClick={() => setSource("")} title="Clear editor">Clear</Btn>
+            <Btn onClick={() => { if (window.confirm("Clear all content?")) setSource(""); }} title="Clear editor">Clear</Btn>
             <div style={{ flex: 1 }} />
             <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
               {shared ? "✓" : "🔗 Share"}
@@ -534,7 +534,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
           <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
           <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>
-          <Btn onClick={() => setSource("")} title="Clear editor">Clear</Btn>
+          <Btn onClick={() => { if (window.confirm("Clear all content?")) setSource(""); }} title="Clear editor">Clear</Btn>
           <div style={{ flex: 1 }} />
           <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
             {shared ? "✓ Copied!" : "🔗 Share"}

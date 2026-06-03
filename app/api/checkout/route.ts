@@ -18,6 +18,13 @@ function getBaseUrl() {
   );
 }
 
+const ALLOWED_PRICE_IDS = new Set([
+  process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY,
+  process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL,
+  process.env.NEXT_PUBLIC_STRIPE_LAB_MONTHLY,
+  process.env.NEXT_PUBLIC_STRIPE_LAB_ANNUAL,
+].filter(Boolean));
+
 export async function POST(req: NextRequest) {
   try {
     const stripe = getStripe();
@@ -26,6 +33,10 @@ export async function POST(req: NextRequest) {
 
     if (!priceId || typeof priceId !== "string") {
       return Response.json({ error: "Missing priceId" }, { status: 400 });
+    }
+
+    if (ALLOWED_PRICE_IDS.size > 0 && !ALLOWED_PRICE_IDS.has(priceId)) {
+      return Response.json({ error: "Invalid priceId" }, { status: 400 });
     }
 
     const session = await stripe.checkout.sessions.create({

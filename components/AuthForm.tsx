@@ -50,18 +50,33 @@ export default function AuthForm() {
 
   async function handleGitHub() {
     setLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) { setError(error.message); setLoading(false); }
+      // On success the browser redirects — leave loading=true
+    } catch {
+      setError("Failed to connect to GitHub. Please try again.");
+      setLoading(false);
+    }
   }
 
   async function handleGoogle() {
     setLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) { setError(error.message); setLoading(false); }
+    } catch {
+      setError("Failed to connect to Google. Please try again.");
+      setLoading(false);
+    }
   }
 
   if (stage === "sent") {

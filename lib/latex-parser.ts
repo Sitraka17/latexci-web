@@ -207,6 +207,11 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     block(`<div class="math-block" data-math="${encodeMath(m)}"></div>`)
   );
 
+  // Display math $$...$$ — treat as block so KaTeX renders in displayMode
+  body = body.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) =>
+    block(`<div class="math-block" data-math="${encodeMath(m.trim())}"></div>`)
+  );
+
   // Starred equation environments (no number)
   body = body.replace(/\\begin\{equation\*\}([\s\S]*?)\\end\{equation\*\}/g, (_, m) =>
     block(`<div class="math-block" data-math="${encodeMath(cleanMath(m))}"></div>`)
@@ -464,10 +469,7 @@ function processInline(
   footnoteList: string[],
   nextFootN: () => number,
 ): string {
-  // Inline math: $...$ (not $$...$$)
-  text = text.replace(/\$\$([^$]+)\$\$/g, (_, m) =>
-    `<span class="math-block" data-math="${encodeMath(m)}"></span>`
-  );
+  // Inline math: $...$ only ($$...$$ is handled as block in Phase 1)
   text = text.replace(/\$([^$\n]+?)\$/g, (_, m) =>
     `<span class="math-inline" data-math="${encodeMath(m)}"></span>`
   );
@@ -512,9 +514,15 @@ function processInline(
     return `<sup class="footnote" title="${escapeHtml(content)}">${n}</sup>`;
   });
 
-  // URLs and hrefs
-  text = text.replace(/\\url\{([^}]*)\}/g, "<a href='$1' target='_blank' rel='noopener'>$1</a>");
-  text = text.replace(/\\href\{([^}]*)\}\{([^}]*)\}/g, "<a href='$1' target='_blank' rel='noopener'>$2</a>");
+  // URLs and hrefs — sanitize to block javascript: and other dangerous protocols
+  text = text.replace(/\\url\{([^}]*)\}/g, (_, u) => {
+    const href = safeHref(u);
+    return `<a href='${href}' target='_blank' rel='noopener noreferrer'>${escapeHtml(u)}</a>`;
+  });
+  text = text.replace(/\\href\{([^}]*)\}\{([^}]*)\}/g, (_, u, label) => {
+    const href = safeHref(u);
+    return `<a href='${href}' target='_blank' rel='noopener noreferrer'>${label}</a>`;
+  });
 
   // Author lists
   text = text.replace(/\\and\b/g, " &amp; ");
@@ -563,6 +571,12 @@ function processInline(
 
 function encodeMath(math: string): string {
   return encodeURIComponent(math.trim());
+}
+
+function safeHref(url: string): string {
+  const u = url.trim();
+  if (/^https?:\/\//i.test(u) || /^mailto:/i.test(u) || /^\//.test(u)) return u;
+  return "#";
 }
 
 function escapeHtml(text: string): string {

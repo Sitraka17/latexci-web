@@ -6,6 +6,16 @@ type Align = "l" | "c" | "r";
 const DEFAULT_ROWS = 4;
 const DEFAULT_COLS = 3;
 
+function escapeLatex(text: string): string {
+  return text
+    .replace(/\\/g, "\\textbackslash{}")
+    .replace(/\{/g, "\\{").replace(/\}/g, "\\}")
+    .replace(/\$/g, "\\$").replace(/&/g, "\\&")
+    .replace(/%/g, "\\%").replace(/#/g, "\\#")
+    .replace(/\^/g, "\\textasciicircum{}")
+    .replace(/_/g, "\\_").replace(/~/g, "\\textasciitilde{}");
+}
+
 function makeGrid(rows: number, cols: number, old?: string[][]): string[][] {
   return Array.from({ length: rows }, (_, r) =>
     Array.from({ length: cols }, (_, c) => old?.[r]?.[c] ?? "")
@@ -119,14 +129,14 @@ export default function TableGenerator() {
     if (borders === "booktabs") lines.push("    \\toprule");
 
     data.forEach((row, r) => {
-      const cells = row.map((cell) => (cell || " ")).join(" & ");
+      const cells = row.map((cell) => (cell ? escapeLatex(cell) : " ")).join(" & ");
       const isHeader = headerRow && r === 0;
       const isLast = r === data.length - 1;
 
       if (isHeader) {
-        // Bold header cells
+        // Bold header cells (escape content first, then wrap in \textbf{})
         const boldCells = row.map((cell) =>
-          cell ? `\\textbf{${cell}}` : " "
+          cell ? `\\textbf{${escapeLatex(cell)}}` : " "
         ).join(" & ");
         lines.push(`    ${boldCells} \\\\`);
         if (borders === "booktabs") lines.push("    \\midrule");

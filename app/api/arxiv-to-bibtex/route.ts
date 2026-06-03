@@ -21,8 +21,11 @@ export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get("id")?.trim() ?? "";
   if (!raw) return NextResponse.json({ error: "Missing id param" }, { status: 400 });
 
-  // Normalize: strip "arxiv:" prefix, strip version suffix
-  const id = raw.replace(/^arxiv:/i, "").replace(/v\d+$/, "");
+  // Normalize: strip https://arxiv.org/abs/ URL, "arxiv:" prefix, and version suffix
+  const id = raw
+    .replace(/^https?:\/\/arxiv\.org\/abs\//i, "")
+    .replace(/^arxiv:/i, "")
+    .replace(/v\d+$/, "");
   const url = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(id)}`;
 
   try {
