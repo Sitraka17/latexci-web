@@ -96,12 +96,12 @@ const SCHEMAS = [
     name: "latexci", applicationCategory: "DeveloperApplication",
     operatingSystem: "Web Browser",
     description: "Free browser-based LaTeX tools: live preview, diff, Word to LaTeX, table generator, templates.",
-    url: "https://latexci-web.vercel.app",
+    url: "https://latexci.com",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
   {
     "@context": "https://schema.org", "@type": "WebSite",
-    name: "latexci", url: "https://latexci-web.vercel.app",
+    name: "latexci", url: "https://latexci.com",
     description: "Free online LaTeX tools for researchers and students.",
   },
 ];

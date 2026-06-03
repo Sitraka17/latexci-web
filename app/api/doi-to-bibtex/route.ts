@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url, {
       headers: {
         Accept: "application/x-bibtex",
-        "User-Agent": "latexci/1.0 (https://latexci-web.vercel.app; mailto:contact@latexci.com)",
+        "User-Agent": "latexci/1.0 (https://latexci.com; mailto:contact@latexci.com)",
       },
       signal: AbortSignal.timeout(8_000),
     });

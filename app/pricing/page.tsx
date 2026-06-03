@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import PricingCards from "@/components/PricingCards";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://latexci-web.vercel.app";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://latexci.com";
 
 export const metadata: Metadata = {
   title: "Pricing — latexci Pro at $49/year",

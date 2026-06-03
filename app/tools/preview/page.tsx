@@ -26,7 +26,7 @@ const schema = {
   "@type": "SoftwareApplication",
   name: "LaTeX Preview — latexci",
   description: "Browser-based LaTeX preview with live KaTeX math rendering.",
-  url: "https://latexci-web.vercel.app/tools/preview",
+  url: "https://latexci.com/tools/preview",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web Browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },

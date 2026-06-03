@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "latexci/1.0 (https://latexci-web.vercel.app)" },
+      headers: { "User-Agent": "latexci/1.0 (https://latexci.com)" },
       signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) return NextResponse.json({ error: `arXiv returned ${res.status}` }, { status: res.status });

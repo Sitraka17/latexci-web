@@ -71,7 +71,7 @@ export default async function Image() {
             letterSpacing: "0.04em",
           }}
         >
-          latexci-web.vercel.app
+          latexci.com
         </div>
 
         {/* Main headline */}

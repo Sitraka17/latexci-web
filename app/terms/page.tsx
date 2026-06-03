@@ -15,7 +15,7 @@ const SECTIONS = [
   {
     title: "1. Acceptance",
     body: [
-      `By accessing latexci (latexci-web.vercel.app), you agree to these Terms of Service. If you do not agree, please do not use the service. These terms were last updated in ${YEAR}.`,
+      `By accessing latexci (latexci.com), you agree to these Terms of Service. If you do not agree, please do not use the service. These terms were last updated in ${YEAR}.`,
     ],
   },
   {

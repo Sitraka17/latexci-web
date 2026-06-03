@@ -1,3 +1,23 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "latexci.org" }],
+      "destination": "https://latexci.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.latexci.com" }],
+      "destination": "https://latexci.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.latexci.org" }],
+      "destination": "https://latexci.com/$1",
+      "permanent": true
+    }
+  ]
 }

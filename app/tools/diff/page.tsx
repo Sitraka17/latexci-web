@@ -24,7 +24,7 @@ const schema = {
   "@type": "SoftwareApplication",
   name: "LaTeX Diff — latexci",
   description: "Browser-based LaTeX diff. Compare two .tex files with changes highlighted.",
-  url: "https://latexci-web.vercel.app/tools/diff",
+  url: "https://latexci.com/tools/diff",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web Browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },

@@ -25,7 +25,7 @@ const schema = {
   "@type": "SoftwareApplication",
   name: "BibTeX Tools — latexci",
   description: "Clean and format BibTeX files, DOI to BibTeX lookup, arXiv to BibTeX.",
-  url: "https://latexci-web.vercel.app/tools/bibtex",
+  url: "https://latexci.com/tools/bibtex",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web Browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },

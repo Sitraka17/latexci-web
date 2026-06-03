@@ -21,7 +21,7 @@ type Props = {
   onClose: () => void;
 };
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://latexci-web.vercel.app";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://latexci.com";
 
 export default function ShareModal({ docId, docTitle, onClose }: Props) {
   const [state, setState]         = useState<ShareState | null>(null);

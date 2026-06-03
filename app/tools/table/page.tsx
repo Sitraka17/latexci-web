@@ -24,7 +24,7 @@ const schema = {
   "@type": "SoftwareApplication",
   name: "LaTeX Table Generator — latexci",
   description: "Visual LaTeX tabular generator. Enter data, choose alignment and borders, copy the code.",
-  url: "https://latexci-web.vercel.app/tools/table",
+  url: "https://latexci.com/tools/table",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web Browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },

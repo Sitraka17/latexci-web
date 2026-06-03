@@ -24,7 +24,7 @@ const schema = {
   "@type": "SoftwareApplication",
   name: "Word to LaTeX Converter — latexci",
   description: "Convert .docx, .odt, and .rtf to LaTeX source. Powered by pandoc.",
-  url: "https://latexci-web.vercel.app/tools/word-to-latex",
+  url: "https://latexci.com/tools/word-to-latex",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web Browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
