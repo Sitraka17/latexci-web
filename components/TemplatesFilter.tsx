@@ -5,7 +5,10 @@ import LZString from "lz-string";
 import { TEMPLATES, CATEGORIES } from "@/lib/templates";
 
 // Templates marked as new (shown with a badge)
-const NEW_TEMPLATE_IDS = new Set(["cv-photo", "beamer-logo", "ml-conference"]);
+const NEW_TEMPLATE_IDS = new Set([
+  "beamer-logo", "ml-conference",
+  "cv-french-academic", "cv-french-industry", "cv-academic-photo",
+]);
 
 function CopySourceBtn({ source }: { source: string }) {
   const [copied, setCopied] = useState(false);
