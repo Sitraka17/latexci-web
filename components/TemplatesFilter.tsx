@@ -1,8 +1,42 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import LZString from "lz-string";
 import { TEMPLATES, CATEGORIES } from "@/lib/templates";
+
+// Templates marked as new (shown with a badge)
+const NEW_TEMPLATE_IDS = new Set(["cv-photo", "beamer-logo", "ml-conference"]);
+
+function CopySourceBtn({ source }: { source: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(source).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [source]);
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy LaTeX source to clipboard"
+      style={{
+        flex: 1,
+        padding: "0.52rem 0.6rem",
+        borderRadius: 7,
+        border: `1px solid ${copied ? "var(--accent)" : "var(--border)"}`,
+        background: copied ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "var(--surface2)",
+        color: copied ? "var(--accent)" : "var(--fg-muted)",
+        fontSize: "0.78rem",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 0.15s",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {copied ? "✓ Copied!" : "Copy source"}
+    </button>
+  );
+}
 
 export default function TemplatesFilter() {
   const [active, setActive] = useState("All");
@@ -135,6 +169,7 @@ export default function TemplatesFilter() {
             const href     = `/tools/preview#s=${encoded}`;
             const lines    = t.source.split("\n").length;
             const isGE     = t.category === "Grande École";
+            const isNew    = NEW_TEMPLATE_IDS.has(t.id);
 
             return (
               <article
@@ -155,6 +190,16 @@ export default function TemplatesFilter() {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.1rem" }}>
                   <span style={{ fontSize: "1.6rem", lineHeight: 1 }} aria-hidden="true">{t.icon}</span>
                   <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                    {isNew && (
+                      <span style={{
+                        fontSize: "0.6rem", fontWeight: 700, padding: "0.17rem 0.5rem",
+                        borderRadius: 999, background: "rgba(16,185,129,0.12)",
+                        border: "1px solid rgba(16,185,129,0.4)", color: "#10b981",
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                      }}>
+                        NEW
+                      </span>
+                    )}
                     <span style={{
                       fontSize: "0.64rem", fontWeight: 600, padding: "0.17rem 0.5rem",
                       borderRadius: 999, background: isGE ? "rgba(0,56,168,0.1)" : "var(--surface2)",
@@ -182,25 +227,89 @@ export default function TemplatesFilter() {
                   {t.desc}
                 </p>
 
-                <Link
-                  href={href}
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    gap: "0.35rem", padding: "0.52rem 1rem", borderRadius: 7,
-                    background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-                    color: "#fff", fontWeight: 600, fontSize: "0.82rem",
-                    textDecoration: "none", marginTop: "0.5rem", transition: "opacity 0.15s",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.88")}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                >
-                  Open in editor →
-                </Link>
+                {/* Action row: Open in editor + Copy source */}
+                <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.5rem" }}>
+                  <Link
+                    href={href}
+                    style={{
+                      flex: 2,
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      gap: "0.35rem", padding: "0.52rem 0.8rem", borderRadius: 7,
+                      background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                      color: "#fff", fontWeight: 600, fontSize: "0.82rem",
+                      textDecoration: "none", transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = "0.88")}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                  >
+                    Open in editor →
+                  </Link>
+                  <CopySourceBtn source={t.source} />
+                </div>
               </article>
             );
           })}
         </div>
       )}
+
+      {/* ── Logo / image quick-guide ──────────────────────────────── */}
+      <div style={{
+        marginTop: "2.5rem",
+        padding: "1.25rem 1.5rem",
+        background: "color-mix(in srgb, var(--accent) 6%, transparent)",
+        border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
+        borderRadius: 10,
+      }}>
+        <h3 style={{ margin: "0 0 0.8rem", fontSize: "0.92rem", fontWeight: 700, color: "var(--fg)" }}>
+          🖼️ How to add a university logo or photo to any template
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+          {[
+            {
+              label: "Add a logo to a title page",
+              code: "\\includegraphics[height=2cm]{university-logo.png}",
+              note: "Put the PNG/PDF file next to your .tex. Adjust height= to fit.",
+            },
+            {
+              label: "Add a photo to a CV",
+              code: "\\includegraphics[width=3cm,clip]{photo.jpg}",
+              note: "Use clip with trim= to crop. Wrap in a minipage to float right.",
+            },
+            {
+              label: "Logo on every Beamer slide",
+              code: "\\logo{\\includegraphics[height=0.65cm]{logo.png}}",
+              note: "Put in the preamble (before \\begin{document}). Scales automatically.",
+            },
+            {
+              label: "Two logos side-by-side",
+              code: "\\includegraphics[height=1.5cm]{logo-a}\\hfill\\includegraphics[height=1.5cm]{logo-b}",
+              note: "\\hfill pushes them apart. Useful for institution + lab co-branding.",
+            },
+          ].map(item => (
+            <div key={item.label} style={{
+              background: "var(--surface)", border: "1px solid var(--border)",
+              borderRadius: 8, padding: "0.9rem 1rem",
+            }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--fg)", marginBottom: "0.35rem" }}>
+                {item.label}
+              </div>
+              <code style={{
+                display: "block",
+                background: "var(--surface2)", color: "var(--accent2)",
+                padding: "0.4rem 0.6rem", borderRadius: 5,
+                fontSize: "0.72rem", fontFamily: "JetBrains Mono, monospace",
+                lineHeight: 1.55, marginBottom: "0.35rem",
+                wordBreak: "break-all",
+              }}>
+                {item.code}
+              </code>
+              <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>
+                {item.note}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 }

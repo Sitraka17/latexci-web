@@ -42,6 +42,7 @@ const THESIS_TEMPLATES = TEMPLATES.filter(t =>
   t.category === "Thesis" || t.id === "article" || t.id === "ieee-paper"
 );
 const GRANDE_ECOLE_TEMPLATES = TEMPLATES.filter(t => t.category === "Grande École");
+const ML_CONFERENCE_TEMPLATE  = TEMPLATES.find(t => t.id === "ml-conference");
 
 const ESSENTIAL_PACKAGES = [
   { pkg: "amsmath, amssymb, amsthm", use: "All math — equations, symbols, theorem environments" },
@@ -403,6 +404,94 @@ export default function AcademicsPage() {
             for the real logo, and export to PDF with the{" "}
             <a href="/tools/preview" style={{ color: "var(--accent)" }}>↓ PDF button</a>.
           </p>
+        </div>
+      </section>
+
+      {/* ── ML Conference template spotlight ────────── */}
+      {ML_CONFERENCE_TEMPLATE && (
+        <section style={{ padding: "3.5rem 1.5rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, margin: 0 }}>
+              🤖 ML Conference Paper template
+            </h2>
+            <span style={{
+              fontSize: "0.68rem", fontWeight: 700, padding: "0.18rem 0.55rem", borderRadius: 999,
+              background: "rgba(16,185,129,0.1)", color: "#10b981",
+              border: "1px solid rgba(16,185,129,0.35)", letterSpacing: "0.06em",
+            }}>NEW</span>
+          </div>
+          <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "1.5rem", maxWidth: 680 }}>
+            NeurIPS / ICML / ICLR / CVPR — all share the same article-class skeleton.
+            This template wires up the anonymous review header, contributions paragraph,
+            algorithm environment, theorem/proof, ablation table, and appendix.
+            Swap in the official <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.8em" }}>neurips_2025.sty</code> once you&apos;re ready to submit.
+          </p>
+          <div style={{
+            display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center",
+          }}>
+            <a
+              href={`/tools/preview#s=${LZString.compressToEncodedURIComponent(ML_CONFERENCE_TEMPLATE.source)}`}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                padding: "0.65rem 1.5rem", borderRadius: 8,
+                background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                color: "#fff", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none",
+              }}
+            >
+              🤖 Open ML Conference template
+            </a>
+            <span style={{ fontSize: "0.82rem", color: "var(--fg-muted)" }}>
+              Includes algorithm env, booktabs tables, theorem environments, appendix
+            </span>
+          </div>
+        </section>
+      )}
+
+      {/* ── EU / GDPR positioning ───────────────────── */}
+      <section style={{
+        padding: "3rem 1.5rem",
+        background: "linear-gradient(135deg, rgba(0,56,168,0.04) 0%, rgba(16,185,129,0.04) 100%)",
+        borderTop: "1px solid var(--border)",
+        borderBottom: "1px solid var(--border)",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", alignItems: "center" }}>
+          <div>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.25rem 0.75rem", borderRadius: 999,
+              background: "rgba(0,56,168,0.08)", border: "1px solid rgba(0,56,168,0.2)",
+              fontSize: "0.72rem", fontWeight: 700, color: "#003BA0",
+              marginBottom: "0.75rem", letterSpacing: "0.06em",
+            }}>🇪🇺 EU · GDPR-AWARE</div>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: "0.6rem", lineHeight: 1.25 }}>
+              Your unpublished research stays in your browser
+            </h2>
+            <p style={{ fontSize: "0.88rem", color: "var(--fg-muted)", lineHeight: 1.75, margin: 0 }}>
+              Every latexci tool — preview, diff, Word→LaTeX — runs <strong>entirely client-side</strong>.
+              Your .tex source, Word documents, and research content are <em>never uploaded to any server</em>.
+              For EU institutions with GDPR obligations around unpublished research,
+              this is a meaningful difference from US-hosted cloud compilers.
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+            {[
+              { icon: "🔒", title: "Zero upload", desc: "Preview, diff, and Word conversion run in WebAssembly and browser JS. Nothing leaves your machine." },
+              { icon: "🇪🇺", title: "GDPR-compatible by design", desc: "No server-side processing of document content means no data transfer, no consent friction." },
+              { icon: "🏛️", title: "Institutional confidence", desc: "Share the link to this page with your IT/legal team — the architecture speaks for itself." },
+            ].map(f => (
+              <div key={f.title} style={{
+                display: "flex", gap: "0.75rem", alignItems: "flex-start",
+                background: "var(--surface)", border: "1px solid var(--border)",
+                borderRadius: 8, padding: "0.85rem 1rem",
+              }}>
+                <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{f.icon}</span>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.15rem" }}>{f.title}</div>
+                  <div style={{ fontSize: "0.79rem", color: "var(--fg-muted)", lineHeight: 1.55 }}>{f.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
