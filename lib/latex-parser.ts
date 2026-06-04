@@ -20,6 +20,9 @@ const KNOWN_ENVS = new Set([
   "vmatrix", "array", "cases", "split", "multline", "multline*",
   "theorem", "proof", "lemma", "definition", "proposition", "corollary",
   "remark", "example", "thebibliography",
+  // Layout / formatting environments handled below
+  "center", "flushleft", "flushright", "minipage", "multicols",
+  "tabbing", "quote", "quotation", "verse",
 ]);
 
 // Placeholder tokens — cannot appear in valid LaTeX
@@ -141,6 +144,47 @@ function prescanDocument(body: string): PrescanResult {
   return { labelMap, citeMap, bibHtml };
 }
 
+// ── Depth-aware brace skipper ─────────────────────────────────────────────
+/** Skip past the closing `}` of a `{...}` group starting at `pos`.  */
+function skipBraces(src: string, pos: number): number {
+  if (src[pos] !== "{") return pos;
+  let depth = 1;
+  let i = pos + 1;
+  while (i < src.length && depth > 0) {
+    if (src[i] === "{") depth++;
+    else if (src[i] === "}") depth--;
+    i++;
+  }
+  return i; // points to the character AFTER the closing }
+}
+
+/**
+ * Remove all \newcommand / \renewcommand / \providecommand definitions,
+ * handling arbitrarily nested braces in the definition body.
+ */
+function stripNewCommands(src: string): string {
+  const re = /\\(?:new|renew|provide)command\b\*?/g;
+  let result = "";
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src)) !== null) {
+    result += src.slice(last, m.index);
+    let i = m.index + m[0].length;
+    // command name: {cmd} or bare \cmd
+    if (src[i] === "{") i = skipBraces(src, i);
+    else { while (i < src.length && /[a-zA-Z]/.test(src[i])) i++; }
+    // optional argument count [n]
+    if (src[i] === "[") { const e = src.indexOf("]", i); i = e !== -1 ? e + 1 : i; }
+    // optional default value [default]
+    if (src[i] === "[") { const e = src.indexOf("]", i); i = e !== -1 ? e + 1 : i; }
+    // definition body {…}
+    if (src[i] === "{") i = skipBraces(src, i);
+    last = i;
+    re.lastIndex = i;
+  }
+  return result + src.slice(last);
+}
+
 // ── Pass 2: main renderer ─────────────────────────────────────────────────
 
 export function latexToHtml(src: string): { html: string; warnings: ParseWarning[] } {
@@ -173,9 +217,15 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     /\\(usepackage|documentclass|geometry|setlength|pagestyle|pagenumbering)(\[.*?\])?\{[^}]*\}/g, ""
   );
   body = body.replace(/\\(onehalfspacing|doublespacing|singlespacing|maketitle)\b/g, "");
-  body = body.replace(/\\newcommand\{[^}]*\}(\[.*?\])?\{[^}]*\}/g, "");
-  body = body.replace(/\\(renewcommand|setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
+  // Depth-aware \newcommand / \renewcommand stripper (handles nested braces in body)
+  body = stripNewCommands(body);
+  body = body.replace(/\\(setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
   body = body.replace(/\\newtheorem\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
+  // Color definitions (\definecolor{name}{model}{spec})
+  body = body.replace(/\\definecolor\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
+  body = body.replace(/\\colorlet\{[^}]*\}\{[^}]*\}/g, "");
+  // hypersetup / hyperref config block
+  body = body.replace(/\\hypersetup\{[\s\S]*?\}/g, "");
   // Strip \title{}, \author{}, \date{} if they appear inside the document body
   // (standard LaTeX puts them in the preamble, but some templates don't)
   body = body.replace(/\\(?:title|author|date)\{(?:[^{}]|\{[^{}]*\})*\}/g, "");
@@ -369,6 +419,38 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   // Bibliography block — use pre-rendered HTML from prescan
   body = body.replace(/\\begin\{thebibliography\}[\s\S]*?\\end\{thebibliography\}/g, () =>
     block(bibHtml || "")
+  );
+
+  // ── Layout / formatting environments ─────────────────────────────────────
+
+  // center / flushleft / flushright
+  body = body.replace(/\\begin\{center\}([\s\S]*?)\\end\{center\}/g, (_, c) =>
+    block(`<div style="text-align:center">${inline(c.trim())}</div>`)
+  );
+  body = body.replace(/\\begin\{flushleft\}([\s\S]*?)\\end\{flushleft\}/g, (_, c) =>
+    block(`<div style="text-align:left">${inline(c.trim())}</div>`)
+  );
+  body = body.replace(/\\begin\{flushright\}([\s\S]*?)\\end\{flushright\}/g, (_, c) =>
+    block(`<div style="text-align:right">${inline(c.trim())}</div>`)
+  );
+
+  // minipage — strip position/width args, pass content through
+  body = body.replace(
+    /\\begin\{minipage\}(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{[^}]*\}([\s\S]*?)\\end\{minipage\}/g,
+    (_, c) => inline(c.trim()) + " "
+  );
+
+  // multicols — strip column arg, pass content through
+  body = body.replace(/\\begin\{multicols\}\{[^}]*\}([\s\S]*?)\\end\{multicols\}/g, (_, c) =>
+    block(`<div style="column-count:2;gap:2em">${inline(c.trim())}</div>`)
+  );
+
+  // quote / quotation / verse
+  body = body.replace(/\\begin\{(?:quote|quotation)\}([\s\S]*?)\\end\{(?:quote|quotation)\}/g, (_, c) =>
+    block(`<blockquote style="margin:1rem 2rem;font-style:italic">${inline(c.trim())}</blockquote>`)
+  );
+  body = body.replace(/\\begin\{verse\}([\s\S]*?)\\end\{verse\}/g, (_, c) =>
+    block(`<div style="margin:1rem 2rem;font-style:italic;white-space:pre-line">${inline(c.trim())}</div>`)
   );
 
   // Remaining unknown envs
@@ -569,6 +651,34 @@ function processInline(
 
   // Thanks
   text = text.replace(/\\thanks\{([^}]*)\}/g, "<sup>*</sup>");
+
+  // ── Color commands ────────────────────────────────────────────────────────
+  // \textcolor{color}{text} — keep text, drop color
+  text = text.replace(/\\textcolor\{[^}]*\}\{([^}]*)\}/g, "$1");
+  // \colorbox{color}{text} — keep text
+  text = text.replace(/\\colorbox\{[^}]*\}\{([^}]*)\}/g, "$1");
+  // \color{...} — drop entirely (don't emit color name)
+  text = text.replace(/\\color\{[^}]*\}/g, "");
+  // \pagecolor, \normalcolor, etc. — drop
+  text = text.replace(/\\(?:pagecolor|normalcolor|textcolor)\{[^}]*\}/g, "");
+
+  // ── Font size / weight / shape shortcuts ─────────────────────────────────
+  text = text.replace(
+    /\\(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge)\b/g, ""
+  );
+  text = text.replace(
+    /\\(?:bfseries|itshape|upshape|slshape|scshape|mdseries|rmfamily|sffamily|ttfamily|normalfont)\b/g, ""
+  );
+
+  // ── Alignment directives ──────────────────────────────────────────────────
+  text = text.replace(/\\(?:raggedright|raggedleft|centering|justifying)\b/g, "");
+
+  // ── Horizontal rules ──────────────────────────────────────────────────────
+  // \hrule and \hrule height 0.6pt — render as <hr>
+  text = text.replace(/\\hrule(?:\s+height\s+[0-9.]+\s*[a-z]*)?\b/g, "<hr>");
+
+  // ── Argument placeholders (#1, #2, …) left over from un-stripped commands ──
+  text = text.replace(/#\d/g, "");
 
   // Generic \cmd{arg} → arg  (last-resort)
   text = text.replace(/\\[a-zA-Z]+\*?\{([^}]*)\}/g, "$1");
