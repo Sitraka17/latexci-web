@@ -80,7 +80,12 @@ html.light {
 ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Smooth anchor scrolling */
+  scroll-behavior: smooth;
+}
 
 body {
   background: var(--bg);
@@ -88,6 +93,35 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   margin: 0;
   min-height: 100vh;
+  /* Respect notch / home-indicator safe areas (needs viewport-fit=cover) */
+  padding-left:   env(safe-area-inset-left, 0px);
+  padding-right:  env(safe-area-inset-right, 0px);
+  /* Bottom safe area is applied at the component level where needed */
+}
+
+/* ─────────────────────────────────────────────────────
+   Mobile touch optimizations
+   • touch-action:manipulation removes the 300 ms tap delay on iOS
+   • -webkit-tap-highlight-color removes the grey flash on tap
+───────────────────────────────────────────────────── */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS from zooming on input focus (requires font-size ≥ 16px).
+   Only applies on mobile — desktop inline styles aren't affected. */
+@media screen and (max-width: 900px) {
+  input[type="text"]:not([readonly]),
+  input[type="email"]:not([readonly]),
+  input[type="password"]:not([readonly]),
+  input[type="search"]:not([readonly]),
+  input[type="number"]:not([readonly]),
+  input[type="url"]:not([readonly]),
+  textarea:not([readonly]),
+  select {
+    font-size: 16px !important; /* prevents iOS auto-zoom */
+  }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -422,4 +456,46 @@ html.light .has-grid::before {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────
+   Dynamic viewport height helpers
+   100dvh changes as the browser chrome appears/disappears (iOS Safari).
+   100svh = smallest possible viewport (safe, always visible).
+   Fallback: 100vh for browsers that don't support dvh.
+───────────────────────────────────────────────────── */
+.h-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+.min-h-screen-dynamic {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ─────────────────────────────────────────────────────
+   Safe-area footer padding (iPhone home indicator)
+   Add class .safe-bottom to any sticky bottom bar.
+───────────────────────────────────────────────────── */
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* ─────────────────────────────────────────────────────
+   Selection color
+───────────────────────────────────────────────────── */
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--fg);
+}
+
+/* ─────────────────────────────────────────────────────
+   Mobile text size adjustments — prevent iOS from
+   inflating font-size on landscape rotation
+───────────────────────────────────────────────────── */
+@media screen and (max-width: 480px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 }

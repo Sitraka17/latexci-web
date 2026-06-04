@@ -200,9 +200,14 @@ export default function Navbar() {
               border: "none",
               color: "var(--fg)",
               cursor: "pointer",
-              padding: "0.4rem",
+              /* min 44×44 px touch target (Apple HIG + WCAG 2.5.8) */
+              padding: "0.6rem",
+              minWidth: 44,
+              minHeight: 44,
               display: "flex",
               flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
               gap: 4,
             }}
           >
@@ -238,6 +243,8 @@ export default function Navbar() {
             borderTop: "1px solid var(--border)",
             background: "var(--surface)",
             padding: "0.5rem 1.25rem 1rem",
+            /* Safe-area bottom padding for iPhone home indicator */
+            paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
           }}
         >
           {tools.map((t) => (
@@ -247,7 +254,7 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
               style={{
                 display: "block",
-                padding: "0.65rem 0",
+                padding: "0.7rem 0",
                 borderBottom: "1px solid var(--border)",
                 fontSize: "0.9rem",
                 color: pathname === t.href ? "var(--accent)" : "var(--fg)",
@@ -263,7 +270,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             style={{
               display: "block",
-              padding: "0.65rem 0",
+              padding: "0.7rem 0",
               borderBottom: "1px solid var(--border)",
               fontSize: "0.9rem",
               color: pathname === "/pricing" ? "var(--accent)" : "var(--accent2)",
@@ -274,27 +281,14 @@ export default function Navbar() {
             ✦ Pricing
           </Link>
           <a
-            href="https://github.com/Sitraka17/latexci-web"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "block",
-              padding: "0.65rem 0",
-              fontSize: "0.9rem",
-              color: "var(--fg-muted)",
-              textDecoration: "none",
-            }}
-          >
-            GitHub ↗
-          </a>
-          <a
             href="https://discord.gg/latexci"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMenuOpen(false)}
             style={{
               display: "block",
-              padding: "0.65rem 0",
+              padding: "0.7rem 0",
+              borderBottom: "1px solid var(--border)",
               fontSize: "0.9rem",
               color: "#5865F2",
               textDecoration: "none",
@@ -303,11 +297,32 @@ export default function Navbar() {
           >
             💬 Discord community ↗
           </a>
+          <a
+            href="https://github.com/Sitraka17/latexci-web"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "block",
+              padding: "0.7rem 0",
+              borderBottom: "1px solid var(--border)",
+              fontSize: "0.9rem",
+              color: "var(--fg-muted)",
+              textDecoration: "none",
+            }}
+          >
+            GitHub ↗
+          </a>
+          {/* Auth button — sign in / account (important for mobile users) */}
+          <div style={{ paddingTop: "0.75rem" }}>
+            <AuthButton />
+          </div>
         </div>
       )}
 
       <style>{`
-        @media (max-width: 720px) {
+        /* Collapse to hamburger at 900px — covers all phones and most tablets.
+           At 900px the desktop nav (8 tools + 4 action buttons) is too cramped. */
+        @media (max-width: 900px) {
           .desktop-nav { display: none !important; }
           .mobile-controls { display: flex !important; }
         }

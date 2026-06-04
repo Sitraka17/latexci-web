@@ -461,7 +461,9 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
 
   // ── Styles ─────────────────────────────────────────────────────────────
 
-  const containerH = "calc(100vh - 56px)";
+  /* 100dvh adjusts when iOS Safari address bar appears/disappears,
+     preventing content from being clipped behind the browser chrome. */
+  const containerH = "calc(100dvh - 56px)";
 
   return (
     <>
@@ -496,13 +498,31 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           </div>
           {/* Row 2: action buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0 0.75rem 0.5rem" }}>
-            <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨ Snippets</Btn>
+            <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨</Btn>
             <Btn onClick={() => setSource(SAMPLE)} title="Restore demo">Reset</Btn>
             <Btn onClick={() => { if (window.confirm("Clear all content?")) setSource(""); }} title="Clear editor">Clear</Btn>
             <div style={{ flex: 1 }} />
             <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
-              {shared ? "✓" : "🔗 Share"}
+              {shared ? "✓" : "🔗"}
             </Btn>
+            {/* PDF export — also available on mobile */}
+            <button
+              onClick={exportPdf}
+              disabled={pdfStatus === "compiling"}
+              title={pdfStatus === "error" ? "Compilation failed — check LaTeX syntax" : "Compile & download PDF"}
+              style={{
+                background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
+                border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
+                borderRadius: 5, color: "#fff",
+                fontSize: "0.72rem", fontWeight: 600,
+                padding: "0.22rem 0.55rem",
+                cursor: pdfStatus === "compiling" ? "wait" : "pointer",
+                whiteSpace: "nowrap",
+                display: "inline-flex", alignItems: "center", gap: "0.25rem",
+              }}
+            >
+              {pdfStatus === "compiling" ? "⏳" : pdfStatus === "error" ? "✗" : "↓ PDF"}
+            </button>
           </div>
         </div>
       ) : (
@@ -748,7 +768,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                   boxShadow: "var(--paper-shadow)",
                   borderRadius: isMobile ? 0 : 3,
                   padding: isMobile ? "1.25rem 1rem" : "3.5rem 4rem",
-                  minHeight: "calc(100vh - 140px)",
+                  minHeight: "calc(100dvh - 140px)",
                   fontFamily: "Georgia, 'Times New Roman', serif",
                   fontSize: isMobile ? "14px" : "15px",
                   lineHeight: 1.8,

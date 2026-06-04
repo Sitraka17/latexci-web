@@ -472,7 +472,11 @@ export default function PricingCards() {
 
       <style>{`
         @media (max-width: 860px) {
-          .pricing-grid { grid-template-columns: 1fr !important; max-width: 420px; margin: 0 auto; }
+          /* Single-column on tablets/phones — full width, no artificial cap */
+          .pricing-grid { grid-template-columns: 1fr !important; max-width: 480px; margin: 0 auto; }
+        }
+        @media (max-width: 520px) {
+          .pricing-grid { max-width: 100% !important; }
         }
       `}</style>
     </div>

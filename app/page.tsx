@@ -200,7 +200,7 @@ export default function HomePage() {
               Free, no signup, nothing leaves your browser.
             </p>
 
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <div className="hero-cta-row" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               <Link
                 href="/tools/bibtex"
                 style={{
@@ -361,7 +361,7 @@ export default function HomePage() {
           display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
         }}>
           {[
-            { n: "13+",  label: "Templates" },
+            { n: "18+",  label: "Templates" },
             { n: "7",    label: "Tools" },
             { n: "0",    label: "Setup needed" },
             { n: "100%", label: "Free forever" },
@@ -396,6 +396,7 @@ export default function HomePage() {
           Everything you need
         </p>
         <div
+          className="tools-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -714,6 +715,13 @@ export default function HomePage() {
           .hero-mobile-preview { display: block !important; }
         }
 
+        /* Hero section — less vertical padding on phones */
+        @media (max-width: 480px) {
+          .hero-section { padding: 2.5rem 1rem 2rem !important; }
+          .hero-cta-row { flex-direction: column !important; }
+          .hero-cta-row a { text-align: center; justify-content: center; }
+        }
+
         /* Responsive: stats band — tighter on small screens */
         @media (max-width: 480px) {
           .stats-band { padding: 0.75rem 0.75rem !important; gap: 0 !important; }
@@ -725,12 +733,16 @@ export default function HomePage() {
         @media (max-width: 520px) {
           .announce-long { display: none; }
           .announce-short { display: inline; }
-          .announce-strip { font-size: 0.72rem !important; }
+          .announce-strip { font-size: 0.72rem !important; padding: 0.45rem 1rem !important; }
         }
 
-        /* Tool cards — 2 columns on mobile instead of 1 */
+        /* Tool cards — maintain 2 columns on small phones */
         @media (max-width: 540px) {
           .tool-card { min-width: 0 !important; }
+          .tools-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+        }
+        @media (max-width: 360px) {
+          .tools-grid { grid-template-columns: 1fr !important; }
         }
 
         /* Scenarios — full width on mobile */
@@ -747,6 +759,12 @@ export default function HomePage() {
         @media (max-width: 640px) {
           .callout-card { padding: 1.4rem !important; gap: 1.25rem !important; }
           .callout-card > div:last-child { width: 100% !important; text-align: center !important; }
+        }
+
+        /* Discord CTA — stack on phones */
+        @media (max-width: 540px) {
+          .discord-cta-section { text-align: center !important; }
+          .discord-cta-section > div { flex-direction: column !important; align-items: center !important; }
         }
       `}</style>
     </div>

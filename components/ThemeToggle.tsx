@@ -26,10 +26,12 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
       title={isLight ? "Switch to dark mode" : "Switch to light mode"}
+      className="theme-toggle-btn"
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        /* 32px visually, 44px touch target on mobile via padding */
         width: 32,
         height: 32,
         borderRadius: 7,
@@ -45,6 +47,16 @@ export default function ThemeToggle() {
       onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
     >
       {isLight ? "🌙" : "☀️"}
+      <style>{`
+        /* Enlarge tap area on touch devices without changing visual size */
+        @media (hover: none) and (pointer: coarse) {
+          .theme-toggle-btn {
+            padding: 6px;
+            width: 44px !important;
+            height: 44px !important;
+          }
+        }
+      `}</style>
     </button>
   );
 }

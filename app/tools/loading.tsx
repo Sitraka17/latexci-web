@@ -2,7 +2,7 @@ export default function ToolLoading() {
   return (
     <div
       style={{
-        height: "calc(100vh - 54px)",
+        height: "calc(100dvh - 54px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

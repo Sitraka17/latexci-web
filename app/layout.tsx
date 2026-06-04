@@ -1,6 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
+
+/* ── Viewport ─────────────────────────────────────────────────────────────────
+   viewport-fit=cover extends the layout into the iPhone notch / home-indicator
+   safe area. env(safe-area-inset-*) variables then let us add padding where needed.
+────────────────────────────────────────────────────────────────────────────── */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)",  color: "#0d0d13" },
+    { media: "(prefers-color-scheme: light)", color: "#ece7da" },
+  ],
+};
 
 // NEXT_PUBLIC_SITE_URL must be set to https://latexci.com in Vercel → Settings → Environment Variables
 const BASE_URL =

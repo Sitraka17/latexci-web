@@ -176,6 +176,10 @@ export default function SiteFooter() {
         @media (max-width: 400px) {
           .footer-grid { grid-template-columns: 1fr; }
         }
+        /* iPhone home-indicator safe area */
+        footer {
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
       `}</style>
     </footer>
   );

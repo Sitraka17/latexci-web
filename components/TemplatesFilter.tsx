@@ -62,9 +62,9 @@ export default function TemplatesFilter() {
   return (
     <>
       {/* ── Search + Filter row ───────────────────────────────── */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap", alignItems: "center" }}>
+      <div className="filter-row" style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap", alignItems: "center" }}>
         {/* Search input */}
-        <div style={{ position: "relative", flexShrink: 0 }}>
+        <div style={{ position: "relative", flex: "0 0 auto" }}>
           <svg
             style={{ position: "absolute", left: "0.65rem", top: "50%", transform: "translateY(-50%)", opacity: 0.4, pointerEvents: "none" }}
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
@@ -76,10 +76,12 @@ export default function TemplatesFilter() {
             placeholder="Search templates…"
             value={query}
             onChange={e => setQuery(e.target.value)}
+            className="template-search"
             style={{
               paddingLeft: "2rem", paddingRight: "0.75rem",
               paddingTop: "0.32rem", paddingBottom: "0.32rem",
-              borderRadius: 999, fontSize: "0.82rem",
+              borderRadius: 999,
+              /* font-size handled by globals.css (min 16px) to prevent iOS zoom */
               background: "var(--surface)", color: "var(--fg)",
               border: "1px solid var(--border)", outline: "none",
               width: 200, transition: "border-color 0.15s, width 0.2s",
@@ -166,7 +168,7 @@ export default function TemplatesFilter() {
           </button>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+        <div className="templates-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
           {filtered.map(t => {
             const encoded  = LZString.compressToEncodedURIComponent(t.source);
             const href     = `/tools/preview#s=${encoded}`;
@@ -254,6 +256,18 @@ export default function TemplatesFilter() {
           })}
         </div>
       )}
+
+      <style>{`
+        /* Template grid — 1 column on very small phones */
+        @media (max-width: 380px) {
+          .templates-grid { grid-template-columns: 1fr !important; }
+        }
+        /* Search row — stack on phones */
+        @media (max-width: 480px) {
+          .filter-row { flex-direction: column; align-items: stretch !important; }
+          .template-search { width: 100% !important; }
+        }
+      `}</style>
 
       {/* ── Logo / image quick-guide ──────────────────────────────── */}
       <div style={{

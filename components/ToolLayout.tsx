@@ -3,13 +3,16 @@ import Navbar from "./Navbar";
 
 /**
  * Shared shell for all full-screen tool pages (Preview, Diff, Word→LaTeX, Table).
- * Provides 100vh layout with sticky Navbar and a flex-fill content area.
+ * Provides 100dvh layout (dynamic viewport height — works correctly on iOS Safari)
+ * with sticky Navbar and a flex-fill content area.
  */
 export default function ToolLayout({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        height: "100vh",
+        /* 100dvh shrinks as the iOS address bar hides, so content
+           never gets clipped behind the browser chrome. */
+        height: "100dvh",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
