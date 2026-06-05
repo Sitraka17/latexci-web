@@ -23,10 +23,12 @@ import { useEffect, useRef } from "react";
 type Provider = "carbon" | "ethical" | "adsense" | "none";
 
 // ── Configure here ──────────────────────────────────────────
-const PROVIDER: Provider = "none";
-const CARBON_SERVE_ID   = "CEAIC423"; // replace with your Carbon serve ID
-const ETHICAL_PUBLISHER = "latexci";  // replace with your EthicalAds publisher slug
-const ADSENSE_SLOT      = "";         // replace with your AdSense slot ID
+// EthicalAds: privacy-respecting, no tracking, great CPM for dev/academic.
+// Apply at https://ethicalads.io/ — once approved, ads appear automatically.
+const PROVIDER: Provider = "ethical";
+const CARBON_SERVE_ID   = "CEAIC423"; // Carbon fallback (unused)
+const ETHICAL_PUBLISHER = "latexci";  // EthicalAds publisher slug
+const ADSENSE_SLOT      = "";         // AdSense (unused)
 // ────────────────────────────────────────────────────────────
 
 const WRAPPER: React.CSSProperties = {

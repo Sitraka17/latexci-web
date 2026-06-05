@@ -5,20 +5,26 @@ import SymbolSearch from "@/components/SymbolSearch";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
 
 export const metadata: Metadata = {
-  title: "LaTeX Symbol Search — Find Any Symbol, Instantly",
+  title: "LaTeX Symbol Search — 380+ Symbols with Live Preview — latexci",
   description:
-    "Search 200+ LaTeX symbols by name, command, or Unicode character. See the required package, copy the command with one click, and get a live KaTeX preview. Faster than Detexify.",
+    "Search 380+ LaTeX symbols by name, command, or Unicode: Greek letters, math operators, arrows, logic, sets, physics, statistics, CS complexity. Copy the command in one click with live KaTeX preview. Faster than Detexify.",
   keywords: [
     "latex symbols",
     "latex symbol search",
     "find latex command",
     "latex math symbols",
     "latex greek letters",
-    "latex arrows",
-    "latex relations",
+    "latex arrows list",
+    "latex operators",
     "detexify alternative",
     "latex symbol list",
     "katex symbols",
+    "latex physics symbols",
+    "latex statistics symbols",
+    "argmax latex",
+    "latex expected value symbol",
+    "latex big O notation",
+    "latex braket notation",
   ],
   alternates: { canonical: "/tools/symbols" },
   openGraph: {
