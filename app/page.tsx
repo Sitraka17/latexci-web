@@ -42,7 +42,7 @@ const TOOLS = [
   { href: "/tools/table",         icon: "▦",  label: "Table Generator", tag: "Build",   color: "#06b6d4",
     desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX in one click." },
   { href: "/tools/templates",     icon: "▤",  label: "Templates",       tag: "Library", color: "#ec4899",
-    desc: "PhD thesis, IEEE paper, CV, Beamer, Centrale Marseille, AMSE. Download .tex instantly." },
+    desc: "PhD thesis, NeurIPS, ICML, ACL, CV, Beamer, Centrale Marseille. 24+ templates, download instantly." },
 ];
 
 const SCENARIOS = [
@@ -361,7 +361,7 @@ export default function HomePage() {
           display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
         }}>
           {[
-            { n: "18+",  label: "Templates" },
+            { n: "24+",  label: "Templates" },
             { n: "7",    label: "Tools" },
             { n: "0",    label: "Setup needed" },
             { n: "100%", label: "Free forever" },

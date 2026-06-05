@@ -48,7 +48,7 @@ const PLANS = [
       { text: "Everything in Free", included: true },
       { text: "Word → LaTeX — unlimited", included: true },
       { text: "PDF export — no timeouts", included: true },
-      { text: "All 13+ LaTeX templates", included: true },
+      { text: "All 20+ LaTeX templates", included: true },
       { text: "Priority support (24 h)", included: true },
       { text: "Invoice for grant / lab reimbursement", included: true },
       { text: "Team seats", included: false },

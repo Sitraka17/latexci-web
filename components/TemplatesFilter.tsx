@@ -8,6 +8,7 @@ import { TEMPLATES, CATEGORIES } from "@/lib/templates";
 const NEW_TEMPLATE_IDS = new Set([
   "beamer-logo", "ml-conference",
   "cv-french-academic", "cv-french-industry", "cv-academic-photo",
+  "neurips", "icml", "acl", "nature-style",
 ]);
 
 function CopySourceBtn({ source }: { source: string }) {

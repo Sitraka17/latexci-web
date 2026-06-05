@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef } from "react";
 import { cleanBibTeX } from "@/lib/bibtex";
 
-type Tab = "clean" | "doi" | "arxiv";
+type Tab = "clean" | "doi" | "arxiv" | "pmid";
 
 // ── tiny shared button ────────────────────────────────────────────────────────
 function Btn({
@@ -378,6 +378,81 @@ function ArxivTab() {
   );
 }
 
+// ── PubMed tab ────────────────────────────────────────────────────────────────
+function PmidTab() {
+  const [id,      setId]      = useState("");
+  const [result,  setResult]  = useState("");
+  const [error,   setError]   = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const lookup = async () => {
+    const raw = id.trim();
+    if (!raw) return;
+    setLoading(true); setError(""); setResult("");
+    try {
+      const res = await fetch(`/api/pmid-to-bibtex?id=${encodeURIComponent(raw)}`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        setError(j.error ?? "Unknown error");
+      } else {
+        setResult(await res.text());
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxWidth: 680 }}>
+      <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
+        Enter a PubMed ID (PMID) and get a ready-to-use BibTeX entry.
+        Fetches metadata directly from{" "}
+        <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener" style={{ color: "var(--accent)" }}>PubMed</a>.
+        Perfect for biomedical and life-science papers.
+      </p>
+      <div style={{ display: "flex", gap: "0.65rem" }}>
+        <input
+          value={id}
+          onChange={e => setId(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && lookup()}
+          placeholder="37652822  or  PMID:37652822  or  https://pubmed.ncbi.nlm.nih.gov/37652822/"
+          style={{
+            flex: 1, background: "var(--surface)", color: "var(--fg)",
+            border: "1px solid var(--border)", borderRadius: 7,
+            padding: "0.55rem 0.9rem", fontSize: "0.9rem", outline: "none",
+          }}
+        />
+        <Btn variant="primary" onClick={lookup} disabled={loading || !id.trim()}>
+          {loading ? "Looking up…" : "Get BibTeX"}
+        </Btn>
+      </div>
+
+      <div style={{
+        display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem",
+        fontSize: "0.78rem", color: "var(--fg-muted)",
+      }}>
+        {["37652822", "33972498", "28498958"].map(ex => (
+          <button key={ex} onClick={() => setId(ex)} style={{
+            background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 5,
+            padding: "0.25rem 0.5rem", cursor: "pointer", color: "var(--fg-muted)", fontSize: "0.78rem",
+          }}>
+            PMID {ex}
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <div style={{ padding: "0.75rem 1rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#f87171", fontSize: "0.85rem" }}>
+          {error}
+        </div>
+      )}
+      {result && <OutputBox value={result} label="BibTeX from PubMed" />}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function BibTexTool() {
   const [tab, setTab] = useState<Tab>("clean");
@@ -386,6 +461,7 @@ export default function BibTexTool() {
     { id: "clean",  label: "Clean & Format",  icon: "✦" },
     { id: "doi",    label: "DOI → BibTeX",    icon: "🔗" },
     { id: "arxiv",  label: "arXiv → BibTeX",  icon: "📄" },
+    { id: "pmid",   label: "PubMed → BibTeX", icon: "🧬" },
   ];
 
   return (
@@ -401,7 +477,7 @@ export default function BibTexTool() {
           BibTeX Tools
         </h1>
         <p style={{ color: "var(--fg-muted)", fontSize: "1rem", lineHeight: 1.65, maxWidth: 580, margin: "0 auto" }}>
-          Clean messy .bib files, look up DOIs, and fetch arXiv citations — all in one place,
+          Clean messy .bib files, look up DOIs, fetch arXiv and PubMed citations — all in one place,
           zero signup required.
         </p>
       </div>
@@ -430,6 +506,7 @@ export default function BibTexTool() {
       {tab === "clean"  && <CleanTab />}
       {tab === "doi"    && <DoiTab />}
       {tab === "arxiv"  && <ArxivTab />}
+      {tab === "pmid"   && <PmidTab />}
 
       {/* Pro tip */}
       <div style={{
@@ -441,7 +518,7 @@ export default function BibTexTool() {
         <strong style={{ color: "var(--accent2)" }}>💡 Pro tip:</strong>{" "}
         Clean your .bib file here, then upload it directly to Overleaf via{" "}
         <em>New Project → Upload Project</em>, or paste it into your Overleaf bibliography file.
-        The DOI and arXiv lookups give you correctly-formatted entries in one click.
+        The DOI, arXiv, and PubMed lookups give you correctly-formatted entries in one click.
       </div>
     </div>
   );

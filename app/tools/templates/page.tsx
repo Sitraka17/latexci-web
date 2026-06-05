@@ -4,27 +4,32 @@ import SiteFooter from "@/components/SiteFooter";
 import TemplatesFilter from "@/components/TemplatesFilter";
 
 export const metadata: Metadata = {
-  title: "Free LaTeX Templates — Academic, CV, Beamer & More",
+  title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis & More",
   description:
-    "Browse 16 free LaTeX templates: PhD thesis, academic papers, CVs with photo, Beamer presentations, ML conference papers (NeurIPS/ICML), math assignments, and Centrale Marseille / AMSE templates. Open any template in the browser — no download, no signup.",
+    "24+ free LaTeX templates: NeurIPS 2024, ICML, ACL/EMNLP, Nature style, PhD thesis, CVs with photo, Beamer presentations, and Centrale Marseille / AMSE templates. Click any template to open it instantly in the browser — no download, no signup.",
   keywords: [
     "free latex templates",
+    "neurips latex template 2024",
+    "icml paper template",
+    "acl emnlp latex template",
+    "nature latex template",
     "latex cv template",
     "beamer presentation template",
     "phd thesis latex template",
     "latex academic paper template",
-    "neurips latex template",
-    "icml paper template",
+    "latex conference paper template",
     "latex cover letter",
     "math assignment latex",
     "centrale marseille latex",
     "amse working paper template",
+    "ml paper latex template",
+    "nlp paper latex template",
   ],
   alternates: { canonical: "/tools/templates" },
   openGraph: {
-    title: "Free LaTeX Templates — Academic, CV, Beamer & More",
+    title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis",
     description:
-      "16 free LaTeX templates for academics: thesis, CV, Beamer, ML conference papers, and Grande École reports. Click to open in the live editor.",
+      "24+ free LaTeX templates: NeurIPS, ICML, ACL, Nature, thesis, CV, Beamer. Click to open in the live editor instantly.",
     url: "/tools/templates",
     type: "website",
   },
@@ -32,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Free LaTeX Templates — latexci",
     description:
-      "PhD thesis, CV with photo, Beamer with logo, NeurIPS/ICML paper, and more. All free, open in browser.",
+      "NeurIPS 2024, ICML, ACL, Nature style, PhD thesis, CV with photo, Beamer. All free, open in browser.",
   },
 };
 
@@ -63,9 +68,9 @@ export default function TemplatesPage() {
           >
             LaTeX Templates
           </h1>
-          <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", maxWidth: 480, margin: 0 }}>
-            Click any template to open it instantly in the live preview editor.
-            No download, no signup.
+          <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", maxWidth: 540, margin: 0 }}>
+            24+ free templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer.
+            Click any template to open it in the live editor. No download, no signup.
           </p>
         </div>
 
@@ -101,11 +106,13 @@ export default function TemplatesPage() {
             }}
           >
             All templates are free to use and modify under the MIT license. They cover the most
-            common LaTeX use cases: academic papers in standard journal formats, CVs for researchers
-            and PhD students, Beamer presentations for conferences, math homework with theorem
-            environments, cover letters, and physics lab reports. Each template opens directly in
-            the latexci live preview editor — see the rendered output immediately and edit the
-            source, no local LaTeX installation required.
+            common LaTeX use cases: <strong style={{color:"var(--fg)"}}>NeurIPS 2024</strong>, <strong style={{color:"var(--fg)"}}>ICML</strong>, <strong style={{color:"var(--fg)"}}>ACL/EMNLP/NAACL</strong>,{" "}
+            <strong style={{color:"var(--fg)"}}>Nature/Science style</strong> manuscripts,
+            PhD and Master&apos;s thesis, CVs for researchers and PhD students (French &amp; English),
+            Beamer presentations, math homework with theorem environments, cover letters,
+            and Centrale Marseille / AMSE institutional reports.
+            Each template opens directly in the latexci live preview editor — see the rendered
+            output immediately and edit the source, no local LaTeX installation required.
           </p>
         </section>
       </div>
