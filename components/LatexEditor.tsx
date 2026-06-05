@@ -432,6 +432,142 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     }
   }, [source, docId, docTitle]);
 
+  // ── LaTeX → Markdown export ────────────────────────────────────────────
+  const downloadMarkdown = useCallback(() => {
+    // Convert LaTeX source directly to Markdown (better fidelity than HTML→MD)
+    let md = source;
+
+    // Strip preamble — keep only body content
+    const bodyMatch = md.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
+    if (bodyMatch) md = bodyMatch[1];
+
+    // Title / author / date → YAML front matter
+    const titleM  = source.match(/\\title\{([^}]*)\}/);
+    const authorM = source.match(/\\author\{([^}]*)\}/);
+    const dateM   = source.match(/\\date\{([^}]*)\}/);
+    let frontMatter = "";
+    if (titleM || authorM) {
+      frontMatter = "---\n";
+      if (titleM)  frontMatter += `title: "${titleM[1].replace(/\\/g, "").trim()}"\n`;
+      if (authorM) frontMatter += `author: "${authorM[1].replace(/\\/g, "").trim()}"\n`;
+      if (dateM && !dateM[1].includes("\\today")) frontMatter += `date: "${dateM[1].trim()}"\n`;
+      frontMatter += "---\n\n";
+    }
+
+    // Remove preamble leftovers
+    md = md.replace(/\\maketitle\b/g, "");
+    md = md.replace(/\\(?:usepackage|documentclass|geometry|setlength|pagestyle)(?:\[[^\]]*\])?\{[^}]*\}/g, "");
+    md = md.replace(/\\(?:newcommand|renewcommand)\{[^}]*\}(?:\[[^\]]*\])?\{[^}]*\}/g, "");
+    md = md.replace(/\\definecolor\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
+
+    // Sections → Markdown headings
+    md = md.replace(/\\chapter\*?\{([^}]*)\}/g, "\n# $1\n");
+    md = md.replace(/\\section\*?\{([^}]*)\}/g,    "\n## $1\n");
+    md = md.replace(/\\subsection\*?\{([^}]*)\}/g,    "\n### $1\n");
+    md = md.replace(/\\subsubsection\*?\{([^}]*)\}/g, "\n#### $1\n");
+    md = md.replace(/\\paragraph\*?\{([^}]*)\}/g,  "\n**$1**\n");
+
+    // Abstract → blockquote
+    md = md.replace(/\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}/g, (_, c) =>
+      `\n> **Abstract:** ${c.trim().replace(/\n+/g, " ")}\n`
+    );
+
+    // Math — keep as-is (Obsidian/Notion understand $...$ and $$...$$)
+    md = md.replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => `\n$$\n${m.trim()}\n$$\n`);
+    md = md.replace(/\\begin\{equation\*?\}([\s\S]*?)\\end\{equation\*?\}/g, (_, m) =>
+      `\n$$\n${m.replace(/\\label\{[^}]*\}/g, "").trim()}\n$$\n`
+    );
+    md = md.replace(/\\begin\{align\*?\}([\s\S]*?)\\end\{align\*?\}/g, (_, m) =>
+      `\n$$\n\\begin{aligned}\n${m.replace(/\\label\{[^}]*\}/g, "").trim()}\n\\end{aligned}\n$$\n`
+    );
+
+    // Lists
+    md = md.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (_, items) =>
+      items.split(/\\item\s*/).filter((s: string) => s.trim())
+        .map((s: string) => `- ${s.trim().replace(/\n+/g, " ")}`)
+        .join("\n") + "\n"
+    );
+    md = md.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (_, items) => {
+      let n = 0;
+      return items.split(/\\item\s*/).filter((s: string) => s.trim())
+        .map((s: string) => `${++n}. ${s.trim().replace(/\n+/g, " ")}`)
+        .join("\n") + "\n";
+    });
+
+    // Code / verbatim
+    md = md.replace(/\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/g, (_, c) => `\`\`\`\n${c}\`\`\`\n`);
+    md = md.replace(/\\begin\{lstlisting\}(?:\[.*?\])?([\s\S]*?)\\end\{lstlisting\}/g, (_, c) => `\`\`\`latex\n${c}\`\`\`\n`);
+
+    // Tables → Markdown table (simplified)
+    md = md.replace(/\\begin\{tabular\}\{[^}]*\}([\s\S]*?)\\end\{tabular\}/g, (_, content) => {
+      const rows = content.split("\\\\").map((r: string) => r.replace(/\\hline|\\(top|mid|bottom)rule/g, "").trim()).filter(Boolean);
+      if (!rows.length) return "";
+      const cells = (r: string) => r.split("&").map((c: string) => c.trim());
+      const header = cells(rows[0]).join(" | ");
+      const sep = cells(rows[0]).map(() => "---").join(" | ");
+      const body = rows.slice(1).map((r: string) => cells(r).join(" | ")).join("\n");
+      return `\n| ${header} |\n| ${sep} |\n${rows.slice(1).length ? rows.slice(1).map((r: string) => `| ${cells(r).join(" | ")} |`).join("\n") : ""}\n`;
+    });
+
+    // Environments
+    md = md.replace(/\\begin\{(?:quote|quotation)\}([\s\S]*?)\\end\{(?:quote|quotation)\}/g, (_, c) =>
+      `\n> ${c.trim().replace(/\n/g, "\n> ")}\n`
+    );
+    md = md.replace(/\\begin\{center\}([\s\S]*?)\\end\{center\}/g, (_, c) => c.trim() + "\n");
+    md = md.replace(/\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\}/g, "");  // drop remaining envs
+
+    // Text formatting
+    md = md.replace(/\\textbf\{([^}]*)\}/g, "**$1**");
+    md = md.replace(/\\textit\{([^}]*)\}/g, "_$1_");
+    md = md.replace(/\\emph\{([^}]*)\}/g, "_$1_");
+    md = md.replace(/\\underline\{([^}]*)\}/g, "$1");
+    md = md.replace(/\\texttt\{([^}]*)\}/g, "`$1`");
+    md = md.replace(/\\textsc\{([^}]*)\}/g, "$1");
+
+    // Links
+    md = md.replace(/\\href\{([^}]*)\}\{([^}]*)\}/g, "[$2]($1)");
+    md = md.replace(/\\url\{([^}]*)\}/g, "<$1>");
+
+    // Citations / refs → plain text
+    md = md.replace(/\\cite(?:\[[^\]]*\])?\{([^}]*)\}/g, "[@$1]");
+    md = md.replace(/\\ref\{([^}]*)\}/g, "\\ref{$1}");
+    md = md.replace(/\\label\{[^}]*\}/g, "");
+
+    // Horizontal rules
+    md = md.replace(/\\(?:hrule|hrulefill|rule\{[^}]*\}\{[^}]*\})/g, "\n---\n");
+
+    // Spacing / misc
+    md = md.replace(/\\(?:newpage|clearpage|pagebreak)\b/g, "\n---\n");
+    md = md.replace(/\\(?:vspace|hspace|kern)\{[^}]*\}/g, "");
+    md = md.replace(/\\(?:noindent|indent|bigskip|medskip|smallskip|centering|raggedright)\b/g, "");
+    md = md.replace(/\\footnote\{([^}]*)\}/g, "[^fn]: $1");
+
+    // Typography
+    md = md.replace(/---/g, "—").replace(/--/g, "–");
+    md = md.replace(/``/g, "“").replace(/''/g, "”");
+    md = md.replace(/\\ldots\b|\\dots\b/g, "…");
+    md = md.replace(/~/g, " ");
+
+    // Generic cleanup
+    md = md.replace(/\\[a-zA-Z]+\*?\{([^}]*)\}/g, "$1");
+    md = md.replace(/\\[a-zA-Z]+\*?\b/g, "");
+    md = md.replace(/\{([^{}]*)\}/g, "$1");
+    md = md.replace(/[{}]/g, "");
+    md = md.replace(/%%[^\n]*/gm, "");
+    md = md.replace(/%[^\n]*/gm, "");
+
+    // Collapse whitespace
+    md = md.replace(/\n{3,}/g, "\n\n").trim();
+
+    const final = frontMatter + md + "\n";
+    const fname = (docId && docTitle !== "Untitled" ? docTitle : "document").replace(/\s+/g, "-");
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(new Blob([final], { type: "text/markdown" })),
+      download: `${fname}.md`,
+    });
+    a.click();
+  }, [source, docId, docTitle]);
+
   const downloadHtml = useCallback(() => {
     const full = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>latexci export</title>` +
       `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">` +
@@ -563,6 +699,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             {copied ? "✓ HTML!" : "Copy HTML"}
           </Btn>
           <Btn onClick={downloadHtml} title="Download as HTML file">↓ HTML</Btn>
+          <Btn onClick={downloadMarkdown} title="Download as Markdown (Obsidian / Notion compatible)">↓ MD</Btn>
           {/* PDF button — always red so it stands out */}
           <button
             onClick={exportPdf}

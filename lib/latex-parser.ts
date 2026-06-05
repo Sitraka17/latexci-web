@@ -22,7 +22,7 @@ const KNOWN_ENVS = new Set([
   "remark", "example", "thebibliography",
   // Layout / formatting environments handled below
   "center", "flushleft", "flushright", "minipage", "multicols",
-  "tabbing", "quote", "quotation", "verse",
+  "tabbing", "quote", "quotation", "verse", "description", "longtable",
 ]);
 
 // Placeholder tokens — cannot appear in valid LaTeX
@@ -452,6 +452,33 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   body = body.replace(/\\begin\{verse\}([\s\S]*?)\\end\{verse\}/g, (_, c) =>
     block(`<div style="margin:1rem 2rem;font-style:italic;white-space:pre-line">${inline(c.trim())}</div>`)
   );
+
+  // description (labelled list like <dl>)
+  body = body.replace(/\\begin\{description\}([\s\S]*?)\\end\{description\}/g, (_, content) => {
+    const items = content.split(/\\item\s*/).filter((s: string) => s.trim());
+    const dls = items.map((s: string) => {
+      const labelM = s.match(/^\[([^\]]*)\]\s*/);
+      if (labelM) {
+        const label = labelM[1];
+        const rest  = s.slice(labelM[0].length).trim();
+        return `<dt><strong>${inline(label)}</strong></dt><dd>${inline(rest)}</dd>`;
+      }
+      return `<dd>${inline(s.trim())}</dd>`;
+    }).join("");
+    return block(`<dl style="margin:0.75rem 0 0.75rem 1.5rem">${dls}</dl>`);
+  });
+
+  // longtable — treat same as tabular but drop caption that might appear mid-body
+  body = body.replace(/\\begin\{longtable\}(\{[^}]*\})([\s\S]*?)\\end\{longtable\}/g, (_, spec, content) => {
+    // Strip longtable-specific commands
+    const clean = content
+      .replace(/\\(?:endhead|endfirsthead|endfoot|endlastfoot)\b/g, "")
+      .replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}(?:\\\\)?/g, "")
+      .replace(/\\label\{[^}]*\}/g, "");
+    // Reuse tabular renderer by prepending \begin{tabular}
+    const fakeTabular = `\\begin{tabular}${spec}${clean}\\end{tabular}`;
+    return fakeTabular;
+  });
 
   // Remaining unknown envs
   body = body.replace(/\\begin\{([^}]+)\}([\s\S]*?)\\end\{\1\}/g, (_, env: string, content: string) => {

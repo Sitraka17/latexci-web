@@ -3,14 +3,15 @@ import ToolLayout from "@/components/ToolLayout";
 import BibTexTool from "@/components/BibTexTool";
 
 export const metadata: Metadata = {
-  title: "BibTeX Tools — Clean, DOI, arXiv & PubMed Lookup — latexci",
+  title: "BibTeX Tools — DOI, arXiv, PubMed, ISBN Lookup — latexci",
   description:
-    "Free BibTeX tools: clean and format .bib files, look up DOIs via CrossRef, fetch arXiv and PubMed citations. No signup required. Works in your browser.",
+    "Free BibTeX tools: clean and format .bib files, look up DOIs via CrossRef, fetch arXiv and PubMed citations, convert ISBNs to @book entries. No signup, works in any browser.",
   keywords: [
     "bibtex cleaner", "bibtex formatter", "doi to bibtex", "arxiv to bibtex",
-    "pubmed to bibtex", "pmid to bibtex", "bibtex tidy", "bib file cleaner",
-    "latex bibliography tool", "citation formatter", "bibtex online",
-    "clean bibtex file", "ncbi bibtex", "pubmed citation latex",
+    "pubmed to bibtex", "pmid to bibtex", "isbn to bibtex", "book bibtex generator",
+    "bibtex tidy", "bib file cleaner", "latex bibliography tool",
+    "citation formatter", "bibtex online", "clean bibtex file",
+    "ncbi bibtex", "pubmed citation latex", "open library bibtex",
   ],
   alternates: { canonical: "/tools/bibtex" },
   openGraph: {

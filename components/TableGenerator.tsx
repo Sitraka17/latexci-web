@@ -164,6 +164,43 @@ export default function TableGenerator() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // ── CSV / Excel paste handler ───────────────────────────────────────────
+  // Accepts tab-separated (Excel copy) or comma-separated pasted text.
+  // Automatically resizes the grid to fit the pasted data.
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData("text");
+    if (!text.includes("\t") && !text.includes("\n") && !text.includes(",")) return;
+    e.preventDefault();
+
+    // Split rows by newline, then cells by tab (Excel) or comma (CSV)
+    const pasted = text.trim().split(/\r?\n/).map(row => {
+      if (row.includes("\t")) return row.split("\t");
+      // Naive CSV: handle quoted fields
+      const cells: string[] = [];
+      let cur = "", inQ = false;
+      for (const ch of row) {
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === "," && !inQ) { cells.push(cur.trim()); cur = ""; }
+        else cur += ch;
+      }
+      cells.push(cur.trim());
+      return cells;
+    }).filter(r => r.some(c => c));
+
+    if (!pasted.length) return;
+
+    const newRows = pasted.length;
+    const newCols = Math.max(...pasted.map(r => r.length));
+    const newGrid = pasted.map(row =>
+      Array.from({ length: newCols }, (_, c) => (row[c] ?? "").trim())
+    );
+
+    setRows(newRows);
+    setCols(newCols);
+    setData(newGrid);
+    setAligns(makeAligns(newCols, aligns));
+  }, [aligns]);
+
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -266,6 +303,11 @@ export default function TableGenerator() {
 
         <div style={{ flex: 1 }} />
 
+        {/* Paste from Excel/CSV hint */}
+        <span style={{ fontSize: "0.72rem", color: "var(--fg-muted)", opacity: 0.75 }}>
+          Paste Excel/CSV into any cell →
+        </span>
+
         <button
           onClick={copy}
           style={{
@@ -307,6 +349,7 @@ export default function TableGenerator() {
             gap: "1rem",
             minWidth: 0,
           }}
+          onPaste={handlePaste}
         >
           <div>
             <p
@@ -316,7 +359,7 @@ export default function TableGenerator() {
                 color: "var(--fg-muted)",
               }}
             >
-              Enter your data. Use Tab to move between cells.
+              Enter your data. Tab to move. <strong>Paste from Excel or CSV</strong> to fill the whole table instantly.
             </p>
 
             {/* Align row */}

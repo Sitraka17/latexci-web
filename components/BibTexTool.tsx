@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef } from "react";
 import { cleanBibTeX } from "@/lib/bibtex";
 
-type Tab = "clean" | "doi" | "arxiv" | "pmid";
+type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
 
 // ── tiny shared button ────────────────────────────────────────────────────────
 function Btn({
@@ -453,6 +453,85 @@ function PmidTab() {
   );
 }
 
+// ── ISBN tab ──────────────────────────────────────────────────────────────────
+function IsbnTab() {
+  const [id,      setId]      = useState("");
+  const [result,  setResult]  = useState("");
+  const [error,   setError]   = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const lookup = async () => {
+    const raw = id.trim();
+    if (!raw) return;
+    setLoading(true); setError(""); setResult("");
+    try {
+      const res = await fetch(`/api/isbn-to-bibtex?isbn=${encodeURIComponent(raw)}`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        setError(j.error ?? "Unknown error");
+      } else {
+        setResult(await res.text());
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxWidth: 680 }}>
+      <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
+        Enter an ISBN-10 or ISBN-13 to generate a <code style={{ fontSize: "0.85rem" }}>@book</code> BibTeX entry.
+        Fetches metadata from{" "}
+        <a href="https://openlibrary.org/" target="_blank" rel="noopener" style={{ color: "var(--accent)" }}>Open Library</a>{" "}
+        (20M+ books). Useful for textbooks and monographs.
+      </p>
+      <div style={{ display: "flex", gap: "0.65rem" }}>
+        <input
+          value={id}
+          onChange={e => setId(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && lookup()}
+          placeholder="9780262033848  or  0262033844  (ISBN-10 or ISBN-13)"
+          style={{
+            flex: 1, background: "var(--surface)", color: "var(--fg)",
+            border: "1px solid var(--border)", borderRadius: 7,
+            padding: "0.55rem 0.9rem", fontSize: "0.9rem", outline: "none",
+          }}
+        />
+        <Btn variant="primary" onClick={lookup} disabled={loading || !id.trim()}>
+          {loading ? "Looking up…" : "Get BibTeX"}
+        </Btn>
+      </div>
+
+      {/* Quick examples */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
+        {[
+          { isbn: "9780262033848", label: "CLRS Algorithms" },
+          { isbn: "9780201633610", label: "Design Patterns" },
+          { isbn: "9780262046305", label: "Goodfellow DL" },
+        ].map(ex => (
+          <button key={ex.isbn} onClick={() => setId(ex.isbn)} style={{
+            background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 5,
+            padding: "0.25rem 0.5rem", cursor: "pointer", color: "var(--fg-muted)", fontSize: "0.75rem",
+            textAlign: "left" as const,
+          }}>
+            <div style={{ fontWeight: 600, color: "var(--fg)", marginBottom: 1 }}>{ex.label}</div>
+            <div style={{ fontFamily: "JetBrains Mono, monospace" }}>{ex.isbn}</div>
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <div style={{ padding: "0.75rem 1rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#f87171", fontSize: "0.85rem" }}>
+          {error}
+        </div>
+      )}
+      {result && <OutputBox value={result} label="BibTeX from ISBN" />}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function BibTexTool() {
   const [tab, setTab] = useState<Tab>("clean");
@@ -462,6 +541,7 @@ export default function BibTexTool() {
     { id: "doi",    label: "DOI → BibTeX",    icon: "🔗" },
     { id: "arxiv",  label: "arXiv → BibTeX",  icon: "📄" },
     { id: "pmid",   label: "PubMed → BibTeX", icon: "🧬" },
+    { id: "isbn",   label: "ISBN → BibTeX",   icon: "📘" },
   ];
 
   return (
@@ -476,9 +556,8 @@ export default function BibTexTool() {
         }}>
           BibTeX Tools
         </h1>
-        <p style={{ color: "var(--fg-muted)", fontSize: "1rem", lineHeight: 1.65, maxWidth: 580, margin: "0 auto" }}>
-          Clean messy .bib files, look up DOIs, fetch arXiv and PubMed citations — all in one place,
-          zero signup required.
+        <p style={{ color: "var(--fg-muted)", fontSize: "1rem", lineHeight: 1.65, maxWidth: 620, margin: "0 auto" }}>
+          Clean .bib files · DOI · arXiv · PubMed · ISBN — all in one place, zero signup.
         </p>
       </div>
 
@@ -507,6 +586,7 @@ export default function BibTexTool() {
       {tab === "doi"    && <DoiTab />}
       {tab === "arxiv"  && <ArxivTab />}
       {tab === "pmid"   && <PmidTab />}
+      {tab === "isbn"   && <IsbnTab />}
 
       {/* Pro tip */}
       <div style={{

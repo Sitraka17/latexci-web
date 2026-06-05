@@ -3,17 +3,29 @@ import ToolLayout from "@/components/ToolLayout";
 import TableGenerator from "@/components/TableGenerator";
 
 export const metadata: Metadata = {
-  title: "LaTeX Table Generator — Free Online tabular Builder — latexci",
+  title: "LaTeX Table Generator — Free, Paste from Excel or CSV — latexci",
   description:
-    "Generate LaTeX table code instantly. Enter data in a visual grid, choose column alignment and borders (booktabs or simple), copy the ready-to-use tabular environment. Free.",
+    "Free LaTeX table generator: paste data from Excel or CSV, pick column alignment (l/c/r), choose booktabs or simple borders, copy the ready-to-use tabular or table environment. No signup, works in any browser.",
   keywords: [
-    "latex table generator", "latex tabular generator", "latex table maker online",
-    "booktabs latex generator", "create latex table online", "latex table builder free",
+    "latex table generator",
+    "latex table generator online",
+    "latex tabular generator",
+    "booktabs latex table",
+    "latex table maker",
+    "create latex table from excel",
+    "latex table from csv",
+    "online latex table creator",
+    "latex tabular environment",
+    "latex table generator free",
+    "paste excel to latex table",
+    "academic table latex",
+    "latex table online",
+    "convert excel to latex table",
   ],
   alternates: { canonical: "/tools/table" },
   openGraph: {
-    title: "LaTeX Table Generator — latexci",
-    description: "Visual LaTeX table builder. Enter data, pick alignment, copy the tabular code.",
+    title: "LaTeX Table Generator — Free, Paste from Excel — latexci",
+    description: "Visual LaTeX table builder. Paste from Excel/CSV or type data, pick alignment and borders, copy booktabs or tabular code instantly.",
     url: "/tools/table", type: "website",
   },
   twitter: { card: "summary_large_image", title: "LaTeX Table Generator — latexci" },
@@ -23,17 +35,57 @@ const schema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "LaTeX Table Generator — latexci",
-  description: "Visual LaTeX tabular generator. Enter data, choose alignment and borders, copy the code.",
+  description: "Free online LaTeX table generator. Paste from Excel/CSV, pick alignment, copy booktabs or tabular code. No signup required.",
   url: "https://latexci.com/tools/table",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web Browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
 };
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How do I create a LaTeX table from Excel?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Select your data in Excel, copy it (Ctrl+C / Cmd+C), then paste it into the latexci table generator. The tool automatically detects tab-separated values and fills all rows and columns. Click 'Copy LaTeX' to get the tabular code.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is the difference between booktabs and simple borders in LaTeX?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Booktabs uses \\toprule, \\midrule, and \\bottomrule — horizontal rules only, no vertical lines. This is the style recommended by most journals and the LaTeX typesetting community. Simple borders use \\hline and vertical | characters in the column spec. Booktabs is generally preferred for academic papers.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How do I paste a CSV file into a LaTeX table?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Open your CSV in a text editor or Excel, copy the rows, and paste them directly into the table generator grid. The tool handles both comma-separated and tab-separated formats.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Do I need \\usepackage{booktabs} in my preamble?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes — when using the booktabs style, the generated LaTeX includes a comment reminding you to add \\usepackage{booktabs} to your preamble. Simple and no-border styles do not need this package.",
+      },
+    },
+  ],
+};
+
 export default function TablePage() {
   return (
     <ToolLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <TableGenerator />
     </ToolLayout>
   );
