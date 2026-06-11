@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -12,6 +13,9 @@ function isValidIsbn(isbn: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { limit: 20, windowMs: 60_000 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: 429, headers: rl.headers });
+
   const raw = req.nextUrl.searchParams.get("isbn")?.trim() ?? "";
   if (!raw) return NextResponse.json({ error: "Missing isbn param" }, { status: 400 });
 

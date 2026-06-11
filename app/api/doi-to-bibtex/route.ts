@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -6,6 +7,9 @@ export const runtime = "edge";
 const DOI_RE = /^10\.\d{4,}[\w.()/:;-]*\/\S+$/;
 
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { limit: 30, windowMs: 60_000 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: 429, headers: rl.headers });
+
   const doi = req.nextUrl.searchParams.get("doi")?.trim();
   if (!doi) return NextResponse.json({ error: "Missing doi param" }, { status: 400 });
 

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
 /** Fetch article metadata from NCBI E-utilities (free, no key needed for low traffic) */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { limit: 30, windowMs: 60_000 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: 429, headers: rl.headers });
+
   const raw = req.nextUrl.searchParams.get("id")?.trim() ?? "";
   if (!raw) return NextResponse.json({ error: "Missing id param" }, { status: 400 });
 
