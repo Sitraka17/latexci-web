@@ -23,6 +23,13 @@ const KNOWN_ENVS = new Set([
   // Layout / formatting environments handled below
   "center", "flushleft", "flushright", "minipage", "multicols",
   "tabbing", "quote", "quotation", "verse", "description", "longtable",
+  // CS / algorithms
+  "algorithm", "algorithmic", "algorithm2e", "algorithmicx", "algpseudocode",
+  "lstlisting",
+  // Beamer
+  "frame", "block", "alertblock", "exampleblock", "columns", "column", "onlyenv",
+  // Other common packages
+  "tikzpicture", "pgfpicture", "comment",
 ]);
 
 // Placeholder tokens — cannot appear in valid LaTeX
@@ -327,7 +334,7 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   for (const env of thmEnvs) {
     const label = env.charAt(0).toUpperCase() + env.slice(1);
     body = body.replace(
-      new RegExp(`\\\\begin\\{${env}\\}(?:\\[([^\\]]*)\\])?(\\s*)([\s\S]*?)\\\\end\\{${env}\\}`, "g"),
+      new RegExp(`\\\\begin\\{${env}\\}(?:\\[([^\\]]*)\\])?(\\s*)([\\s\\S]*?)\\\\end\\{${env}\\}`, "g"),
       (_, opt, _ws, c) => block(
         `<div class="thm-box thm-${env}"><span class="thm-label">${label}${opt ? ` (${opt})` : ""}.</span> ${inline(c.trim())}</div>`
       )
@@ -403,12 +410,14 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     let prev = "";
     while (prev !== body) {
       prev = body;
-      body = body.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (_, items) => {
+      // Match only lists with no nested \begin{itemize|enumerate} inside,
+      // i.e. the innermost ones — outer lists are converted on later passes.
+      body = body.replace(/\\begin\{itemize\}((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{itemize\}/g, (_, items) => {
         const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
           .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
         return block(`<ul>${lis}</ul>`);
       });
-      body = body.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (_, items) => {
+      body = body.replace(/\\begin\{enumerate\}((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{enumerate\}/g, (_, items) => {
         const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
           .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
         return block(`<ol>${lis}</ol>`);
@@ -419,6 +428,120 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   // Bibliography block — use pre-rendered HTML from prescan
   body = body.replace(/\\begin\{thebibliography\}[\s\S]*?\\end\{thebibliography\}/g, () =>
     block(bibHtml || "")
+  );
+
+  // ── Multi-file: \input / \include warning ────────────────────────────────
+  // These cannot be resolved in a single-file browser preview.
+  // Surface a clear yellow notice instead of silently losing content.
+  body = body.replace(/\\(?:input|include|subfile)\{([^}]*)\}/g, (_, fname: string) => {
+    warnings.push({ env: "\\input", reason: `Multi-file document: "${fname}" not loaded` });
+    return block(
+      `<div class="unknown-env" style="border-color:#f59e0b;color:#f59e0b">` +
+      `⚠ <code>\\input{${escapeHtml(fname)}}</code> — multi-file document. ` +
+      `Paste the contents of <em>${escapeHtml(fname)}</em> here to preview it.` +
+      `</div>`
+    );
+  });
+
+  // ── Algorithm / pseudocode environments ──────────────────────────────────
+  // Render as a styled code block. Translates common algorithmic commands.
+  function renderAlgorithm(content: string): string {
+    const c = content
+      // strip \caption and \label
+      .replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}/g, "")
+      .replace(/\\label\{[^}]*\}/g, "")
+      // algorithmic state — bold keywords
+      .replace(/\\(State|Procedure|Function|Return|If|ElsIf|Else|EndIf|For|EndFor|While|EndWhile|Loop|EndLoop|Require|Ensure|Input|Output)\b\s*/g,
+        (_: string, kw: string) => `<strong>${kw}</strong> `)
+      // \COMMENT{text}
+      .replace(/\\(?:Comment|COMMENT)\{([^}]*)\}/g, '<em style="opacity:0.6"> ▷ $1</em>')
+      // \State, \gets
+      .replace(/\\gets\b/g, "←")
+      .replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>")
+      .replace(/\\emph\{([^}]*)\}/g, "<em>$1</em>")
+      // inline math
+      .replace(/\$([^$\n]+?)\$/g, (_, m) =>
+        `<span class="math-inline" data-math="${encodeMath(m)}"></span>`)
+      // strip remaining LaTeX commands
+      .replace(/\\[a-zA-Z]+\*?\{([^}]*)\}/g, "$1")
+      .replace(/\\[a-zA-Z]+\*?\b/g, "")
+      .replace(/\{([^}]*)\}/g, "$1")
+      .trim();
+    return (
+      `<div class="thm-box" style="font-family:'JetBrains Mono',monospace;font-size:0.85em">` +
+      `<span class="thm-label">Algorithm</span><br>` +
+      `<div style="white-space:pre-wrap;margin-top:0.5rem">${c}</div>` +
+      `</div>`
+    );
+  }
+
+  const algoEnvs = [
+    "algorithm", "algorithmic", "algorithm2e", "algorithmicx", "algpseudocode",
+  ];
+  for (const env of algoEnvs) {
+    body = body.replace(
+      new RegExp(`\\\\begin\\{${env}\\}(?:\\[[^\\]]*\\])?(\\s*[\\s\\S]*?)\\\\end\\{${env}\\}`, "g"),
+      (_, content: string) => block(renderAlgorithm(content))
+    );
+  }
+
+  // ── Beamer frame environments ─────────────────────────────────────────────
+  // Render each frame as a styled card with its title (frametitle).
+  body = body.replace(
+    /\\begin\{frame\}(\[[^\]]*\])?(?:\{([^}]*)\})?([\s\S]*?)\\end\{frame\}/g,
+    (_, _opts, title: string | undefined, content: string) => {
+      const titleHtml = title
+        ? `<div style="font-weight:700;font-size:1rem;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)">${inline(title)}</div>`
+        : "";
+      const frametitle = content.match(/\\frametitle\{([^}]*)\}/);
+      const ftHtml = frametitle
+        ? `<div style="font-weight:700;font-size:1rem;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)">${inline(frametitle[1])}</div>`
+        : "";
+      const cleaned = content
+        .replace(/\\frametitle\{[^}]*\}/g, "")
+        .replace(/\\framesubtitle\{[^}]*\}/g, "");
+      return block(
+        `<div class="thm-box" style="border-left:3px solid var(--accent);margin:0.75rem 0">` +
+        (ftHtml || titleHtml) +
+        `${inline(cleaned.trim())}</div>`
+      );
+    }
+  );
+
+  // Beamer block environments
+  body = body.replace(/\\begin\{block\}\{([^}]*)\}([\s\S]*?)\\end\{block\}/g, (_, title, c) =>
+    block(`<div class="thm-box"><span class="thm-label">${inline(title)}</span> ${inline(c.trim())}</div>`)
+  );
+  body = body.replace(/\\begin\{alertblock\}\{([^}]*)\}([\s\S]*?)\\end\{alertblock\}/g, (_, title, c) =>
+    block(`<div class="thm-box" style="border-color:#f87171"><span class="thm-label" style="color:#f87171">${inline(title)}</span> ${inline(c.trim())}</div>`)
+  );
+  body = body.replace(/\\begin\{exampleblock\}\{([^}]*)\}([\s\S]*?)\\end\{exampleblock\}/g, (_, title, c) =>
+    block(`<div class="thm-box" style="border-color:#34d399"><span class="thm-label" style="color:#34d399">${inline(title)}</span> ${inline(c.trim())}</div>`)
+  );
+
+  // Beamer columns layout — render each column inline
+  body = body.replace(/\\begin\{columns\}([\s\S]*?)\\end\{columns\}/g, (_, content) => {
+    const cols = [...content.matchAll(/\\begin\{column\}(?:\[[^\]]*\])?\{[^}]*\}([\s\S]*?)\\end\{column\}/g)]
+      .map(m => `<div style="flex:1;min-width:0">${inline(m[1].trim())}</div>`)
+      .join("");
+    return block(`<div style="display:flex;gap:1.5rem;align-items:flex-start">${cols}</div>`);
+  });
+
+  // ── Suppress non-renderable environments gracefully ───────────────────────
+  // tikz, pgf, comment — remove silently (can't render in browser)
+  body = body.replace(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g, () =>
+    block(`<div class="fig-placeholder">🔷 TikZ figure (not rendered in browser preview — compile to PDF)</div>`)
+  );
+  body = body.replace(/\\begin\{pgfpicture\}[\s\S]*?\\end\{pgfpicture\}/g, () =>
+    block(`<div class="fig-placeholder">🔷 PGF figure (not rendered in browser preview)</div>`)
+  );
+  body = body.replace(/\\begin\{comment\}[\s\S]*?\\end\{comment\}/g, "");
+
+  // \printbibliography placeholder
+  body = body.replace(/\\printbibliography(?:\[[^\]]*\])?/g, () =>
+    block(`<div class="bib-section"><h2 class="bib-heading">References</h2>` +
+      `<div class="unknown-env" style="border-color:#6366f1;color:#6366f1;font-size:0.82em">` +
+      `📚 <code>\\printbibliography</code> — compile with <strong>biber</strong> to generate the reference list.</div></div>`)
   );
 
   // ── Layout / formatting environments ─────────────────────────────────────
@@ -543,7 +666,11 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     .join("\n");
 
   // ── Phase 4: restore placeholders ───────────────────────────────────────
-  for (const [ph, html] of blocks) {
+  // IMPORTANT: iterate in REVERSE insertion order so that inner placeholders
+  // (which were inserted first) are resolved after outer ones embed them.
+  // e.g. nested \begin{itemize} — inner list ph appears inside outer list html;
+  // processing outer first puts inner ph into body, then inner resolves it.
+  for (const [ph, html] of [...blocks].reverse()) {
     body = body.split(ph).join(html);
   }
 
@@ -575,6 +702,16 @@ function cleanMath(math: string): string {
   return math.replace(/\\label\{[^}]*\}/g, "").trim();
 }
 
+// ── Helper: translate packages that KaTeX doesn't support natively ────────────
+// Called on math content BEFORE encodeMath so KaTeX can render correctly.
+function sanitizeMathForKaTeX(math: string): string {
+  return math
+    // bm package: \bm{x} → \boldsymbol{x}  (KaTeX supports boldsymbol, not bm)
+    .replace(/\\bm\{/g, "\\boldsymbol{")
+    // \operatorname* (starred) → \operatorname (KaTeX doesn't support *)
+    .replace(/\\operatorname\*/g, "\\operatorname");
+}
+
 // ── Inline processing ─────────────────────────────────────────────────────────
 
 /** Static version (no footnote collection) — used in prescan bibitem text */
@@ -591,7 +728,7 @@ function processInline(
 ): string {
   // Inline math: $...$ only ($$...$$ is handled as block in Phase 1)
   text = text.replace(/\$([^$\n]+?)\$/g, (_, m) =>
-    `<span class="math-inline" data-math="${encodeMath(m)}"></span>`
+    `<span class="math-inline" data-math="${encodeMath(sanitizeMathForKaTeX(m))}"></span>`
   );
 
   // Text formatting
@@ -601,7 +738,7 @@ function processInline(
   text = text.replace(/\\underline\{([^}]*)\}/g, "<u>$1</u>");
   text = text.replace(/\\texttt\{([^}]*)\}/g, "<code>$1</code>");
   text = text.replace(/\\text\{([^}]*)\}/g, "$1");
-  text = text.replace(/\\textsc\{([^}]*)\}/g, "<span style='font-variant:small-caps'>$1</span>");
+  text = text.replace(/\\textsc\{([^}]*)\}/g, '<span style="font-variant:small-caps">$1</span>');
 
   // ── Citations \\cite{key} or \\cite{key1,key2} ──────────────────────────
   text = text.replace(/\\cite(?:\[[^\]]*\])?\{([^}]*)\}/g, (_, keys: string) => {
@@ -637,11 +774,11 @@ function processInline(
   // URLs and hrefs — sanitize to block javascript: and other dangerous protocols
   text = text.replace(/\\url\{([^}]*)\}/g, (_, u) => {
     const href = safeHref(u);
-    return `<a href='${href}' target='_blank' rel='noopener noreferrer'>${escapeHtml(u)}</a>`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(u)}</a>`;
   });
   text = text.replace(/\\href\{([^}]*)\}\{([^}]*)\}/g, (_, u, label) => {
     const href = safeHref(u);
-    return `<a href='${href}' target='_blank' rel='noopener noreferrer'>${label}</a>`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
   });
 
   // Author lists
@@ -679,7 +816,45 @@ function processInline(
   // Thanks
   text = text.replace(/\\thanks\{([^}]*)\}/g, "<sup>*</sup>");
 
-  // ── Color commands ────────────────────────────────────────────────────────
+  // ── \boxed{} — highlight result (very common in physics/math) ────────────
+  // Wrap in KaTeX \boxed so it renders with a box
+  text = text.replace(/\\boxed\{([^}]*)\}/g, (_, inner) =>
+    `<span class="math-inline" data-math="${encodeMath("\\boxed{" + inner + "}")}"></span>`
+  );
+
+  // ── \bm{} — bold math (bm package, standard in ML papers) ────────────────
+  // Map to \boldsymbol which KaTeX understands
+  text = text.replace(/\\bm\{([^}]*)\}/g, (_, inner) =>
+    `<span class="math-inline" data-math="${encodeMath("\\boldsymbol{" + inner + "}")}"></span>`
+  );
+
+  // ── siunitx: \SI{value}{unit} / \si{unit} / \num{number} ─────────────────
+  text = text.replace(/\\SI\{([^}]*)\}\{([^}]*)\}/g, (_, val, unit) => {
+    // Simplify unit: \meter → m, \per → /, \squared → ², etc.
+    const u = unit
+      .replace(/\\per\b/g, "/").replace(/\\kilo\b/g, "k").replace(/\\mega\b/g, "M")
+      .replace(/\\meter\b/g, "m").replace(/\\metre\b/g, "m")
+      .replace(/\\second\b/g, "s").replace(/\\kilogram\b/g, "kg")
+      .replace(/\\newton\b/g, "N").replace(/\\joule\b/g, "J")
+      .replace(/\\watt\b/g, "W").replace(/\\hertz\b/g, "Hz")
+      .replace(/\\pascal\b/g, "Pa").replace(/\\kelvin\b/g, "K")
+      .replace(/\\celsius\b/g, "°C").replace(/\\degree\b/g, "°")
+      .replace(/\\squared\b/g, "²").replace(/\\cubed\b/g, "³")
+      .replace(/\\\\|\s*\.\s*/g, "").replace(/\{|\}/g, "").trim();
+    return `${val} ${u}`;
+  });
+  text = text.replace(/\\si\{([^}]*)\}/g, (_, unit) =>
+    unit.replace(/\\[a-zA-Z]+/g, (m: string) => m.slice(1)).replace(/[{}]/g, "")
+  );
+  text = text.replace(/\\num\{([^}]*)\}/g, "$1");
+
+  // ── \substack — multi-line subscript/superscript ──────────────────────────
+  // Already handled by KaTeX if inside math — this is a fallback for text mode
+  text = text.replace(/\\substack\{([^}]*)\}/g, (_, inner) =>
+    `<span class="math-inline" data-math="${encodeMath("\\substack{" + inner + "}")}"></span>`
+  );
+
+  // ── \color commands ────────────────────────────────────────────────────────
   // \textcolor{color}{text} — keep text, drop color
   text = text.replace(/\\textcolor\{[^}]*\}\{([^}]*)\}/g, "$1");
   // \colorbox{color}{text} — keep text
