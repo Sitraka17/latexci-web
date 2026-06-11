@@ -159,9 +159,10 @@ export default function TableGenerator() {
   }, [data, aligns, borders, headerRow, hlines, cols]);
 
   const copy = () => {
-    navigator.clipboard.writeText(latex);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(latex).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   };
 
   // ── CSV / Excel paste handler ───────────────────────────────────────────
@@ -219,7 +220,7 @@ export default function TableGenerator() {
       >
         <span
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "var(--font-mono), monospace",
             fontSize: "0.75rem",
             color: "var(--fg-muted)",
             marginRight: 4,
@@ -491,7 +492,7 @@ export default function TableGenerator() {
               style={{
                 fontSize: "0.7rem",
                 color: "#8a88a4",
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: "var(--font-mono), monospace",
               }}
             >
               output.tex
@@ -518,7 +519,7 @@ export default function TableGenerator() {
               overflowY: "auto",
               margin: 0,
               padding: "1.25rem 1rem",
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "var(--font-mono), monospace",
               fontSize: "0.78rem",
               lineHeight: 1.7,
               color: "#d4d4d4",

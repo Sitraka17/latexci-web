@@ -38,7 +38,7 @@ function CopyBtn({ text }: { text: string }) {
       navigator.clipboard.writeText(text).then(() => {
         setDone(true);
         setTimeout(() => setDone(false), 2000);
-      });
+      }).catch(() => {});
     }}>
       {done ? "✓ Copied!" : "Copy BibTeX"}
     </Btn>
@@ -60,7 +60,7 @@ function OutputBox({ value, label }: { value: string; label?: string }) {
         style={{
           width: "100%", minHeight: 240, background: "var(--surface)", color: "var(--fg)",
           border: "1px solid var(--border)", borderRadius: 8, padding: "0.9rem 1rem",
-          fontFamily: "JetBrains Mono, monospace", fontSize: "12.5px",
+          fontFamily: "var(--font-mono), monospace", fontSize: "12.5px",
           lineHeight: 1.7, resize: "vertical", boxSizing: "border-box",
           outline: "none",
         }}
@@ -179,7 +179,7 @@ function CleanTab() {
             style={{
               width: "100%", minHeight: 280, background: "var(--surface)", color: "var(--fg)",
               border: "1px solid var(--border)", borderRadius: 8, padding: "0.9rem 1rem",
-              fontFamily: "JetBrains Mono, monospace", fontSize: "12.5px",
+              fontFamily: "var(--font-mono), monospace", fontSize: "12.5px",
               lineHeight: 1.7, resize: "vertical", boxSizing: "border-box", outline: "none",
             }}
           />
@@ -199,7 +199,7 @@ function CleanTab() {
             style={{
               width: "100%", minHeight: 280, background: "var(--surface)", color: "var(--fg)",
               border: "1px solid var(--border)", borderRadius: 8, padding: "0.9rem 1rem",
-              fontFamily: "JetBrains Mono, monospace", fontSize: "12.5px",
+              fontFamily: "var(--font-mono), monospace", fontSize: "12.5px",
               lineHeight: 1.7, resize: "vertical", boxSizing: "border-box", outline: "none",
             }}
           />
@@ -517,7 +517,7 @@ function IsbnTab() {
             textAlign: "left" as const,
           }}>
             <div style={{ fontWeight: 600, color: "var(--fg)", marginBottom: 1 }}>{ex.label}</div>
-            <div style={{ fontFamily: "JetBrains Mono, monospace" }}>{ex.isbn}</div>
+            <div style={{ fontFamily: "var(--font-mono), monospace" }}>{ex.isbn}</div>
           </button>
         ))}
       </div>

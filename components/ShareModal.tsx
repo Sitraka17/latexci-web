@@ -156,9 +156,10 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
 
   function copyLink() {
     if (!state) return;
-    navigator.clipboard.writeText(`${SITE}/shared/${state.share_token}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(`${SITE}/shared/${state.share_token}`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   }
 
   const shareUrl = state ? `${SITE}/shared/${state.share_token}` : "";

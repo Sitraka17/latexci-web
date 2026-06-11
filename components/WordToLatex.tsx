@@ -444,9 +444,10 @@ export default function WordToLatex() {
   });
 
   const copyLatex = () => {
-    navigator.clipboard.writeText(result);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(result).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   };
 
   const downloadLatex = () => {
@@ -602,7 +603,7 @@ export default function WordToLatex() {
               <textarea value={result} onChange={e => setResult(e.target.value)} style={{
                 width: "100%", height: "60vh", background: "var(--surface)", color: "var(--fg)",
                 border: "none", outline: "none", padding: "1rem",
-                fontFamily: "JetBrains Mono, monospace", fontSize: "12.5px",
+                fontFamily: "var(--font-mono), monospace", fontSize: "12.5px",
                 lineHeight: 1.65, resize: "none",
               }} />
             )}

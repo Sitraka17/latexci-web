@@ -181,27 +181,26 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load CodeMirror extensions — theme switches with light/dark mode
+  // Load CodeMirror extensions — theme + LaTeX keybindings. Re-runs on dark/light toggle.
   useEffect(() => {
-    Promise.all([
-      import("@codemirror/lang-markdown").then(m => m.markdown()),
-      (async () => {
-        const { createTheme } = await import("@uiw/codemirror-themes");
-        const { tags }        = await import("@lezer/highlight");
-        if (isLight) {
-          // ── Warm parchment (light mode) ──────────────────────────
-          return createTheme({
+    (async () => {
+      const [{ createTheme }, { tags }, lang, { keymap }, { Prec }] = await Promise.all([
+        import("@uiw/codemirror-themes"),
+        import("@lezer/highlight"),
+        import("@codemirror/lang-markdown").then(m => m.markdown()),
+        import("@codemirror/view"),
+        import("@codemirror/state"),
+      ]);
+
+      // ── Theme ─────────────────────────────────────────────────────────────
+      const theme = isLight
+        ? createTheme({
             theme: "light",
             settings: {
-              background:       "#faf6f0",
-              foreground:       "#2c2018",
-              caret:            "#7a5c40",
-              selection:        "rgba(180,150,110,0.28)",
-              selectionMatch:   "rgba(180,150,110,0.16)",
-              lineHighlight:    "#f5efea",
-              gutterBackground: "#f0ebe3",
-              gutterForeground: "#b0a090",
-              gutterBorder:     "transparent",
+              background: "#faf6f0", foreground: "#2c2018", caret: "#7a5c40",
+              selection: "rgba(180,150,110,0.28)", selectionMatch: "rgba(180,150,110,0.16)",
+              lineHighlight: "#f5efea", gutterBackground: "#f0ebe3",
+              gutterForeground: "#b0a090", gutterBorder: "transparent",
             },
             styles: [
               { tag: tags.comment,  color: "#9a8070", fontStyle: "italic" },
@@ -219,21 +218,14 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               { tag: [tags.url, tags.link], color: "#3d5fa0" },
               { tag: tags.invalid,  color: "#cc2222" },
             ],
-          });
-        } else {
-          // ── Deep indigo (dark mode) ───────────────────────────────
-          return createTheme({
+          })
+        : createTheme({
             theme: "dark",
             settings: {
-              background:       "#13131e",
-              foreground:       "#c8c5e0",
-              caret:            "#7c6cf8",
-              selection:        "rgba(124,108,248,0.22)",
-              selectionMatch:   "rgba(124,108,248,0.12)",
-              lineHighlight:    "#1c1c2a",
-              gutterBackground: "#0f0f1a",
-              gutterForeground: "#4a4868",
-              gutterBorder:     "transparent",
+              background: "#13131e", foreground: "#c8c5e0", caret: "#7c6cf8",
+              selection: "rgba(124,108,248,0.22)", selectionMatch: "rgba(124,108,248,0.12)",
+              lineHighlight: "#1c1c2a", gutterBackground: "#0f0f1a",
+              gutterForeground: "#4a4868", gutterBorder: "transparent",
             },
             styles: [
               { tag: tags.comment,  color: "#5c5a7a", fontStyle: "italic" },
@@ -252,9 +244,79 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               { tag: tags.invalid,  color: "#ef4444" },
             ],
           });
-        }
-      })(),
-    ]).then(([lang, theme]) => setExtensions([lang, theme]));
+
+      // ── LaTeX keyboard shortcuts ──────────────────────────────────────────
+      type EV = import("@codemirror/view").EditorView;
+
+      /** Wrap selection (or placeholder) with \cmd{...} */
+      function wrapCmd(cmd: string, placeholder = "text") {
+        return (v: EV): boolean => {
+          const sel = v.state.selection.main;
+          const inner = v.state.doc.sliceString(sel.from, sel.to) || placeholder;
+          const repl  = `\\${cmd}{${inner}}`;
+          v.dispatch({
+            changes: { from: sel.from, to: sel.to, insert: repl },
+            selection: { anchor: sel.from + cmd.length + 2, head: sel.from + repl.length - 1 },
+          });
+          v.focus(); return true;
+        };
+      }
+
+      const latexKeymap = Prec.high(keymap.of([
+        // Formatting (Cmd/Ctrl + key)
+        { key: "Mod-b", run: wrapCmd("textbf") },        // bold
+        { key: "Mod-i", run: wrapCmd("textit") },        // italic
+        { key: "Mod-u", run: wrapCmd("underline") },     // underline
+        // Math
+        { key: "Mod-m", run: (v: EV) => {               // inline math $...$
+            const sel = v.state.selection.main;
+            const inner = v.state.doc.sliceString(sel.from, sel.to) || "x";
+            const repl  = `$${inner}$`;
+            v.dispatch({ changes: { from: sel.from, to: sel.to, insert: repl },
+              selection: { anchor: sel.from + 1, head: sel.from + repl.length - 1 } });
+            v.focus(); return true;
+          },
+        },
+        { key: "Mod-Shift-m", run: (v: EV) => {         // display math \[...\]
+            const cursor = v.state.selection.main.head;
+            const snip   = "\\[\n  \n\\]";
+            v.dispatch({ changes: { from: cursor, insert: snip },
+              selection: { anchor: cursor + 4 } });
+            v.focus(); return true;
+          },
+        },
+        // Comment/uncomment lines (Cmd+/)
+        { key: "Mod-/", run: (v: EV) => {
+            const { from, to } = v.state.selection.main;
+            const text    = v.state.doc.sliceString(from, to);
+            const lines   = text.split("\n");
+            const allCommented = lines.every(l => l.trimStart().startsWith("%"));
+            const toggled = lines.map(l =>
+              allCommented ? l.replace(/^\s*%\s?/, "") : `% ${l}`
+            ).join("\n");
+            v.dispatch({ changes: { from, to, insert: toggled },
+              selection: { anchor: from, head: from + toggled.length } });
+            v.focus(); return true;
+          },
+        },
+        // Tab → 2-space indent
+        { key: "Tab", run: (v: EV) => {
+            const { from, to } = v.state.selection.main;
+            if (from === to) {
+              v.dispatch({ changes: { from, insert: "  " }, selection: { anchor: from + 2 } });
+            } else {
+              const indented = v.state.doc.sliceString(from, to).split("\n")
+                .map((l: string) => "  " + l).join("\n");
+              v.dispatch({ changes: { from, to, insert: indented },
+                selection: { anchor: from, head: from + indented.length } });
+            }
+            v.focus(); return true;
+          },
+        },
+      ]));
+
+      setExtensions([lang, theme, latexKeymap]);
+    })();
   }, [isLight]); // re-run whenever dark⇄light toggles
 
   // Load document: priority = docId (cloud) > URL hash > localStorage
@@ -331,7 +393,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     const savedScroll = previewScroll.current?.scrollTop ?? 0;
     (async () => {
       const katex = (await import("katex")).default;
-      await import("katex/dist/katex.min.css");
+      // katex.min.css is already loaded globally in app/layout.tsx — do NOT import it again here
       const root = previewRef.current!;
       root.querySelectorAll<HTMLElement>(".math-inline[data-math]").forEach(el => {
         try {
@@ -358,19 +420,29 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     })();
   }, [html]);
 
-  const copyHtml = useCallback(() => {
-    navigator.clipboard.writeText(html);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyHtml = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard blocked (permissions / insecure context) — don't show a false "copied"
+    }
   }, [html]);
 
-  const shareLink = useCallback(() => {
+  const shareLink = useCallback(async () => {
     const compressed = LZString.compressToEncodedURIComponent(source);
     const url = `${window.location.origin}/tools/preview#s=${compressed}`;
-    navigator.clipboard.writeText(url);
+    // Update the URL fragment even if the clipboard is blocked, so the
+    // address bar still holds a shareable link the user can copy manually.
     window.history.replaceState(null, "", `#s=${compressed}`);
-    setShared(true);
-    setTimeout(() => setShared(false), 2500);
+    try {
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2500);
+    } catch {
+      // clipboard blocked — URL fragment is already set
+    }
   }, [source]);
 
   const insertSnippet = useCallback((text: string) => {
@@ -616,7 +688,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                 <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, display: "inline-block" }} />
               ))}
             </div>
-            <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.72rem", color: "var(--fg-muted)", flex: 1 }}>
+            <span style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.72rem", color: "var(--fg-muted)", flex: 1 }}>
               main.tex
             </span>
             {/* Pane switcher — always visible on mobile */}
@@ -674,7 +746,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               <span key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c, display: "inline-block" }} />
             ))}
           </div>
-          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
+          <span style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
             {docId ? docTitle : "main.tex"}
           </span>
           {/* Autosave status */}
@@ -774,7 +846,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                     background: "var(--editor-bg)",
                     color: isLight ? "#2c2018" : "#c8c5e0",
                     border: "none", outline: "none", padding: "1rem",
-                    fontFamily: "JetBrains Mono, monospace", fontSize: "13px",
+                    fontFamily: "var(--font-mono), monospace", fontSize: "13px",
                     lineHeight: 1.65, resize: "none",
                   }}
                 />

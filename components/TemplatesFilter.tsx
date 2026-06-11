@@ -17,7 +17,7 @@ function CopySourceBtn({ source }: { source: string }) {
     navigator.clipboard.writeText(source).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }).catch(() => {});
   }, [source]);
   return (
     <button
@@ -218,7 +218,7 @@ export default function TemplatesFilter() {
                       fontSize: "0.62rem", fontWeight: 500, padding: "0.17rem 0.45rem",
                       borderRadius: 999, background: "var(--surface2)",
                       border: "1px solid var(--border)", color: "var(--fg-muted)",
-                      fontFamily: "JetBrains Mono, monospace",
+                      fontFamily: "var(--font-mono), monospace",
                     }}>
                       {lines}L
                     </span>
@@ -315,7 +315,7 @@ export default function TemplatesFilter() {
                 display: "block",
                 background: "var(--surface2)", color: "var(--accent2)",
                 padding: "0.4rem 0.6rem", borderRadius: 5,
-                fontSize: "0.72rem", fontFamily: "JetBrains Mono, monospace",
+                fontSize: "0.72rem", fontFamily: "var(--font-mono), monospace",
                 lineHeight: 1.55, marginBottom: "0.35rem",
                 wordBreak: "break-all",
               }}>

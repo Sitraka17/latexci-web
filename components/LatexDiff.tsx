@@ -48,7 +48,11 @@ In conclusion, primes are truly fascinating objects.
 \\end{document}`;
 
 // ── Drag-to-resize hook ───────────────────────────────────────────────────────
+// The caller owns the container ref and attaches it to the element being
+// measured; the hook only reads it inside event handlers/effects, so the
+// returned values are safe to use during render.
 function useDrag(
+  containerRef: React.RefObject<HTMLDivElement | null>,
   axis: "x" | "y",
   initial = 50,
   min = 15,
@@ -56,7 +60,6 @@ function useDrag(
 ) {
   const [pct, setPct] = useState(initial);
   const dragging = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -89,9 +92,9 @@ function useDrag(
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [axis, min, max]);
+  }, [containerRef, axis, min, max]);
 
-  return { pct, containerRef, onMouseDown, reset };
+  return { pct, onMouseDown, reset };
 }
 
 // ── Drag handle visual ────────────────────────────────────────────────────────
@@ -200,7 +203,7 @@ function EditorPane({
             ? "color-mix(in srgb, var(--accent) 4%, var(--surface))"
             : "var(--surface)",
           color: "var(--fg)", border: "none", outline: "none",
-          padding: "0.75rem", fontFamily: "JetBrains Mono, monospace",
+          padding: "0.75rem", fontFamily: "var(--font-mono), monospace",
           fontSize: "12px", lineHeight: 1.65, resize: "none", width: "100%",
         }}
       />
@@ -261,7 +264,7 @@ function SideBySideDiff({ diff }: { diff: DiffPart[] }) {
       display: "block",
       padding: "0 0.6rem",
       background: bg,
-      fontFamily: "JetBrains Mono, monospace",
+      fontFamily: "var(--font-mono), monospace",
       fontSize: "12.5px",
       lineHeight: "1.7",
       whiteSpace: "pre",
@@ -342,7 +345,7 @@ function UnifiedDiff({ diff, mode }: { diff: DiffPart[]; mode: "lines" | "words"
   );
 
   if (mode === "words") return (
-    <p style={{ lineHeight: 2, margin: "0.75rem 1.25rem", fontSize: "12.5px", fontFamily: "JetBrains Mono, monospace" }}>
+    <p style={{ lineHeight: 2, margin: "0.75rem 1.25rem", fontSize: "12.5px", fontFamily: "var(--font-mono), monospace" }}>
       {diff.map((part, i) => (
         <span key={i} style={{
           background: part.added ? "rgba(52,211,153,0.2)" : part.removed ? "rgba(248,113,113,0.2)" : "transparent",
@@ -451,8 +454,10 @@ export default function LatexDiff() {
   // "stacked" layout: editorSplit = % of height for editors row
   //                   hSplit      = % of editors width for original
   // "columns" layout: hSplit splits original | revised | diff (we reuse hSplit for orig/revised)
-  const editorDrag = useDrag("y", 42, 15, 82);
-  const hSplitDrag = useDrag("x", 50, 15, 85);
+  const editorDragRef = useRef<HTMLDivElement>(null);
+  const hSplitDragRef = useRef<HTMLDivElement>(null);
+  const editorDrag = useDrag(editorDragRef, "y", 42, 15, 82);
+  const hSplitDrag = useDrag(hSplitDragRef, "x", 50, 15, 85);
 
   const diff = useMemo(() =>
     diffMode === "words"
@@ -477,14 +482,18 @@ export default function LatexDiff() {
     setRevised(original);
   }, [original, revised]);
 
-  const copyDiff = useCallback(() => {
+  const copyDiff = useCallback(async () => {
     const text = diff
       .map(p => p.value.split("\n").filter(Boolean)
         .map(l => (p.added ? "+ " : p.removed ? "- " : "  ") + l).join("\n"))
       .join("\n");
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard blocked (permissions / insecure context) — don't show a false "copied"
+    }
   }, [diff]);
 
   const downloadPatch = useCallback(() => {
@@ -555,32 +564,6 @@ export default function LatexDiff() {
         {copied ? "✓ copied" : "copy diff"}
       </TBtn>
       <TBtn onClick={downloadPatch} title="Download as .patch file">↓ .patch</TBtn>
-    </div>
-  );
-
-  // ── Editor pair ───────────────────────────────────────────────────────────
-  const editors = (refProp?: React.RefObject<HTMLDivElement | null>, flex?: string) => (
-    <div
-      ref={refProp}
-      style={{
-        flex: flex ?? undefined,
-        display: "flex",
-        flexDirection: "row",
-        overflow: "hidden",
-        minHeight: 0,
-      }}
-    >
-      <EditorPane
-        value={original} onChange={setOriginal}
-        label="original.tex" color="#f87171"
-        onClear={() => setOriginal("")}
-      />
-      <DragHandle axis="x" onMouseDown={hSplitDrag.onMouseDown} onDoubleClick={hSplitDrag.reset} />
-      <EditorPane
-        value={revised} onChange={setRevised}
-        label="revised.tex" color="#34d399"
-        onClear={() => setRevised("")}
-      />
     </div>
   );
 
@@ -684,13 +667,13 @@ export default function LatexDiff() {
   if (layout === "stacked") {
     return (
       <div
-        ref={editorDrag.containerRef}
+        ref={editorDragRef}
         style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}
       >
         {toolbar}
         {/* Editors row */}
         <div
-          ref={hSplitDrag.containerRef}
+          ref={hSplitDragRef}
           style={{
             height: `${editorDrag.pct}%`,
             display: "flex", flexDirection: "row", flexShrink: 0,
@@ -725,7 +708,7 @@ export default function LatexDiff() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {toolbar}
       <div
-        ref={hSplitDrag.containerRef}
+        ref={hSplitDragRef}
         style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", minHeight: 0 }}
       >
         {/* Left: original editor (hSplitDrag.pct% of total) */}
@@ -743,7 +726,7 @@ export default function LatexDiff() {
         />
         {/* Right: diff output — uses editorDrag as a second horiz split */}
         <div
-          ref={editorDrag.containerRef}
+          ref={editorDragRef}
           style={{
             display: "flex", flexDirection: "row",
             width: `${100 - editorDrag.pct}%`, minWidth: 120,

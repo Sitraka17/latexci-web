@@ -13,6 +13,7 @@ type Props = {
 
 export default function SharedEditor({ initialContent, title, readOnly }: Props) {
   const [source, setSource] = useState(initialContent);
+  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">(readOnly ? "preview" : "edit");
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +25,7 @@ export default function SharedEditor({ initialContent, title, readOnly }: Props)
     let cancelled = false;
     (async () => {
       const katex = (await import("katex")).default;
-      await import("katex/dist/katex.min.css");
+      // katex.min.css loaded globally in app/layout.tsx — no duplicate import needed
       if (cancelled || !previewRef.current) return;
       const root = previewRef.current;
       root.querySelectorAll<HTMLElement>(".math-inline[data-math]").forEach(el => {
@@ -90,7 +91,15 @@ export default function SharedEditor({ initialContent, title, readOnly }: Props)
 
         {/* Copy LaTeX */}
         <button
-          onClick={() => navigator.clipboard.writeText(source)}
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(source);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            } catch {
+              // clipboard blocked — keep label unchanged rather than lie
+            }
+          }}
           title="Copy LaTeX source"
           style={{
             padding: "0.25rem 0.65rem", borderRadius: 6,
@@ -101,7 +110,7 @@ export default function SharedEditor({ initialContent, title, readOnly }: Props)
           onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--fg)"; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--fg-muted)"; }}
         >
-          Copy LaTeX
+          {copied ? "✓ Copied" : "Copy LaTeX"}
         </button>
       </div>
 
