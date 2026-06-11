@@ -37,6 +37,8 @@ export default async function Image() {
         {/* Code preview card — top right */}
         <div
           style={{
+            display: "flex",
+            flexDirection: "column",
             position: "absolute",
             top: 64,
             right: 72,
@@ -77,6 +79,8 @@ export default async function Image() {
         {/* Main headline */}
         <div
           style={{
+            display: "flex",
+            flexDirection: "column",
             fontSize: 68,
             fontWeight: 900,
             letterSpacing: "-2px",
@@ -85,16 +89,14 @@ export default async function Image() {
             marginBottom: 20,
           }}
         >
-          LaTeX tools
-          <br />
-          <span style={{ color: "#7c6cf8" }}>for researchers.</span>
+          <div>LaTeX tools</div>
+          <div style={{ color: "#7c6cf8" }}>for researchers.</div>
         </div>
 
         {/* Subtext */}
-        <div style={{ fontSize: 24, color: "#8a88a4", maxWidth: 520, lineHeight: 1.5 }}>
-          Preview · Diff · Word → LaTeX · Templates
-          <br />
-          All free, in your browser. No signup.
+        <div style={{ display: "flex", flexDirection: "column", fontSize: 24, color: "#8a88a4", maxWidth: 520, lineHeight: 1.5 }}>
+          <div>Preview · Diff · Word → LaTeX · Templates</div>
+          <div>All free, in your browser. No signup.</div>
         </div>
 
         {/* Pill badges */}

@@ -4,8 +4,10 @@ import SiteFooter from "@/components/SiteFooter";
 
 const TOOLS = [
   { href: "/tools/preview",       label: "LaTeX Preview",     icon: "⚡" },
+  { href: "/tools/bibtex",        label: "BibTeX Tools",      icon: "📚" },
   { href: "/tools/diff",          label: "LaTeX Diff",        icon: "↕" },
   { href: "/tools/word-to-latex", label: "Word → LaTeX",      icon: "↗" },
+  { href: "/tools/symbols",       label: "Symbol Search",     icon: "∑" },
   { href: "/tools/table",         label: "Table Generator",   icon: "▦" },
   { href: "/tools/templates",     label: "Templates",         icon: "▤" },
 ];
@@ -29,7 +31,7 @@ export default function NotFound() {
         {/* LaTeX-style error block */}
         <div
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "var(--font-mono), monospace",
             fontSize: "0.78rem",
             color: "var(--fg-muted)",
             background: "var(--surface)",

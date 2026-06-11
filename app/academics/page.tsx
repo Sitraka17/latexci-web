@@ -332,7 +332,7 @@ export default function AcademicsPage() {
               <code style={{
                 background: "rgba(108,99,255,0.1)", color: "var(--accent2)",
                 padding: "0.2rem 0.55rem", borderRadius: 5, fontSize: "0.78rem",
-                fontFamily: "JetBrains Mono, monospace", whiteSpace: "nowrap", flexShrink: 0,
+                fontFamily: "var(--font-mono), monospace", whiteSpace: "nowrap", flexShrink: 0,
               }}>
                 {p.pkg.split(",")[0]}
               </code>

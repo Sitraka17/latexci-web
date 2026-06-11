@@ -3,14 +3,17 @@ import Link from "next/link";
 
 const TOOLS = [
   { label: "Live Preview",   href: "/tools/preview" },
+  { label: "BibTeX Tools",   href: "/tools/bibtex" },
   { label: "LaTeX Diff",     href: "/tools/diff" },
   { label: "Word → LaTeX",   href: "/tools/word-to-latex" },
+  { label: "Symbol Search",  href: "/tools/symbols" },
   { label: "Table Generator",href: "/tools/table" },
   { label: "Templates",      href: "/tools/templates" },
 ];
 
 const LEARN = [
   { label: "Academics hub",  href: "/academics" },
+  { label: "Life after Overleaf", href: "/after-overleaf" },
   { label: "Pricing",        href: "/pricing" },
   { label: "GitHub",         href: "https://github.com/Sitraka17/latexci-web", external: true },
 ];

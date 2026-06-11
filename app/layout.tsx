@@ -1,6 +1,21 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
+
+// Self-hosted via next/font — no render-blocking Google Fonts CSS request.
+// Exposed as CSS variables so both globals.css and inline styles can use them.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 /* ── Viewport ─────────────────────────────────────────────────────────────────
    viewport-fit=cover extends the layout into the iPhone notch / home-indicator
@@ -54,13 +69,13 @@ export const metadata: Metadata = {
     title: "latexci — Free Online LaTeX Tools",
     description:
       "Live LaTeX preview, side-by-side diff, and Word-to-LaTeX conversion. All free, no signup required.",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "latexci tools" }],
+    // og:image comes from app/opengraph-image.tsx (file convention) —
+    // do NOT list a static image here or it overrides the generated one.
   },
   twitter: {
     card: "summary_large_image",
     title: "latexci — Free Online LaTeX Tools",
     description: "Live LaTeX preview, diff, and Word-to-LaTeX. Free, no signup.",
-    images: ["/og.png"],
     creator: "@Sitraka17",
   },
   robots: {
@@ -68,25 +83,27 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
-  alternates: { canonical: BASE_URL },
+  // No root canonical: each page declares its own. A root-level canonical
+  // would be inherited by any page that forgets alternates — pointing
+  // search engines at the homepage as its "canonical" copy.
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html lang="en" className={`h-full ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Anti-flash: read saved theme before first paint — must be synchronous */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('latexci_theme');if(t==='light'||(t==null&&window.matchMedia('(prefers-color-scheme:light)').matches)){document.documentElement.classList.add('light');}}catch(e){}})();` }} />
-        {/* KaTeX CSS — used by server-rendered math in hero and preview tool */}
+        {/* KaTeX CSS — loaded ONCE here at the root; do NOT import it again in child components */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
+        {/* PWA manifest — apple-touch-icon is auto-injected from app/apple-icon.tsx */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="latexci" />
       </head>
       <body className="min-h-full flex flex-col antialiased">
         {children}

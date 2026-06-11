@@ -1,0 +1,14 @@
+{
+  "name": "latexci — LaTeX Tools",
+  "short_name": "latexci",
+  "description": "Free browser-based LaTeX tools: live preview, diff, Word converter, BibTeX suite, symbol search, table generator, templates.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d13",
+  "theme_color": "#7c6cf8",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icon", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-icon", "sizes": "180x180", "type": "image/png" }
+  ]
+}

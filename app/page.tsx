@@ -130,10 +130,10 @@ export default function HomePage() {
       }}>
         <span style={{ marginRight: "0.4rem" }}>✨</span>
         <strong style={{ color: "var(--accent2)" }}>New:</strong>
-        <span className="announce-long">{" "}Symbol Search — 200+ LaTeX symbols with live KaTeX preview, one-click copy —{" "}</span>
+        <span className="announce-long">{" "}ISBN → BibTeX — cite any of 20M+ books in one click, plus 380+ searchable symbols —{" "}</span>
         <span className="announce-short">{" "}</span>
-        <a href="/tools/symbols" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-          try Symbol Search →
+        <a href="/tools/bibtex" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
+          try BibTeX Tools →
         </a>
       </div>
 
@@ -263,7 +263,7 @@ export default function HomePage() {
                   style={{
                     marginLeft: 8, fontSize: "0.68rem",
                     color: "#5a5878",
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: "var(--font-mono), monospace",
                   }}
                 >
                   main.tex
@@ -273,7 +273,7 @@ export default function HomePage() {
               <div
                 style={{
                   padding: "0.9rem 1rem",
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "var(--font-mono), monospace",
                   fontSize: "0.72rem",
                   lineHeight: 1.75,
                 }}

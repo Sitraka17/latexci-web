@@ -36,7 +36,7 @@ export default function ToolLoading() {
         style={{
           fontSize: "0.75rem",
           color: "var(--fg-muted)",
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "var(--font-mono), monospace",
           letterSpacing: "0.04em",
         }}
       >
