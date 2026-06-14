@@ -9,13 +9,41 @@ type Props = {
   initialContent: string;
   title: string;
   readOnly: boolean;
+  /** Share token — enables saving edits back when the doc allows public edits. */
+  token?: string;
 };
 
-export default function SharedEditor({ initialContent, title, readOnly }: Props) {
+export default function SharedEditor({ initialContent, title, readOnly, token }: Props) {
   const [source, setSource] = useState(initialContent);
   const [copied, setCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [activeTab, setActiveTab] = useState<"edit" | "preview">(readOnly ? "preview" : "edit");
   const previewRef = useRef<HTMLDivElement>(null);
+  const saveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirtyRef = useRef(false);
+
+  // Autosave edits back through the share token (debounced 2 s).
+  // Without this, "anyone with the link can edit" edits were silently lost.
+  useEffect(() => {
+    if (readOnly || !token) return;
+    if (!dirtyRef.current) { dirtyRef.current = true; return; } // skip initial content
+    if (saveRef.current) clearTimeout(saveRef.current);
+    setSaveStatus("saving");
+    saveRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/shared/${token}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: source }),
+        });
+        setSaveStatus(res.ok ? "saved" : "error");
+      } catch {
+        setSaveStatus("error");
+      }
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    }, 2000);
+    return () => { if (saveRef.current) clearTimeout(saveRef.current); };
+  }, [source, readOnly, token]);
 
   const { html, warnings } = useMemo(() => latexToHtml(source), [source]);
 
@@ -78,6 +106,16 @@ export default function SharedEditor({ initialContent, title, readOnly }: Props)
         }}>
           {title}
         </span>
+
+        {/* Save status — only for editable shared docs */}
+        {!readOnly && saveStatus !== "idle" && (
+          <span style={{
+            fontSize: "0.7rem", flexShrink: 0,
+            color: saveStatus === "saved" ? "#10b981" : saveStatus === "error" ? "#ef4444" : "var(--fg-muted)",
+          }}>
+            {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved" : "Save failed"}
+          </span>
+        )}
 
         {/* Tab switcher */}
         <div style={{ display: "flex", gap: 2 }}>

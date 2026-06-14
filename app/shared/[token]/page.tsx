@@ -1,7 +1,8 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import SharedEditor from "@/components/SharedEditor";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,29 @@ export default async function SharedDocPage({ params }: Props) {
     .eq("share_token", token)
     .single();
 
-  if (!doc || !doc.is_public) notFound();
+  if (!doc) notFound();
+
+  // The owner and invited collaborators get the full editor (autosave,
+  // PDF export) instead of the lightweight shared view — and it's the
+  // only way in when the doc is not public.
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const isOwner = user.id === doc.user_id;
+    let isCollaborator = false;
+    if (!isOwner && user.email) {
+      const { data: invite } = await admin
+        .from("document_collaborators")
+        .select("id")
+        .eq("document_id", doc.id)
+        .eq("email", user.email.toLowerCase())
+        .maybeSingle();
+      isCollaborator = !!invite;
+    }
+    if (isOwner || isCollaborator) redirect(`/tools/preview?doc=${doc.id}`);
+  }
+
+  if (!doc.is_public) notFound();
 
   const { data: owner } = await admin
     .from("profiles")
@@ -91,6 +114,7 @@ export default async function SharedDocPage({ params }: Props) {
             initialContent={doc.content}
             title={doc.title}
             readOnly={!doc.public_can_edit}
+            token={token}
           />
         </Suspense>
       </div>

@@ -370,7 +370,7 @@ export default function DashboardClient({
                       </Link>
                     ) : (
                       <Link
-                        href={`/shared/${d.share_token}`}
+                        href={`/tools/preview?doc=${d.id}`}
                         style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg)", textDecoration: "none" }}
                       >
                         View

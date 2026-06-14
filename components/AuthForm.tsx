@@ -15,12 +15,19 @@ export default function AuthForm() {
   const [error, setError] = useState<string | null>(null);
 
   // Show error from URL param (e.g. after failed OAuth callback)
+  const [nextPath, setNextPath] = useState("/dashboard");
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("error")) setError("Authentication failed. Please try again.");
+    // Forward ?next= so sign-in returns the user to where they started
+    // (the callback route validates it is a safe same-origin path).
+    const n = p.get("next");
+    if (n) setNextPath(n);
   }, []);
 
   const supabase = useMemo(() => createClient(), []);
+  const callbackUrl = () =>
+    `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 
   async function handleMagicLink() {
     setLoading(true);
@@ -28,7 +35,7 @@ export default function AuthForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: callbackUrl(),
       },
     });
     if (error) { setError(error.message); setLoading(false); return; }
@@ -40,12 +47,12 @@ export default function AuthForm() {
     setLoading(true);
     setError(null);
     const fn = isSignUp
-      ? supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } })
+      ? supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } })
       : supabase.auth.signInWithPassword({ email, password });
     const { error } = await fn;
     if (error) { setError(error.message); setLoading(false); return; }
     if (isSignUp) { setStage("sent"); setLoading(false); return; }
-    window.location.href = "/dashboard";
+    window.location.href = nextPath;
   }
 
   async function handleGitHub() {
@@ -54,7 +61,7 @@ export default function AuthForm() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: callbackUrl() },
       });
       if (error) { setError(error.message); setLoading(false); }
       // On success the browser redirects — leave loading=true
@@ -70,7 +77,7 @@ export default function AuthForm() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: callbackUrl() },
       });
       if (error) { setError(error.message); setLoading(false); }
     } catch {
