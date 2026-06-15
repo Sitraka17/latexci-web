@@ -267,6 +267,33 @@ html.light .cm-gutters { border-right: 1px solid #d8cfc4 !important; }
   background: #1e1a0a; border: 1px solid #3a3000;
   border-radius: 4px; padding: 0.35rem 0.7rem; color: #d4a06a; font-size: 0.84em;
 }
+/* Unsupported-class notice (e.g. Beamer) + deck outline */
+.latex-preview .preview-notice {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.latex-preview .preview-notice-head { font-weight: 700; font-size: 0.98rem; margin-bottom: 0.45rem; }
+.latex-preview .preview-notice p { font-size: 0.85rem; line-height: 1.6; color: var(--fg-muted); margin: 0.35rem 0 0; }
+.latex-preview .preview-notice-sub { font-style: italic; color: var(--fg) !important; }
+.latex-preview .beamer-outline-head {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--fg-muted); margin: 0 0 0.6rem;
+}
+.latex-preview .beamer-outline { font-family: var(--font-inter), system-ui, sans-serif; }
+.latex-preview .beamer-section {
+  font-weight: 700; font-size: 0.92rem; color: var(--accent);
+  margin: 0.9rem 0 0.35rem; padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.latex-preview .beamer-section:first-child { margin-top: 0; }
+.latex-preview .beamer-frame {
+  font-size: 0.85rem; color: var(--fg); padding: 0.18rem 0 0.18rem 1rem;
+  position: relative;
+}
+.latex-preview .beamer-frame::before { content: "▸"; position: absolute; left: 0; color: var(--accent2); font-size: 0.75rem; }
 .latex-preview .toc-placeholder { text-align: center; color: #5e5c7a; padding: 1rem; font-style: italic; }
 .latex-preview .appendix-marker { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid #27273e; }
 .latex-preview sup.footnote { cursor: help; color: #b49ff5; }

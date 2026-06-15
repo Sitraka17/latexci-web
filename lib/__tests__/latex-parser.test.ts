@@ -178,6 +178,48 @@ describe("tabular", () => {
 
 // ── 6. Environments ────────────────────────────────────────────────────────────
 
+describe("presentation classes (Beamer)", () => {
+  const DECK = `\\documentclass[aspectratio=169]{beamer}
+\\title{Python, SQL \\& Machine Learning}
+\\begin{document}
+\\section{Motivation}
+\\begin{frame}{First slide}Intro text\\end{frame}
+\\begin{frame}[plain]Title slide with no frame title\\end{frame}
+\\section{Python for Data}
+\\begin{frame}{The DataFrame}\\begin{lstlisting}[style=py]import pandas\\end{lstlisting}\\end{frame}
+\\end{document}`;
+
+  it("detects beamer and shows the notice instead of mangled output", () => {
+    const out = html(DECK);
+    expect(out).toContain("preview-notice");
+    expect(out).toContain("Beamer presentation detected");
+    expect(out).toContain("↓ PDF");
+    // raw lstlisting code must NOT leak into the output
+    expect(out).not.toContain("import pandas");
+  });
+
+  it("emits a warning for the presentation class", () => {
+    expect(warns(DECK)).toContain("beamer");
+  });
+
+  it("counts all frames", () => {
+    expect(html(DECK)).toContain("3 slides");
+  });
+
+  it("builds an outline of sections and frame titles", () => {
+    const out = html(DECK);
+    expect(out).toContain("beamer-outline");
+    expect(out).toContain("Motivation");
+    expect(out).toContain("First slide");
+    expect(out).toContain("The DataFrame");
+  });
+
+  it("detects a deck even without an explicit beamer class (frame env present)", () => {
+    const out = html("\\begin{document}\\begin{frame}{Solo}hi\\end{frame}\\end{document}");
+    expect(out).toContain("preview-notice");
+  });
+});
+
 describe("environments", () => {
   it("renders abstract", () => {
     const out = html("\\begin{abstract}This is the abstract.\\end{abstract}");

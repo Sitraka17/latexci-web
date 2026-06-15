@@ -219,6 +219,58 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   const inline = (text: string) =>
     processInline(text, labelMap, citeMap, footnoteList, () => ++footN);
 
+  // ── Unsupported document class: Beamer & other slide/poster classes ───────
+  // The preview renders article-style LaTeX (text + math). Presentation decks
+  // rely on frames, overlays, TikZ and tcolorbox this client-side parser cannot
+  // reproduce, so it would otherwise emit mangled output. Instead, surface a
+  // clear notice + a deck outline and point to PDF export (a real LaTeX engine).
+  const classMatch = src.match(/\\documentclass(?:\[[^\]]*\])?\{([a-zA-Z]+)\}/);
+  const docClass = classMatch?.[1]?.toLowerCase() ?? "";
+  const PRESENTATION_CLASSES = new Set(["beamer", "beamerposter", "powerdot", "prosper"]);
+  const isPresentation = PRESENTATION_CLASSES.has(docClass) || /\\begin\{frame\}/.test(body);
+
+  if (isPresentation) {
+    const label = docClass === "beamer" || docClass === "" ? "Beamer presentation" : `${docClass} presentation`;
+    warnings.push({ env: docClass || "beamer", reason: "Presentation class — preview shows an outline; use ↓ PDF to compile the real slides" });
+
+    const slideCount = (body.match(/\\begin\{frame\}/g) || []).length;
+
+    // Title of the title slide (preamble \title, falls back to nothing)
+    const deckTitle = extractBracedContent(src, "title");
+
+    // Build a structural outline in document order: sections + frame titles.
+    const cleanItem = (t: string) =>
+      inline(t.replace(/\\texorpdfstring\{(?:[^{}]|\{[^{}]*\})*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, "$1").trim());
+    const items: { kind: "section" | "frame"; text: string }[] = [];
+    const re = /\\section\{([^}]*)\}|\\begin\{frame\}(?:\[[^\]]*\])*\{([^}]*)\}|\\frametitle\{([^}]*)\}/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(body)) !== null) {
+      if (m[1] != null) items.push({ kind: "section", text: m[1] });
+      else if (m[2] != null && m[2].trim()) items.push({ kind: "frame", text: m[2] });
+      else if (m[3] != null && m[3].trim()) items.push({ kind: "frame", text: m[3] });
+    }
+
+    const outline = items.length
+      ? `<div class="beamer-outline">${items.map(it =>
+          it.kind === "section"
+            ? `<div class="beamer-section">${cleanItem(it.text)}</div>`
+            : `<div class="beamer-frame">${cleanItem(it.text)}</div>`
+        ).join("")}</div>`
+      : "";
+
+    const notice =
+      `<div class="preview-notice">` +
+        `<div class="preview-notice-head">📊 ${label} detected</div>` +
+        `<p>The live preview renders <strong>article-style LaTeX</strong> (text &amp; math). ` +
+        `It can't reproduce slides, overlays, TikZ, or tcolorbox — but your document looks valid. ` +
+        `Use <strong>↓ PDF</strong> in the toolbar to compile the real ${slideCount} slide${slideCount === 1 ? "" : "s"}.</p>` +
+        (deckTitle ? `<p class="preview-notice-sub">“${escapeForDisplay(deckTitle)}”</p>` : "") +
+      `</div>` +
+      (outline ? `<div class="beamer-outline-head">Deck outline · ${slideCount} slide${slideCount === 1 ? "" : "s"}</div>${outline}` : "");
+
+    return { html: notice, warnings };
+  }
+
   // ── Preamble cleanup ─────────────────────────────────────────────────────
   body = body.replace(
     /\\(usepackage|documentclass|geometry|setlength|pagestyle|pagenumbering)(\[.*?\])?\{[^}]*\}/g, ""
