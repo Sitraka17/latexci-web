@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="lc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c6cf8"/>
+      <stop offset="1" stop-color="#b49ff5"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#0d0d13"/>
+  <!-- Integral sign — the LaTeX/math mark, drawn as a stroke so it is
+       font-independent and stays crisp down to 16px. -->
+  <path d="M20 7.6 C20 4.9 16.3 5.1 16.1 9 L15.9 23 C15.7 26.9 12 27.1 12 24.4"
+        fill="none" stroke="url(#lc)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
