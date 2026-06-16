@@ -156,6 +156,72 @@ describe("lists", () => {
     expect(out).toContain("outer");
     expect(out).toContain("inner");
   });
+
+  it("strips list options and does not leak them as text", () => {
+    const out = html("\\begin{itemize}[leftmargin=*, itemsep=2pt]\\item One\\item Two\\end{itemize}");
+    expect(out).toContain("<ul>");
+    expect(out).toContain("One");
+    expect(out).not.toContain("leftmargin");
+    expect(out).not.toContain("itemsep");
+  });
+
+  it("strips custom \\item labels", () => {
+    const out = text(html("\\begin{itemize}\\item[\\textbullet] Labelled\\end{itemize}"));
+    expect(out).toContain("Labelled");
+    expect(out).not.toContain("textbullet");
+  });
+});
+
+describe("line breaks with spacing", () => {
+  it("\\\\[1em] becomes a break without leaking the length", () => {
+    const out = html("Line one \\\\[1em] Line two");
+    expect(out).toContain("<br>");
+    expect(out).not.toContain("[1em]");
+    expect(out).not.toContain("1em]");
+  });
+
+  it("\\\\* and plain \\\\ both break", () => {
+    expect(html("a \\\\* b")).toContain("<br>");
+    expect(html("a \\\\ b")).toContain("<br>");
+  });
+});
+
+describe("user macro expansion (\\newcommand)", () => {
+  it("expands a zero-argument macro", () => {
+    const out = text(html("\\newcommand{\\lab}{Neuro Lab}\n\\lab{} is great"));
+    expect(out).toContain("Neuro Lab is great");
+    expect(out).not.toContain("newcommand");
+  });
+
+  it("expands a multi-argument macro and keeps args separated", () => {
+    const src = [
+      "\\newcommand{\\cventry}[3]{\\textbf{#1} at #2 \\\\ #3}",
+      "\\cventry{PhD}{Cambridge}{Thesis on coding}",
+    ].join("\n");
+    const out = text(html(src));
+    expect(out).toContain("PhD");
+    expect(out).toContain("Cambridge");
+    expect(out).toContain("Thesis on coding");
+    // args must not be mashed together with no separation
+    expect(out).not.toContain("PhDat");
+    expect(out).not.toContain("CambridgeThesis");
+  });
+
+  it("matches the longest macro name first (\\cv vs \\cvsect)", () => {
+    const src = [
+      "\\newcommand{\\cv}{CURRICULUM}",
+      "\\newcommand{\\cvsect}[1]{== #1 ==}",
+      "\\cvsect{Education}",
+    ].join("\n");
+    const out = text(html(src));
+    expect(out).toContain("== Education ==");
+    expect(out).not.toContain("CURRICULUMsect");
+  });
+
+  it("bare \\newcommand\\name form works", () => {
+    const out = text(html("\\newcommand\\hi{HELLO}\n\\hi{} world"));
+    expect(out).toContain("HELLO world");
+  });
 });
 
 // ── 5. Tables ─────────────────────────────────────────────────────────────────

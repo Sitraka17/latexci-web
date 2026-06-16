@@ -166,30 +166,118 @@ function skipBraces(src: string, pos: number): number {
 }
 
 /**
- * Remove all \newcommand / \renewcommand / \providecommand definitions,
- * handling arbitrarily nested braces in the definition body.
+ * Expand user-defined \newcommand / \renewcommand / \providecommand macros,
+ * then remove the definitions. Without this, custom commands such as a CV's
+ * \cventry{dates}{title}{...} render their arguments mashed together because
+ * the definition is stripped but the *calls* are never substituted.
+ *
+ * Supports `\newcommand{\name}[n]{body}`, `\newcommand\name[n]{body}`, and the
+ * zero-argument form. Macros with an optional-argument default
+ * (`[n][default]`) are too complex to expand safely, so their definition is
+ * removed but calls are left as-is. Expansion is bounded (calls can nest).
  */
-function stripNewCommands(src: string): string {
-  const re = /\\(?:new|renew|provide)command\b\*?/g;
-  let result = "";
-  let last = 0;
+interface UserMacro { nargs: number; body: string; }
+
+function expandUserMacros(src: string): string {
+  const macros = new Map<string, UserMacro>();
+  const defSpans: Array<[number, number]> = [];
+  const defRe = /\\(?:new|renew|provide)command\b\*?\s*/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(src)) !== null) {
-    result += src.slice(last, m.index);
+
+  while ((m = defRe.exec(src)) !== null) {
     let i = m.index + m[0].length;
-    // command name: {cmd} or bare \cmd
-    if (src[i] === "{") i = skipBraces(src, i);
-    else { while (i < src.length && /[a-zA-Z]/.test(src[i])) i++; }
-    // optional argument count [n]
-    if (src[i] === "[") { const e = src.indexOf("]", i); i = e !== -1 ? e + 1 : i; }
-    // optional default value [default]
-    if (src[i] === "[") { const e = src.indexOf("]", i); i = e !== -1 ? e + 1 : i; }
-    // definition body {…}
-    if (src[i] === "{") i = skipBraces(src, i);
-    last = i;
-    re.lastIndex = i;
+    // name: {\foo} or bare \foo
+    let name = "";
+    if (src[i] === "{") {
+      const close = skipBraces(src, i);
+      name = src.slice(i + 1, close - 1).trim();
+      i = close;
+    } else if (src[i] === "\\") {
+      let j = i + 1;
+      while (j < src.length && /[a-zA-Z]/.test(src[j])) j++;
+      name = src.slice(i, j);
+      i = j;
+    } else {
+      continue;
+    }
+    while (src[i] === " ") i++;
+    // optional arg count [n]
+    let nargs = 0;
+    if (src[i] === "[") {
+      const e = src.indexOf("]", i);
+      if (e !== -1) { nargs = parseInt(src.slice(i + 1, e), 10) || 0; i = e + 1; }
+    }
+    // optional default value [default] → can't expand safely
+    let hasDefault = false;
+    if (src[i] === "[") {
+      hasDefault = true;
+      const e = src.indexOf("]", i);
+      if (e !== -1) i = e + 1;
+    }
+    while (src[i] === " ") i++;
+    if (src[i] !== "{") continue;
+    const bodyClose = skipBraces(src, i);
+    const body = src.slice(i + 1, bodyClose - 1);
+    defSpans.push([m.index, bodyClose]);
+    if (/^\\[a-zA-Z]+$/.test(name) && !hasDefault) {
+      macros.set(name, { nargs, body });
+    }
+    defRe.lastIndex = bodyClose;
   }
-  return result + src.slice(last);
+
+  // Remove all definition spans.
+  let out = "";
+  let last = 0;
+  for (const [s, e] of defSpans) { out += src.slice(last, s); last = e; }
+  out += src.slice(last);
+
+  if (macros.size === 0) return out;
+
+  // Expand invocations. Longest names first so \cvsect is matched before \cv.
+  // Bounded passes guard against runaway / mutually-recursive macros.
+  const names = [...macros.keys()].sort((a, b) => b.length - a.length);
+  for (let pass = 0; pass < 8; pass++) {
+    let changed = false;
+    for (const name of names) {
+      const macro = macros.get(name)!;
+      let result = "";
+      let idx = 0;
+      while (idx < out.length) {
+        const at = out.indexOf(name, idx);
+        if (at === -1) { result += out.slice(idx); break; }
+        // Don't match a prefix of a longer command name (e.g. \cv vs \cvsect).
+        const after = out[at + name.length];
+        if (after && /[a-zA-Z]/.test(after)) {
+          result += out.slice(idx, at + name.length);
+          idx = at + name.length;
+          continue;
+        }
+        // Capture nargs brace groups.
+        let p = at + name.length;
+        const args: string[] = [];
+        let ok = true;
+        for (let k = 0; k < macro.nargs; k++) {
+          while (out[p] === " ") p++;
+          if (out[p] !== "{") { ok = false; break; }
+          const close = skipBraces(out, p);
+          args.push(out.slice(p + 1, close - 1));
+          p = close;
+        }
+        if (!ok) { // not enough args present — leave call untouched
+          result += out.slice(idx, at + name.length);
+          idx = at + name.length;
+          continue;
+        }
+        const expanded = macro.body.replace(/#(\d)/g, (_, d: string) => args[+d - 1] ?? "");
+        result += out.slice(idx, at) + expanded;
+        idx = p;
+        changed = true;
+      }
+      out = result;
+    }
+    if (!changed) break;
+  }
+  return out;
 }
 
 // ── Pass 2: main renderer ─────────────────────────────────────────────────
@@ -276,8 +364,9 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     /\\(usepackage|documentclass|geometry|setlength|pagestyle|pagenumbering)(\[.*?\])?\{[^}]*\}/g, ""
   );
   body = body.replace(/\\(onehalfspacing|doublespacing|singlespacing|maketitle)\b/g, "");
-  // Depth-aware \newcommand / \renewcommand stripper (handles nested braces in body)
-  body = stripNewCommands(body);
+  // Expand user macros (\newcommand …) then drop their definitions, so custom
+  // commands like a CV's \cventry{…}{…} render their arguments properly.
+  body = expandUserMacros(body);
   body = body.replace(/\\(setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
   body = body.replace(/\\newtheorem\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
   // Color definitions (\definecolor{name}{model}{spec})
@@ -464,16 +553,15 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
       prev = body;
       // Match only lists with no nested \begin{itemize|enumerate} inside,
       // i.e. the innermost ones — outer lists are converted on later passes.
-      body = body.replace(/\\begin\{itemize\}((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{itemize\}/g, (_, items) => {
-        const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
-          .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
-        return block(`<ul>${lis}</ul>`);
-      });
-      body = body.replace(/\\begin\{enumerate\}((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{enumerate\}/g, (_, items) => {
-        const lis = items.split(/\\item\s*/).filter((s: string) => s.trim())
-          .map((s: string) => `<li>${inline(s.trim())}</li>`).join("");
-        return block(`<ol>${lis}</ol>`);
-      });
+      // Optional list arguments (\begin{itemize}[leftmargin=*,…]) and custom
+      // item labels (\item[•]) are consumed so they don't leak as literal text.
+      const toItems = (items: string) =>
+        items.split(/\\item\b\s*/).filter((s: string) => s.trim())
+          .map((s: string) => `<li>${inline(s.replace(/^\[[^\]]*\]\s*/, "").trim())}</li>`).join("");
+      body = body.replace(/\\begin\{itemize\}(?:\[[^\]]*\])?((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{itemize\}/g,
+        (_, items) => block(`<ul>${toItems(items)}</ul>`));
+      body = body.replace(/\\begin\{enumerate\}(?:\[[^\]]*\])?((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{enumerate\}/g,
+        (_, items) => block(`<ol>${toItems(items)}</ol>`));
     }
   }
 
@@ -851,8 +939,9 @@ function processInline(
   text = text.replace(/\\ldots\b/g, "…");
   text = text.replace(/\\dots\b/g, "…");
 
-  // Spacing / line breaks
-  text = text.replace(/\\\\/g, "<br>");
+  // Spacing / line breaks — consume the optional \\[length] / \\* spacing arg
+  // (otherwise "[1em]", "[0.5em]" leak into the output as literal text).
+  text = text.replace(/\\\\\*?(?:\s*\[[^\]]*\])?/g, "<br>");
   text = text.replace(/\\newline\b/g, "<br>");
   text = text.replace(/\\~/g, " ");
   text = text.replace(/~/g, " ");
