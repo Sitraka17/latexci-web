@@ -6,7 +6,7 @@ import { TEMPLATES, CATEGORIES } from "@/lib/templates";
 
 // Templates marked as new (shown with a badge)
 const NEW_TEMPLATE_IDS = new Set([
-  "beamer-logo", "ml-conference",
+  "beamer", "beamer-modern",
   "cv-french-academic", "cv-french-industry", "cv-academic-photo",
   "neurips", "icml", "acl", "nature-style",
 ]);
