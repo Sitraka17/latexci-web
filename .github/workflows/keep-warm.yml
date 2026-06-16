@@ -1,0 +1,30 @@
+name: Keep Supabase warm
+
+# Supabase free-tier projects pause after ~7 days without database activity,
+# which previously deleted the production backend. This pings the health
+# endpoint twice a week (Mon & Thu, 09:00 UTC) — well inside the window — so
+# the project always sees recent activity. The /api/health route runs one
+# tiny DB query, which is what actually counts as "activity".
+#
+# Note: a paid Supabase plan never auto-pauses; this is the free-tier safety net.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1,4"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          echo "Pinging https://latexci.com/api/health"
+          code=$(curl -fsS -o /tmp/health.json -w "%{http_code}" --max-time 30 https://latexci.com/api/health) || true
+          echo "HTTP $code"
+          cat /tmp/health.json || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Health check failed (HTTP $code) — Supabase may be paused or down."
+            exit 1
+          fi
