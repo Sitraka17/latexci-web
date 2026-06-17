@@ -53,12 +53,31 @@ function Toast({ message, type }: { message: string; type: "error" | "success" }
   );
 }
 
+const STARTER_TEX = `\\documentclass[11pt]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage{amsmath}
+
+\\title{Untitled}
+\\author{}
+\\date{\\today}
+
+\\begin{document}
+\\maketitle
+
+\\section{Introduction}
+Start writing here.
+
+\\end{document}
+`;
+
 export default function DashboardClient({
   userId,
+  userEmail,
   initialDocuments,
   sharedWithMe,
 }: {
   userId: string;
+  userEmail: string;
   initialDocuments: DocRow[];
   sharedWithMe: SharedDoc[];
 }) {
@@ -78,14 +97,35 @@ export default function DashboardClient({
     setTimeout(() => setToast(null), 3500);
   }
 
+  const [creating, setCreating] = useState(false);
+
   async function createDocument() {
-    const { data, error } = await supabase
-      .from("documents")
-      .insert({ user_id: userId, title: "Untitled", content: "" })
-      .select("id")
-      .single();
-    if (error || !data) { showToast("Failed to create document"); return; }
-    router.push(`/tools/preview?doc=${data.id}`);
+    if (creating) return;
+    setCreating(true);
+    try {
+      // Ensure a profiles row exists first: documents.user_id has a foreign key
+      // to profiles(id), and the handle_new_user trigger may not have fired for
+      // pre-existing accounts or a freshly restored database. Best-effort — if
+      // this fails, the insert below surfaces the real reason.
+      await supabase
+        .from("profiles")
+        .upsert({ id: userId, email: userEmail }, { onConflict: "id", ignoreDuplicates: true });
+
+      const { data, error } = await supabase
+        .from("documents")
+        .insert({ user_id: userId, title: "Untitled", content: STARTER_TEX })
+        .select("id")
+        .single();
+
+      if (error || !data) {
+        console.error("createDocument failed:", error);
+        showToast(error ? `Couldn't create document: ${error.message}` : "Failed to create document");
+        return;
+      }
+      router.push(`/tools/preview?doc=${data.id}`);
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function deleteDocument(id: string) {

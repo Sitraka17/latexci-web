@@ -110,6 +110,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pdfStatus, setPdfStatus]     = useState<"idle" | "compiling" | "error">("idle");
   const [userId, setUserId]           = useState<string | null>(null);
+  const [userEmail, setUserEmail]     = useState<string | null>(null);
   const [docTitle, setDocTitle]       = useState("Untitled");
   // Role on the open cloud doc: owner | collaborator with edit | view-only
   const [docRole, setDocRole]         = useState<"owner" | "edit" | "view" | null>(null);
@@ -182,7 +183,10 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
 
   // Get logged-in user
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+      setUserEmail(data.user?.email ?? null);
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load CodeMirror extensions — theme + LaTeX keybindings. Re-runs on dark/light toggle.
@@ -446,6 +450,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     setCloudSaving(true);
     const titleMatch = source.match(/\\title\{([^}]*)\}/);
     const title = titleMatch?.[1]?.trim() || "Untitled";
+    // Ensure the profiles row exists (documents.user_id FK → profiles.id);
+    // best-effort, the insert below surfaces the real error if anything fails.
+    await supabase
+      .from("profiles")
+      .upsert({ id: userId, email: userEmail ?? "" }, { onConflict: "id", ignoreDuplicates: true });
     const { data, error } = await supabase
       .from("documents")
       .insert({ user_id: userId, title, content: source })
@@ -453,14 +462,15 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       .single();
     setCloudSaving(false);
     if (error || !data) {
+      console.error("saveToCloud failed:", error);
       setSaveStatus("error");
-      setTimeout(() => setSaveStatus("idle"), 2500);
+      setTimeout(() => setSaveStatus("idle"), 3000);
       return;
     }
     setDocTitle(title);
     setDocRole("owner");
     router.replace(`/tools/preview?doc=${data.id}`);
-  }, [userId, cloudSaving, source, supabase, router]);
+  }, [userId, userEmail, cloudSaving, source, supabase, router]);
 
   const copyHtml = useCallback(async () => {
     try {

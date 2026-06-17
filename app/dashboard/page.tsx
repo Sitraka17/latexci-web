@@ -116,6 +116,7 @@ export default async function DashboardPage() {
         {/* Document list + shared with me */}
         <DashboardClient
           userId={user.id}
+          userEmail={user.email ?? ""}
           initialDocuments={documents ?? []}
           sharedWithMe={(sharedRaw ?? []) as SharedDoc[]}
         />
