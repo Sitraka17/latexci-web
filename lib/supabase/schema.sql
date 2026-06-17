@@ -109,44 +109,41 @@ create policy "documents: owner all"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- Cross-table membership checks via SECURITY DEFINER functions. These run as
+-- the function owner, so RLS is NOT re-applied to the table they read — which
+-- avoids the "infinite recursion detected in policy" error that arises when
+-- documents and document_collaborators policies reference each other directly.
+create or replace function public.owns_document(doc_id uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.documents where id = doc_id and user_id = auth.uid());
+$$;
+
+create or replace function public.is_collaborator(doc_id uuid, require_edit boolean default false)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from public.document_collaborators dc
+    join public.profiles p on p.email = dc.email
+    where dc.document_id = doc_id and p.id = auth.uid()
+      and (not require_edit or dc.permission = 'edit')
+  );
+$$;
+
 -- Documents: collaborator can read
 create policy "documents: collaborator read"
   on public.documents for select
-  using (
-    exists (
-      select 1 from public.document_collaborators dc
-      join public.profiles p on p.email = dc.email
-      where dc.document_id = id and p.id = auth.uid()
-    )
-  );
+  using (public.is_collaborator(id));
 
 -- Documents: collaborator with edit permission can update
 create policy "documents: collaborator edit"
   on public.documents for update
-  using (
-    exists (
-      select 1 from public.document_collaborators dc
-      join public.profiles p on p.email = dc.email
-      where dc.document_id = id and p.id = auth.uid() and dc.permission = 'edit'
-    )
-  )
-  with check (
-    exists (
-      select 1 from public.document_collaborators dc
-      join public.profiles p on p.email = dc.email
-      where dc.document_id = id and p.id = auth.uid() and dc.permission = 'edit'
-    )
-  );
+  using (public.is_collaborator(id, true))
+  with check (public.is_collaborator(id, true));
 
 -- document_collaborators: owner manages
 create policy "dc: owner manages"
   on public.document_collaborators for all
-  using (
-    exists (select 1 from public.documents d where d.id = document_id and d.user_id = auth.uid())
-  )
-  with check (
-    exists (select 1 from public.documents d where d.id = document_id and d.user_id = auth.uid())
-  );
+  using (public.owns_document(document_id))
+  with check (public.owns_document(document_id));
 
 -- document_collaborators: collaborator can see their own invites
 create policy "dc: view own invites"
