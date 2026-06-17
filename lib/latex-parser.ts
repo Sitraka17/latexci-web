@@ -364,6 +364,17 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     /\\(usepackage|documentclass|geometry|setlength|pagestyle|pagenumbering)(\[.*?\])?\{[^}]*\}/g, ""
   );
   body = body.replace(/\\(onehalfspacing|doublespacing|singlespacing|maketitle)\b/g, "");
+  // fancyhdr / page-style commands (header & footer setup — not rendered in
+  // preview). Brace pattern tolerates one level of nesting, e.g.
+  // \rhead{\textcolor{gray}{\small Title}}.
+  {
+    const arg = "\\{(?:[^{}]|\\{[^{}]*\\})*\\}";
+    body = body.replace(new RegExp(`\\\\(?:thispagestyle|pagestyle)${arg}`, "g"), "");
+    body = body.replace(new RegExp(`\\\\fancyhf${arg}`, "g"), "");
+    body = body.replace(new RegExp(`\\\\(?:fancyhead|fancyfoot)(?:\\[[^\\]]*\\])?${arg}`, "g"), "");
+    body = body.replace(new RegExp(`\\\\(?:[rlc]head|[rlc]foot)${arg}`, "g"), "");
+    body = body.replace(new RegExp(`\\\\renewcommand\\{\\\\(?:headrulewidth|footrulewidth)\\}${arg}`, "g"), "");
+  }
   // Expand user macros (\newcommand …) then drop their definitions, so custom
   // commands like a CV's \cventry{…}{…} render their arguments properly.
   body = expandUserMacros(body);
@@ -377,6 +388,12 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   // Strip \title{}, \author{}, \date{} if they appear inside the document body
   // (standard LaTeX puts them in the preamble, but some templates don't)
   body = body.replace(/\\(?:title|author|date)\{(?:[^{}]|\{[^{}]*\})*\}/g, "");
+
+  // Neutralise "\\[<len>]" line breaks BEFORE math parsing. The "\[" inside
+  // "\\[1cm]" would otherwise be misread as a display-math opener and swallow
+  // everything up to the next "\]" (mangling title pages full of \\[..]).
+  // Real "\[ ... \]" display math (single backslash) is untouched.
+  body = body.replace(/\\\\\*?\s*\[[^\]]*\]/g, "\\\\ ");
 
   // ── Title metadata ───────────────────────────────────────────────────────
   const rawTitle  = extractBracedContent(src, "title");
@@ -686,6 +703,11 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   // ── Layout / formatting environments ─────────────────────────────────────
 
+  // titlepage — unwrap so its content (minipages, rules, \\[len], super-
+  // scripts) flows through the normal pipeline instead of being dumped raw
+  // as an "unknown environment". Must run before the minipage handler below.
+  body = body.replace(/\\begin\{titlepage\}([\s\S]*?)\\end\{titlepage\}/g, (_, c) => `\n${c}\n`);
+
   // center / flushleft / flushright
   body = body.replace(/\\begin\{center\}([\s\S]*?)\\end\{center\}/g, (_, c) =>
     block(`<div style="text-align:center">${inline(c.trim())}</div>`)
@@ -879,6 +901,13 @@ function processInline(
   text = text.replace(/\\texttt\{([^}]*)\}/g, "<code>$1</code>");
   text = text.replace(/\\text\{([^}]*)\}/g, "$1");
   text = text.replace(/\\textsc\{([^}]*)\}/g, '<span style="font-variant:small-caps">$1</span>');
+  text = text.replace(/\\textsuperscript\{([^}]*)\}/g, "<sup>$1</sup>");
+  text = text.replace(/\\textsubscript\{([^}]*)\}/g, "<sub>$1</sub>");
+  // \parbox[pos][height][inner]{width}{content} → content (drop the box sizing
+  // args, which otherwise leak as literal "[2.8cm]" text in photo-CV templates).
+  text = text.replace(/\\parbox(?:\[[^\]]*\]){0,3}\{[^{}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, "$1");
+  // \fbox / \framebox / \mbox / \makebox → content
+  text = text.replace(/\\(?:fbox|framebox|mbox|makebox)(?:\[[^\]]*\])*\{((?:[^{}]|\{[^{}]*\})*)\}/g, "$1");
 
   // ── Citations \\cite{key} or \\cite{key1,key2} ──────────────────────────
   text = text.replace(/\\cite(?:\[[^\]]*\])?\{([^}]*)\}/g, (_, keys: string) => {
@@ -945,7 +974,7 @@ function processInline(
   text = text.replace(/\\newline\b/g, "<br>");
   text = text.replace(/\\~/g, " ");
   text = text.replace(/~/g, " ");
-  text = text.replace(/\\(vspace|hspace|kern|mspace)\{[^}]*\}/g, " ");
+  text = text.replace(/\\(vspace|hspace|kern|mspace)\*?\{[^}]*\}/g, " ");
   text = text.replace(/\\(bigskip|medskip|smallskip|noindent|indent|centering)\b/g, "");
   text = text.replace(/\\(newpage|clearpage|pagebreak)\b/g, "");
   text = text.replace(/\\par\b/g, "");

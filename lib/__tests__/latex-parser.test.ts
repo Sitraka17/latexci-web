@@ -286,6 +286,37 @@ describe("presentation classes (Beamer)", () => {
   });
 });
 
+describe("title pages and report-class commands", () => {
+  it("unwraps \\begin{titlepage} and renders its content", () => {
+    const out = html("\\begin{titlepage}\\centering {\\large My Thesis}\\\\[0.5em] By Me\\end{titlepage}");
+    expect(out).toContain("My Thesis");
+    expect(out).toContain("By Me");
+    expect(out).not.toContain("[titlepage]");
+    expect(out).not.toContain("titlepage");
+    expect(out).not.toContain("0.5em");
+  });
+
+  it("renders \\textsuperscript / \\textsubscript", () => {
+    expect(html("1\\textsuperscript{re} place")).toContain("<sup>re</sup>");
+    expect(html("H\\textsubscript{2}O")).toContain("<sub>2</sub>");
+  });
+
+  it("strips \\thispagestyle and \\vspace* without leaking args", () => {
+    const out = text(html("\\thispagestyle{empty}\\vspace*{3cm} Visible"));
+    expect(out).toContain("Visible");
+    expect(out).not.toContain("thispagestyle");
+    expect(out).not.toContain("empty");
+    expect(out).not.toContain("3cm");
+  });
+
+  it("strips fancyhdr header commands with nested braces", () => {
+    const out = text(html("\\rhead{\\textcolor{gray}{\\small Centrale}} Body here"));
+    expect(out).toContain("Body here");
+    expect(out).not.toContain("rhead");
+    expect(out).not.toContain("textcolor");
+  });
+});
+
 describe("environments", () => {
   it("renders abstract", () => {
     const out = html("\\begin{abstract}This is the abstract.\\end{abstract}");
