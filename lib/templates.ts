@@ -3198,7 +3198,300 @@ export const TEMPLATES: Template[] = [
       "\\end{document}",
     ].join("\n"),
   },
+
+  // ─── PRODUCTIVITY: daily / monthly / quarterly / yearly planners ──────────
+  {
+    id: "productivity-daily",
+    icon: "🗓️",
+    title: "Daily Plan",
+    category: "Productivity",
+    desc: "One-page daily planner: top-3 priorities, hourly schedule, task checklist, and a reflection line. Print or fill digitally.",
+    source: String.raw`\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\definecolor{accent}{RGB}{37,99,235}
+\renewcommand{\arraystretch}{1.6}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+% Section heading with an accent rule
+\newcommand{\heading}[1]{%
+  \vspace{0.6em}%
+  {\large\bfseries\color{accent}#1}\\[-0.5em]%
+  {\color{accent!35}\rule{\linewidth}{1pt}}\\[0.4em]}
+
+\begin{document}
+
+{\Huge\bfseries Daily Plan}\hfill{\large \today}\\[0.2em]
+{\color{accent}\rule{\linewidth}{2pt}}
+
+\heading{Top 3 Priorities}
+\begin{enumerate}[leftmargin=2.2em, itemsep=0.7em]
+  \item \dotfill
+  \item \dotfill
+  \item \dotfill
+\end{enumerate}
+
+\begin{minipage}[t]{0.48\linewidth}
+\heading{Schedule}
+\begin{tabularx}{\linewidth}{@{}p{1.8cm} X@{}}
+\toprule
+Time & Focus \\
+\midrule
+08:00 & \\
+10:00 & \\
+12:00 & \\
+14:00 & \\
+16:00 & \\
+18:00 & \\
+\bottomrule
+\end{tabularx}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\heading{Tasks}
+\begin{itemize}[leftmargin=1.6em, label=$\square$, itemsep=0.7em]
+  \item \dotfill
+  \item \dotfill
+  \item \dotfill
+  \item \dotfill
+  \item \dotfill
+\end{itemize}
+\end{minipage}
+
+\heading{Notes \& Reflection}
+\dotfill\\[1.1em]
+\dotfill\\[1.1em]
+\dotfill
+
+\vfill
+{\small\color{accent!70}One thing I'm grateful for today:}\\[0.3em]
+\dotfill
+
+\end{document}
+`,
+  },
+  {
+    id: "productivity-monthly",
+    icon: "📅",
+    title: "Monthly Plan",
+    category: "Productivity",
+    desc: "Monthly goals, a four-week habit tracker grid, weekly focus table, and a month-end review.",
+    source: String.raw`\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\definecolor{accent}{RGB}{124,58,237}
+\renewcommand{\arraystretch}{1.6}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+\newcommand{\heading}[1]{%
+  \vspace{0.7em}%
+  {\large\bfseries\color{accent}#1}\\[-0.5em]%
+  {\color{accent!35}\rule{\linewidth}{1pt}}\\[0.4em]}
+
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+\begin{document}
+
+{\Huge\bfseries Monthly Plan}\hfill{\large Month / Year}\\[0.2em]
+{\color{accent}\rule{\linewidth}{2pt}}
+
+\heading{Monthly Goals}
+\begin{enumerate}[leftmargin=2.2em, itemsep=0.6em]
+  \item \dotfill
+  \item \dotfill
+  \item \dotfill
+\end{enumerate}
+
+\heading{Habit Tracker}
+\begin{tabularx}{\linewidth}{@{}X C C C C@{}}
+\toprule
+Habit & Wk 1 & Wk 2 & Wk 3 & Wk 4 \\
+\midrule
+\dotfill & & & & \\
+\dotfill & & & & \\
+\dotfill & & & & \\
+\dotfill & & & & \\
+\bottomrule
+\end{tabularx}
+
+\heading{Weekly Focus}
+\begin{tabularx}{\linewidth}{@{}p{2.2cm} X@{}}
+\toprule
+Week & Main focus \\
+\midrule
+Week 1 & \\
+Week 2 & \\
+Week 3 & \\
+Week 4 & \\
+\bottomrule
+\end{tabularx}
+
+\heading{Month-End Review}
+{\bfseries What went well?}\\[0.3em]\dotfill\\[1em]
+{\bfseries What to improve?}\\[0.3em]\dotfill\\[1em]
+{\bfseries Carry into next month:}\\[0.3em]\dotfill
+
+\end{document}
+`,
+  },
+  {
+    id: "productivity-quarterly",
+    icon: "📈",
+    title: "Quarterly Review",
+    category: "Productivity",
+    desc: "OKR-style quarterly plan: theme, three objectives with key results, monthly progress, and a structured reflection.",
+    source: String.raw`\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\definecolor{accent}{RGB}{13,148,136}
+\renewcommand{\arraystretch}{1.6}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+\newcommand{\heading}[1]{%
+  \vspace{0.7em}%
+  {\large\bfseries\color{accent}#1}\\[-0.5em]%
+  {\color{accent!35}\rule{\linewidth}{1pt}}\\[0.4em]}
+
+\begin{document}
+
+{\Huge\bfseries Quarterly Review}\hfill{\large Q\_\_ / Year}\\[0.2em]
+{\color{accent}\rule{\linewidth}{2pt}}
+
+\heading{Theme of the Quarter}
+{\large\itshape\color{accent!80}\dotfill}
+
+\heading{Objectives \& Key Results}
+\textbf{Objective 1:} \dotfill
+\begin{itemize}[leftmargin=1.6em, label=$\bullet$, itemsep=0.4em, topsep=0.3em]
+  \item KR \dotfill
+  \item KR \dotfill
+\end{itemize}
+\textbf{Objective 2:} \dotfill
+\begin{itemize}[leftmargin=1.6em, label=$\bullet$, itemsep=0.4em, topsep=0.3em]
+  \item KR \dotfill
+  \item KR \dotfill
+\end{itemize}
+\textbf{Objective 3:} \dotfill
+\begin{itemize}[leftmargin=1.6em, label=$\bullet$, itemsep=0.4em, topsep=0.3em]
+  \item KR \dotfill
+  \item KR \dotfill
+\end{itemize}
+
+\heading{Progress by Month}
+\begin{tabularx}{\linewidth}{@{}p{2.4cm} X@{}}
+\toprule
+Month & Key wins \& blockers \\
+\midrule
+Month 1 & \\
+Month 2 & \\
+Month 3 & \\
+\bottomrule
+\end{tabularx}
+
+\heading{Reflection}
+{\bfseries Biggest win:}\\[0.3em]\dotfill\\[1em]
+{\bfseries Biggest lesson:}\\[0.3em]\dotfill\\[1em]
+{\bfseries Focus for next quarter:}\\[0.3em]\dotfill
+
+\end{document}
+`,
+  },
+  {
+    id: "productivity-yearly",
+    icon: "🎯",
+    title: "Yearly Goals",
+    category: "Productivity",
+    desc: "Annual planner: word of the year, goals across six life areas, quarterly milestones, and a year-end review.",
+    source: String.raw`\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\definecolor{accent}{RGB}{217,119,6}
+\renewcommand{\arraystretch}{1.6}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+\newcommand{\heading}[1]{%
+  \vspace{0.7em}%
+  {\large\bfseries\color{accent}#1}\\[-0.5em]%
+  {\color{accent!40}\rule{\linewidth}{1pt}}\\[0.4em]}
+
+\begin{document}
+
+{\Huge\bfseries Yearly Goals}\hfill{\large Year \dotfill}\\[0.2em]
+{\color{accent}\rule{\linewidth}{2pt}}
+
+\heading{Word of the Year}
+{\LARGE\bfseries\color{accent!85}\dotfill}
+
+\heading{Goals by Area}
+\begin{tabularx}{\linewidth}{@{}p{3.2cm} X X@{}}
+\toprule
+Area & Goal & Why it matters \\
+\midrule
+Career / Research & & \\
+Learning & & \\
+Health & & \\
+Relationships & & \\
+Finances & & \\
+Personal & & \\
+\bottomrule
+\end{tabularx}
+
+\heading{Quarterly Milestones}
+\begin{tabularx}{\linewidth}{@{}p{2cm} X@{}}
+\toprule
+Quarter & Milestone \\
+\midrule
+Q1 & \\
+Q2 & \\
+Q3 & \\
+Q4 & \\
+\bottomrule
+\end{tabularx}
+
+\heading{Year-End Review}
+{\bfseries Proudest achievement:}\\[0.3em]\dotfill\\[1em]
+{\bfseries What I learned:}\\[0.3em]\dotfill\\[1em]
+{\bfseries Theme for next year:}\\[0.3em]\dotfill
+
+\end{document}
+`,
+  },
 ];
 
-export const CATEGORIES = ["All", "CV", "Thesis", "Conference", "Research", "Career", "Slides", "Homework", "Grande École"];
+export const CATEGORIES = ["All", "CV", "Thesis", "Conference", "Research", "Career", "Slides", "Productivity", "Homework", "Grande École"];
 
