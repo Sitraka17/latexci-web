@@ -18,6 +18,7 @@ create table public.profiles (
   subscription_status         subscription_status,
   subscription_period_end     timestamptz,
   word_conversions_this_month integer not null default 0,
+  word_conversions_reset_at   timestamptz not null default now(),
   created_at                  timestamptz not null default now(),
   updated_at                  timestamptz not null default now()
 );

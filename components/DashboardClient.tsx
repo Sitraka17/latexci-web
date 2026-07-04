@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useTransition, lazy, Suspense } from "react";
+import { useState, useMemo, useRef, useTransition, lazy, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -83,6 +83,8 @@ export default function DashboardClient({
 }) {
   const [docs, setDocs]           = useState<DocRow[]>(initialDocuments);
   const [deleting, setDeleting]   = useState<string | null>(null);
+  const [deletePending, setDeletePending] = useState<string | null>(null);
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sharingDoc, setSharingDoc] = useState<{ id: string; title: string } | null>(null);
   const [toast, setToast]         = useState<{ message: string; type: "error" | "success" } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -128,8 +130,18 @@ export default function DashboardClient({
     }
   }
 
-  async function deleteDocument(id: string) {
-    if (!confirm("Delete this document? This cannot be undone.")) return;
+  function requestDelete(id: string) {
+    if (deletePending === id) {
+      if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+      setDeletePending(null);
+      doDelete(id);
+    } else {
+      setDeletePending(id);
+      deleteTimerRef.current = setTimeout(() => setDeletePending(null), 2500);
+    }
+  }
+
+  async function doDelete(id: string) {
     setDeleting(id);
     const { error } = await supabase.from("documents").delete().eq("id", id);
     if (error) {
@@ -351,12 +363,20 @@ export default function DashboardClient({
                       🔗
                     </button>
                     <button
-                      onClick={() => deleteDocument(doc.id)}
+                      onClick={() => requestDelete(doc.id)}
                       disabled={deleting === doc.id}
-                      title="Delete"
-                      style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)", cursor: deleting === doc.id ? "wait" : "pointer" }}
+                      title={deletePending === doc.id ? "Click again to confirm deletion" : "Delete document"}
+                      style={{
+                        ...btnStyle,
+                        background: deletePending === doc.id ? "#fef2f2" : "var(--surface2)",
+                        color: deletePending === doc.id ? "#dc2626" : "var(--fg-muted)",
+                        borderColor: deletePending === doc.id ? "#fca5a5" : "var(--border)",
+                        fontWeight: deletePending === doc.id ? 700 : undefined,
+                        cursor: deleting === doc.id ? "wait" : "pointer",
+                        transition: "all 0.15s",
+                      }}
                     >
-                      {deleting === doc.id ? "…" : "🗑"}
+                      {deleting === doc.id ? "…" : deletePending === doc.id ? "Sure?" : "🗑"}
                     </button>
                   </div>
                 </div>

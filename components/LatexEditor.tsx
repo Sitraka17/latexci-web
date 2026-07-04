@@ -121,6 +121,20 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     feature: "pdf_export";
     reason: "sign_in_required" | "upgrade_required";
   } | null>(null);
+  const [clearPending, setClearPending] = useState(false);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleClear = useCallback(() => {
+    if (clearPending) {
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+      setClearPending(false);
+      setSource("");
+    } else {
+      setClearPending(true);
+      clearTimerRef.current = setTimeout(() => setClearPending(false), 2500);
+    }
+  }, [clearPending]);
+
   const previewRef    = useRef<HTMLDivElement>(null);
   const previewScroll = useRef<HTMLDivElement>(null);
   const editorRef     = useRef<ReactCodeMirrorRef>(null);
@@ -763,7 +777,9 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0 0.75rem 0.5rem" }}>
             <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨</Btn>
             <Btn onClick={() => setSource(SAMPLE)} title="Restore demo">Reset</Btn>
-            <Btn onClick={() => { if (window.confirm("Clear all content?")) setSource(""); }} title="Clear editor">Clear</Btn>
+            <Btn active={clearPending} activeColor="#ef4444" onClick={handleClear} title={clearPending ? "Click again to confirm" : "Clear editor"}>
+              {clearPending ? "Sure?" : "Clear"}
+            </Btn>
             <div style={{ flex: 1 }} />
             {!docId && userId && (
               <Btn onClick={saveToCloud} title="Save to your documents (cloud)">
@@ -832,7 +848,9 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
           <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
           <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>
-          <Btn onClick={() => { if (window.confirm("Clear all content?")) setSource(""); }} title="Clear editor">Clear</Btn>
+          <Btn active={clearPending} activeColor="#ef4444" onClick={handleClear} title={clearPending ? "Click again to confirm" : "Clear editor"}>
+            {clearPending ? "Sure?" : "Clear"}
+          </Btn>
           <div style={{ flex: 1 }} />
           {/* Save to cloud — signed-in users on scratch docs */}
           {!docId && userId && (
