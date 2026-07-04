@@ -529,3 +529,99 @@ describe("\\multicolumn in tabular", () => {
     expect(out).toContain("<table>");
   });
 });
+
+// ── 15. natbib author-year citations ────────────────────────────────────────
+
+describe("natbib \\citet / \\citep", () => {
+  const bibSrc = [
+    "\\begin{document}",
+    "\\citet{devlin2019} proposed BERT.",
+    "Transformers \\citep{devlin2019} changed NLP.",
+    "\\begin{thebibliography}{99}",
+    "\\bibitem[Devlin et al.(2019)]{devlin2019}",
+    "Devlin, J. et al. (2019). BERT. arXiv.",
+    "\\end{thebibliography}",
+    "\\end{document}",
+  ].join("\n");
+
+  it("renders \\citet as author-year inline", () => {
+    const out = html(bibSrc);
+    expect(out).toContain("Devlin et al. (2019)");
+  });
+
+  it("renders \\citep as parenthetical (Author, year)", () => {
+    const out = html(bibSrc);
+    // citep converts "Author et al. (year)" → "(Author et al., year)"
+    expect(out).toContain("(Devlin et al., 2019)");
+  });
+
+  it("wraps citations in <cite> tag", () => {
+    const out = html(bibSrc);
+    expect(out).toContain('<cite class="ref">');
+  });
+
+  it("falls back to [N] when no natbib label", () => {
+    const src = [
+      "\\begin{document}",
+      "\\citet{smith2020} did work.",
+      "\\begin{thebibliography}{99}",
+      "\\bibitem{smith2020}",
+      "Smith (2020). Title.",
+      "\\end{thebibliography}",
+      "\\end{document}",
+    ].join("\n");
+    const out = html(src);
+    expect(out).toContain("[1]");
+  });
+});
+
+// ── 16. \\paragraph and \\subparagraph headings ──────────────────────────────
+
+describe("\\paragraph / \\subparagraph", () => {
+  it("renders \\paragraph as a bold inline heading", () => {
+    const out = html("\\paragraph{Contributions.} We show that...");
+    expect(out).toContain("<strong>Contributions.</strong>");
+  });
+
+  it("renders \\subparagraph similarly", () => {
+    const out = html("\\subparagraph{Detail.} More info.");
+    expect(out).toContain("Detail.");
+  });
+});
+
+// ── 17. \\dotfill and \\fcolorbox ────────────────────────────────────────────
+
+describe("\\dotfill and \\fcolorbox", () => {
+  it("renders \\dotfill as a dotted span", () => {
+    const out = html("Chapter 1 \\dotfill 42");
+    expect(out).toContain("⋯");
+  });
+
+  it("renders \\fcolorbox content inside a styled span", () => {
+    const out = html("\\fcolorbox{accent}{white}{Python}");
+    expect(out).toContain("Python");
+    expect(out).toContain("<span");
+  });
+});
+
+// ── 18. noisy preamble commands silenced ────────────────────────────────────
+
+describe("preamble cleanup", () => {
+  it("removes \\bibliographystyle without leaving text", () => {
+    const out = html("Intro text.\n\\bibliographystyle{aer}\nMore text.");
+    expect(out).not.toContain("aer");
+    expect(out).toContain("Intro text");
+  });
+
+  it("removes \\addcontentsline silently", () => {
+    const out = html("\\addcontentsline{toc}{section}{Introduction}\nHello.");
+    expect(out).not.toContain("addcontentsline");
+    expect(out).toContain("Hello");
+  });
+
+  it("removes \\selectlanguage silently", () => {
+    const out = html("\\selectlanguage{french}\nBonjour.");
+    expect(out).not.toContain("selectlanguage");
+    expect(out).toContain("Bonjour");
+  });
+});

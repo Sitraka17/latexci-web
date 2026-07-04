@@ -38,14 +38,16 @@ const PH = (n: number) => `\x00B${n}\x00`;
 // ── Pass 1: prescan ────────────────────────────────────────────────────────
 
 interface PrescanResult {
-  labelMap: Map<string, string>;   // label key → display string ("3", "1.2", …)
-  citeMap:  Map<string, number>;   // bibitem key → reference number
-  bibHtml:  string;                // pre-rendered bibliography HTML (or "")
+  labelMap:     Map<string, string>;  // label key → display string ("3", "1.2", …)
+  citeMap:      Map<string, number>;  // bibitem key → reference number
+  citeAuthorMap: Map<string, string>; // bibitem key → "Author et al. (2017)" (natbib)
+  bibHtml:      string;               // pre-rendered bibliography HTML (or "")
 }
 
 function prescanDocument(body: string): PrescanResult {
-  const labelMap = new Map<string, string>();
-  const citeMap  = new Map<string, number>();
+  const labelMap     = new Map<string, string>();
+  const citeMap      = new Map<string, number>();
+  const citeAuthorMap = new Map<string, string>();
 
   let eqN = 0, figN = 0, tblN = 0, secN = 0, subN = 0, subSubN = 0;
 
@@ -126,12 +128,18 @@ function prescanDocument(body: string): PrescanResult {
   if (bibBlock) {
     const bibItems = bibBlock[1].split(/(?=\\bibitem)/);
     for (const chunk of bibItems) {
-      const km = chunk.match(/\\bibitem(?:\[[^\]]*\])?\{([^}]*)\}([\s\S]*)/);
+      const km = chunk.match(/\\bibitem(?:\[([^\]]*)\])?\{([^}]*)\}([\s\S]*)/);
       if (!km) continue;
-      const key = km[1].trim();
-      const text = km[2].replace(/\n+/g, " ").trim();
+      const natbibLabel = km[1]; // e.g. "Jones(2022)" or "Jones et al.(2017)"
+      const key = km[2].trim();
+      const text = km[3].replace(/\n+/g, " ").trim();
       const n = ++bibN;
       citeMap.set(key, n);
+      // Convert "Author(year)" → "Author (year)" for natbib citations
+      if (natbibLabel) {
+        const formatted = natbibLabel.trim().replace(/\((\d{4}[a-z]?)\)$/, " ($1)");
+        citeAuthorMap.set(key, formatted);
+      }
       bibHtmlParts.push(
         `<div class="bib-entry">` +
         `<span class="bib-num">[${n}]</span>` +
@@ -148,7 +156,7 @@ function prescanDocument(body: string): PrescanResult {
   events.sort((a, b) => a.pos - b.pos);
   events.forEach(e => e.fn());
 
-  return { labelMap, citeMap, bibHtml };
+  return { labelMap, citeMap, citeAuthorMap, bibHtml };
 }
 
 // ── Depth-aware brace skipper ─────────────────────────────────────────────
@@ -293,7 +301,7 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   let body = bodyMatch ? bodyMatch[1] : src;
 
   // ── Prescan ──────────────────────────────────────────────────────────────
-  const { labelMap, citeMap, bibHtml } = prescanDocument(body);
+  const { labelMap, citeMap, citeAuthorMap, bibHtml } = prescanDocument(body);
 
   // Footnote collector (threaded through processInline calls)
   let footN = 0;
@@ -305,7 +313,7 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   // Inline helper — closure over maps & footnote list
   const inline = (text: string) =>
-    processInline(text, labelMap, citeMap, footnoteList, () => ++footN);
+    processInline(text, labelMap, citeMap, citeAuthorMap, footnoteList, () => ++footN);
 
   // ── Unsupported document class: Beamer & other slide/poster classes ───────
   // The preview renders article-style LaTeX (text + math). Presentation decks
@@ -379,6 +387,12 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   // commands like a CV's \cventry{…}{…} render their arguments properly.
   body = expandUserMacros(body);
   body = body.replace(/\\(setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
+  // Commands that are valid LaTeX but produce no visible output in preview
+  body = body.replace(/\\bibliographystyle\{[^}]*\}/g, "");
+  body = body.replace(/\\addcontentsline\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
+  body = body.replace(/\\(?:linenumbers|nolinenumbers|lineno|resetlinenumber)\b/g, "");
+  body = body.replace(/\\selectlanguage\{[^}]*\}/g, "");
+  body = body.replace(/\\(?:appendix|frontmatter|mainmatter|backmatter)\b/g, "");
 
   // Collect \newtheorem{envname}[optional]{Label} BEFORE stripping them so
   // user-defined envs like \begin{thm} render as proper theorem boxes.
@@ -799,7 +813,7 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   // Sections — single combined pass to preserve document order.
   // Three separate body.replace() calls would process ALL sections before
   // ANY subsections, making secCounter stale by the time subsections run.
-  body = body.replace(/\\(chapter|(?:sub){0,2}section)(\*?)\{([^}]*)\}/g, (_, cmd, star, t) => {
+  body = body.replace(/\\(chapter|(?:sub){0,2}section|(?:sub)?paragraph)(\*?)\{([^}]*)\}/g, (_, cmd, star, t) => {
     const starred = star === "*";
     if (cmd === "chapter") {
       return block(`<h1 class="chapter">${inline(t)}</h1>`);
@@ -811,10 +825,12 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
       if (!starred) { subCounter++; subSubCounter = 0; }
       const num = starred ? "" : `<span class="sec-num">${secCounter}.${subCounter}</span> `;
       return block(`<h3>${num}${inline(t)}</h3>`);
-    } else { // subsubsection
+    } else if (cmd === "subsubsection") {
       if (!starred) subSubCounter++;
       const num = starred ? "" : `<span class="sec-num">${secCounter}.${subCounter}.${subSubCounter}</span> `;
       return block(`<h4>${num}${inline(t)}</h4>`);
+    } else { // paragraph / subparagraph
+      return block(`<p style="margin-top:0.75rem"><strong>${inline(t)}</strong></p>`);
     }
   });
 
@@ -899,13 +915,14 @@ function sanitizeMathForKaTeX(math: string): string {
 
 /** Static version (no footnote collection) — used in prescan bibitem text */
 function processInlineStatic(text: string): string {
-  return processInline(text, new Map(), new Map(), [], () => 0);
+  return processInline(text, new Map(), new Map(), new Map(), [], () => 0);
 }
 
 function processInline(
   text: string,
   labelMap: Map<string, string>,
   citeMap: Map<string, number>,
+  citeAuthorMap: Map<string, string>,
   footnoteList: string[],
   nextFootN: () => number,
 ): string {
@@ -937,6 +954,35 @@ function processInline(
       return n !== undefined ? String(n) : k.trim();
     });
     return `<cite class="ref">[${nums.join(", ")}]</cite>`;
+  });
+
+  // ── natbib author-year citations ──────────────────────────────────────────
+  // \citet{key} → Author (2022) ;  \citet*{key} → all authors
+  text = text.replace(/\\citet\*?(?:\[[^\]]*\])*\{([^}]*)\}/g, (_, keys: string) => {
+    const parts = keys.split(",").map(k => {
+      const ay = citeAuthorMap.get(k.trim());
+      if (ay) return ay;
+      const n = citeMap.get(k.trim());
+      return n !== undefined ? `[${n}]` : k.trim();
+    });
+    return `<cite class="ref">${parts.join("; ")}</cite>`;
+  });
+  // \citep{key} → (Author, 2022) ;  \citep{k1,k2} → (Author, 2022; Author2, 2018)
+  text = text.replace(/\\citep\*?(?:\[[^\]]*\])*\{([^}]*)\}/g, (_, keys: string) => {
+    const parts = keys.split(",").map(k => {
+      const ay = citeAuthorMap.get(k.trim());
+      if (ay) return ay.replace(/^(.*?)\s*\((\d{4}[a-z]?)\)$/, "$1, $2");
+      const n = citeMap.get(k.trim());
+      return n !== undefined ? String(n) : k.trim();
+    });
+    return `<cite class="ref">(${parts.join("; ")})</cite>`;
+  });
+  // \citeauthor / \citeyear / \citealt / \citealp — simplified fallbacks
+  text = text.replace(/\\cite(?:author|year|alt|alp)\*?\{([^}]*)\}/g, (_, key: string) => {
+    const ay = citeAuthorMap.get(key.trim());
+    if (ay) return `<cite class="ref">${ay}</cite>`;
+    const n = citeMap.get(key.trim());
+    return n !== undefined ? `<cite class="ref">[${n}]</cite>` : `<cite class="ref">[?]</cite>`;
   });
 
   // ── Cross-references ──────────────────────────────────────────────────────
@@ -1048,6 +1094,12 @@ function processInline(
   // ── \color commands ────────────────────────────────────────────────────────
   // \textcolor{color}{text} — keep text, drop color
   text = text.replace(/\\textcolor\{[^}]*\}\{([^}]*)\}/g, "$1");
+  // \fcolorbox{border}{fill}{text} — render as a labeled tag/badge
+  text = text.replace(
+    /\\fcolorbox\{[^}]*\}\{[^}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g,
+    (_, content) =>
+      `<span style="border:1px solid var(--border);padding:0.1em 0.35em;border-radius:4px;font-size:0.82em">${content}</span>`
+  );
   // \colorbox{color}{text} — keep text
   text = text.replace(/\\colorbox\{[^}]*\}\{([^}]*)\}/g, "$1");
   // \color{...} — drop entirely (don't emit color name)
@@ -1065,6 +1117,12 @@ function processInline(
 
   // ── Alignment directives ──────────────────────────────────────────────────
   text = text.replace(/\\(?:raggedright|raggedleft|centering|justifying)\b/g, "");
+
+  // ── Spacing / fill commands ──────────────────────────────────────────────
+  // \dotfill — fill remaining space with dots (render as a dotted ellipsis)
+  text = text.replace(/\\dotfill\b/g, '<span style="letter-spacing:0.15em">⋯⋯⋯⋯⋯⋯⋯⋯</span>');
+  // \hrulefill — render as a thin hr-like span
+  text = text.replace(/\\hrulefill\b/g, '<span style="display:inline-block;flex:1;border-bottom:1px solid currentColor;min-width:2rem;margin:0 0.25rem;vertical-align:middle"></span>');
 
   // ── Horizontal rules ──────────────────────────────────────────────────────
   // \hrule and \hrule height 0.6pt — render as <hr>

@@ -46,19 +46,24 @@ export default function TemplatesFilter() {
   const [active, setActive] = useState("All");
   const [query,  setQuery]  = useState("");
 
-  const filtered = useMemo(() => {
+  // Templates matching the current query (ignoring category filter, for pill counts)
+  const queryFiltered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    const byCategory = active === "All" ? TEMPLATES : TEMPLATES.filter(t => t.category === active);
-    if (!q) return byCategory;
-    return byCategory.filter(t =>
+    if (!q) return TEMPLATES;
+    return TEMPLATES.filter(t =>
       t.title.toLowerCase().includes(q) ||
       t.desc.toLowerCase().includes(q) ||
       t.category.toLowerCase().includes(q)
     );
-  }, [active, query]);
+  }, [query]);
+
+  const filtered = useMemo(() => {
+    const byCategory = active === "All" ? queryFiltered : queryFiltered.filter(t => t.category === active);
+    return byCategory;
+  }, [active, queryFiltered]);
 
   const countFor = (cat: string) =>
-    cat === "All" ? TEMPLATES.length : TEMPLATES.filter(t => t.category === cat).length;
+    cat === "All" ? queryFiltered.length : queryFiltered.filter(t => t.category === cat).length;
 
   return (
     <>
@@ -94,7 +99,7 @@ export default function TemplatesFilter() {
 
         {/* Category pills */}
         <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center", flex: 1 }}>
-          {CATEGORIES.map(cat => {
+          {CATEGORIES.filter(cat => countFor(cat) > 0 || cat === active).map(cat => {
             const isActive = cat === active;
             return (
               <button
