@@ -40,7 +40,7 @@ function pkgStyle(pkg: string): React.CSSProperties {
 }
 
 // ── Symbol Card ───────────────────────────────────────────────────────────────
-function SymbolCard({ sym, onCopy }: { sym: SymbolEntry; onCopy: (cmd: string) => void }) {
+function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cmd: string) => void; katexReady: boolean }) {
   const [html, setHtml] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -48,7 +48,7 @@ function SymbolCard({ sym, onCopy }: { sym: SymbolEntry; onCopy: (cmd: string) =
     if (katexRender) {
       setHtml(renderKaTeX(sym.command));
     }
-  }, [sym.command]);
+  }, [sym.command, katexReady]);
 
   function copy() {
     navigator.clipboard.writeText(sym.command).catch(() => {});
@@ -164,11 +164,6 @@ export default function SymbolSearch() {
     return searched.filter((s) => s.category === activeCategory);
   }, [query, activeCategory]);
 
-  // Update KaTeX renders when ready
-  const [, forceUpdate] = useState(0);
-  useEffect(() => {
-    if (katexReady) forceUpdate((n) => n + 1);
-  }, [katexReady]);
 
   const catCounts = useMemo(() => {
     const searched = searchSymbols(query);
@@ -312,6 +307,7 @@ export default function SymbolSearch() {
                 key={`${sym.command}-${i}`}
                 sym={sym}
                 onCopy={setLastCopied}
+                katexReady={katexReady}
               />
             ))}
           </div>

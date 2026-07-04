@@ -485,3 +485,47 @@ describe("typography", () => {
     expect(text(html("wait\\ldots"))).toContain("wait…");
   });
 });
+
+// ── 13. \newtheorem user-defined environments ────────────────────────────────
+
+describe("\\newtheorem", () => {
+  it("renders \\begin{thm}…\\end{thm} as a theorem box when defined with \\newtheorem", () => {
+    const src = `\\newtheorem{thm}{Theorem}\n\\begin{thm}\nPythagoras.\n\\end{thm}`;
+    const out = html(src);
+    expect(out).toContain("thm-box");
+    expect(out).toContain("Theorem");
+    expect(out).toContain("Pythagoras");
+  });
+
+  it("uses the custom label from \\newtheorem{mydef}{Definition}", () => {
+    const src = `\\newtheorem{mydef}{Definition}\n\\begin{mydef}\nA group is a set with a binary operation.\n\\end{mydef}`;
+    const out = html(src);
+    expect(out).toContain("Definition");
+    expect(out).toContain("group");
+  });
+
+  it("still renders built-in theorem without \\newtheorem", () => {
+    const out = html("\\begin{theorem}\nFermat.\n\\end{theorem}");
+    expect(out).toContain("thm-box");
+    expect(out).toContain("Theorem.");
+  });
+});
+
+// ── 14. \multicolumn in tabular ─────────────────────────────────────────────
+
+describe("\\multicolumn in tabular", () => {
+  it("emits colspan attribute", () => {
+    const src = `\\begin{tabular}{ccc}\n\\multicolumn{2}{c}{Header} & Col3 \\\\\n A & B & C \\\\\n\\end{tabular}`;
+    const out = html(src);
+    expect(out).toContain('colspan="2"');
+    expect(out).toContain("Header");
+  });
+
+  it("renders single-cell multicolumn without breaking table", () => {
+    const src = `\\begin{tabular}{cc}\n\\multicolumn{1}{c}{Title} & Data \\\\\n\\end{tabular}`;
+    const out = html(src);
+    expect(out).toContain("Title");
+    expect(out).toContain("Data");
+    expect(out).toContain("<table>");
+  });
+});

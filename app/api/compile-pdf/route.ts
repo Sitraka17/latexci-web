@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -41,6 +42,10 @@ async function checkPdfAccess(): Promise<{ allowed: boolean; reason?: string }> 
 }
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit: 5 compilations/min per IP (pro feature but still protect YToTech) ──
+  const rl = rateLimit(req, { limit: 5, windowMs: 60_000 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message, feature: "pdf_export" }, { status: 429, headers: rl.headers });
+
   // ── Auth gate ──────────────────────────────────────────────────────────────
   const access = await checkPdfAccess();
   if (!access.allowed) {

@@ -379,7 +379,15 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   // commands like a CV's \cventry{…}{…} render their arguments properly.
   body = expandUserMacros(body);
   body = body.replace(/\\(setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
-  body = body.replace(/\\newtheorem\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
+
+  // Collect \newtheorem{envname}[optional]{Label} BEFORE stripping them so
+  // user-defined envs like \begin{thm} render as proper theorem boxes.
+  const extraThmEnvs: Array<[string, string]> = []; // [envname, label]
+  body = body.replace(
+    /\\newtheorem\{([^}]+)\}(?:\[[^\]]*\])?\{([^}]+)\}/g,
+    (_, envName: string, label: string) => { extraThmEnvs.push([envName, label]); return ""; }
+  );
+  body = body.replace(/\\newtheorem\*?\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
   // Color definitions (\definecolor{name}{model}{spec})
   body = body.replace(/\\definecolor\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
   body = body.replace(/\\colorlet\{[^}]*\}\{[^}]*\}/g, "");
@@ -487,10 +495,13 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     block(`<pre class="verbatim"><code>${escapeHtml(c)}</code></pre>`)
   );
 
-  // Theorem-like environments
-  const thmEnvs = ["theorem", "lemma", "proposition", "corollary", "definition", "remark", "example", "proof"];
-  for (const env of thmEnvs) {
-    const label = env.charAt(0).toUpperCase() + env.slice(1);
+  // Theorem-like environments (built-in + user-defined via \newtheorem)
+  const builtinThmEnvs: Array<[string, string]> = [
+    ["theorem","Theorem"], ["lemma","Lemma"], ["proposition","Proposition"],
+    ["corollary","Corollary"], ["definition","Definition"], ["remark","Remark"],
+    ["example","Example"], ["proof","Proof"],
+  ];
+  for (const [env, label] of [...builtinThmEnvs, ...extraThmEnvs]) {
     body = body.replace(
       new RegExp(`\\\\begin\\{${env}\\}(?:\\[([^\\]]*)\\])?(\\s*)([\\s\\S]*?)\\\\end\\{${env}\\}`, "g"),
       (_, opt, _ws, c) => block(
@@ -545,12 +556,22 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
       if (/^\\hline\s*$/.test(row) || /^\\(top|mid|bottom)rule\s*$/.test(row)) return;
       const clean = row.replace(/\\hline/g, "").replace(/\\(top|mid|bottom)rule/g, "").trim();
       if (!clean) return;
-      const cells = clean.split("&").map((c: string) => inline(c.trim()));
+      const renderCell = (raw: string, isHeader: boolean) => {
+        const mc = raw.trim().match(/^\\multicolumn\{(\d+)\}\{[^}]*\}\{([\s\S]*)\}$/);
+        if (mc) {
+          const span = mc[1];
+          const content = inline(mc[2].trim());
+          return isHeader ? `<th colspan="${span}">${content}</th>` : `<td colspan="${span}">${content}</td>`;
+        }
+        const content = inline(raw.trim());
+        return isHeader ? `<th>${content}</th>` : `<td>${content}</td>`;
+      };
+      const cells = clean.split("&");
       if (firstDataRow) {
-        tbl += `<thead><tr>${cells.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>`;
+        tbl += `<thead><tr>${cells.map(c => renderCell(c, true)).join("")}</tr></thead><tbody>`;
         firstDataRow = false;
       } else {
-        tbl += `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
+        tbl += `<tr>${cells.map(c => renderCell(c, false)).join("")}</tr>`;
       }
     });
     // Guard: if no data rows were processed (e.g. table had only \hline rows),
