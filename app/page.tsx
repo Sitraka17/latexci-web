@@ -24,6 +24,19 @@ export const metadata: Metadata = {
     "katex online renderer", "overleaf after graduation",
   ],
   alternates: { canonical: "/" },
+  openGraph: {
+    title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
+    description:
+      "latexci: BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. No signup, no install, works in any browser.",
+    url: "/",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
+    description:
+      "BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. Free, no signup.",
+  },
 };
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -42,7 +55,7 @@ const TOOLS = [
   { href: "/tools/table",         icon: "▦",  label: "Table Generator", tag: "Build",   color: "#06b6d4",
     desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX in one click." },
   { href: "/tools/templates",     icon: "▤",  label: "Templates",       tag: "Library", color: "#ec4899",
-    desc: "PhD thesis, NeurIPS, ICML, ACL, CV, Beamer, Centrale Marseille. 24+ templates, download instantly." },
+    desc: "PhD thesis, NeurIPS, ICML, ACL, CV, Beamer, Centrale Marseille. 28 templates, open instantly." },
 ];
 
 const SCENARIOS = [
@@ -131,7 +144,7 @@ export default function HomePage() {
         <span style={{ marginRight: "0.4rem" }}>✨</span>
         <strong style={{ color: "var(--accent2)" }}>New:</strong>
         <span className="announce-long">{" "}ISBN → BibTeX — cite any of 20M+ books in one click, plus 380+ searchable symbols —{" "}</span>
-        <span className="announce-short">{" "}</span>
+        <span className="announce-short">{" "}ISBN → BibTeX + 380 symbols —{" "}</span>
         <a href="/tools/bibtex" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
           try BibTeX Tools →
         </a>
@@ -202,7 +215,7 @@ export default function HomePage() {
 
             <div className="hero-cta-row" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               <Link
-                href="/tools/bibtex"
+                href="/tools/preview"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.4rem",
                   padding: "0.72rem 1.6rem", borderRadius: 8,
@@ -212,10 +225,10 @@ export default function HomePage() {
                   boxShadow: "0 4px 18px color-mix(in srgb, var(--accent) 40%, transparent)",
                 }}
               >
-                BibTeX Tools
+                ⚡ Try Preview
               </Link>
               <Link
-                href="/tools/word-to-latex"
+                href="/tools/bibtex"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.4rem",
                   padding: "0.72rem 1.4rem", borderRadius: 8,
@@ -224,7 +237,7 @@ export default function HomePage() {
                   border: "1px solid var(--border)",
                 }}
               >
-                Word → LaTeX
+                BibTeX Tools
               </Link>
             </div>
 
@@ -361,7 +374,7 @@ export default function HomePage() {
           display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "0.5rem",
         }}>
           {[
-            { n: "24+",  label: "Templates" },
+            { n: "28",   label: "Templates" },
             { n: "7",    label: "Tools" },
             { n: "0",    label: "Setup needed" },
             { n: "100%", label: "Free forever" },
@@ -543,7 +556,8 @@ export default function HomePage() {
                 Centrale Marseille &amp; AMSE templates
               </p>
               <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--fg-muted)" }}>
-                Rapport de projet, rapport de stage, AMSE working paper — avec la mise en page officielle.
+                <span lang="fr">Rapport de projet, rapport de stage, AMSE working paper</span>
+                {" "}— with the official institutional layout.
               </p>
             </div>
             <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#003BA0", flexShrink: 0 }}>

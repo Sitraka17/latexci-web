@@ -13,14 +13,18 @@ export const metadata: Metadata = {
     "latex tools pricing", "latex pro plan", "cheap overleaf alternative",
     "academic software grant fundable", "research lab latex tools", "latex pdf export",
   ],
-  alternates: { canonical: `${BASE}/pricing` },
+  alternates: { canonical: "/pricing" },
   openGraph: {
     title: "latexci Pricing — Pro at $49/year",
     description: "Unlimited Word→LaTeX, PDF export, priority support. $49/year. Grant-reimbursable.",
-    url: `${BASE}/pricing`,
+    url: "/pricing",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "latexci Pricing" },
+  twitter: {
+    card: "summary_large_image",
+    title: "latexci Pricing — Pro at $49/year",
+    description: "Unlimited Word→LaTeX, PDF export, priority support. $49/year. Grant-reimbursable.",
+  },
 };
 
 const faqSchema = {
@@ -95,7 +99,7 @@ export default function PricingPage() {
               color: "var(--fg)",
             }}
           >
-            No compile timeouts.
+            Simple pricing for researchers.
             <br />
             <span
               style={{
@@ -104,7 +108,7 @@ export default function PricingPage() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              Ever.
+              $49/year. No timeouts.
             </span>
           </h1>
           <p

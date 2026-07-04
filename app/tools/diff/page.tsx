@@ -34,6 +34,9 @@ export default function DiffPage() {
   return (
     <ToolLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+        Online LaTeX Diff Tool — Compare .tex Files Side by Side
+      </h1>
       <LatexDiff />
     </ToolLayout>
   );

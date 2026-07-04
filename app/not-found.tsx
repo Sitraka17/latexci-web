@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+
+export const metadata: Metadata = {
+  title: "Page not found — latexci",
+  robots: { index: false, follow: false },
+};
 
 const TOOLS = [
   { href: "/tools/preview",       label: "LaTeX Preview",     icon: "⚡" },

@@ -164,7 +164,7 @@ export default function AcademicsPage() {
               background: "linear-gradient(135deg, var(--accent), var(--accent2))",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             }}>
-              heavy academic work
+              PhD students &amp; researchers
             </span>
           </h1>
 

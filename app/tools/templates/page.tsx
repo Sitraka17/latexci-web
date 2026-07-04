@@ -6,7 +6,7 @@ import TemplatesFilter from "@/components/TemplatesFilter";
 export const metadata: Metadata = {
   title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis & More",
   description:
-    "24+ free LaTeX templates: NeurIPS 2024, ICML, ACL/EMNLP, Nature style, PhD thesis, CVs with photo, Beamer presentations, and Centrale Marseille / AMSE templates. Click any template to open it instantly in the browser — no download, no signup.",
+    "28 free LaTeX templates: NeurIPS 2024, ICML, ACL/EMNLP, Nature style, PhD thesis, CVs with photo, Beamer presentations, and Centrale Marseille / AMSE templates. Click any template to open it instantly in the browser — no download, no signup.",
   keywords: [
     "free latex templates",
     "neurips latex template 2024",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis",
     description:
-      "24+ free LaTeX templates: NeurIPS, ICML, ACL, Nature, thesis, CV, Beamer. Click to open in the live editor instantly.",
+      "28 free LaTeX templates: NeurIPS, ICML, ACL, Nature, thesis, CV, Beamer. Click to open in the live editor instantly.",
     url: "/tools/templates",
     type: "website",
   },
@@ -69,7 +69,7 @@ export default function TemplatesPage() {
             LaTeX Templates
           </h1>
           <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", maxWidth: 540, margin: 0 }}>
-            24+ free templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer.
+            28 free templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer.
             Click any template to open it in the live editor. No download, no signup.
           </p>
         </div>

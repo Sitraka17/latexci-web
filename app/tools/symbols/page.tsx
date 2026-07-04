@@ -33,6 +33,11 @@ export const metadata: Metadata = {
     url: "/tools/symbols",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "LaTeX Symbol Search — 380+ Symbols with Live Preview — latexci",
+    description: "Find any LaTeX symbol instantly. Search by name, command, or Unicode. Live KaTeX preview.",
+  },
 };
 
 export default function SymbolsPage() {

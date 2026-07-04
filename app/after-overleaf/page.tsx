@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     description: "Lost your university Overleaf license? These tools are free, forever.",
     url: "/after-overleaf", type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "After Overleaf — Free LaTeX Tools When Your University License Ends",
+    description: "Lost your university Overleaf license? These tools are free, forever. No signup.",
+  },
 };
 
 const WHAT_YOU_LOSE = [

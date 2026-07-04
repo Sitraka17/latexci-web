@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   title: "Terms of Service — latexci",
   description: "Terms of service for latexci — free, open-source LaTeX tools for researchers and students.",
   alternates: { canonical: "/terms" },
+  openGraph: {
+    title: "Terms of Service — latexci",
+    description: "Terms of service for latexci — free online LaTeX tools for researchers.",
+    url: "/terms",
+    type: "website",
+  },
 };
 
 const YEAR = new Date().getFullYear();

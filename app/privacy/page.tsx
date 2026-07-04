@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   title: "Privacy Policy — latexci",
   description: "latexci privacy policy. We run everything in your browser — your LaTeX source never leaves your machine.",
   alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy — latexci",
+    description: "latexci privacy policy. Your LaTeX source never leaves your browser.",
+    url: "/privacy",
+    type: "website",
+  },
 };
 
 const YEAR = new Date().getFullYear();
