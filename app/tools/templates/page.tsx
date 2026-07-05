@@ -6,7 +6,7 @@ import TemplatesFilter from "@/components/TemplatesFilter";
 export const metadata: Metadata = {
   title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis & More",
   description:
-    "28 free LaTeX templates: NeurIPS 2024, ICML, ACL/EMNLP, Nature style, PhD thesis, CVs with photo, Beamer presentations, and Centrale Marseille / AMSE templates. Click any template to open it instantly in the browser — no download, no signup.",
+    "28 free LaTeX templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer, and more. Open any template instantly in the browser. No download, no signup.",
   keywords: [
     "free latex templates",
     "neurips latex template 2024",

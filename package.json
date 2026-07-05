@@ -24,14 +24,17 @@
     "codemirror": "^6.0.2",
     "diff": "^9.0.0",
     "katex": "^0.17.0",
-    "lucide-react": "^1.16.0",
     "lz-string": "^1.5.0",
     "mammoth": "^1.12.0",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-dropzone": "^15.0.0",
     "stripe": "^22.2.0"
+  },
+  "comment_overrides": "Force patched postcss (GHSA-qx2v-qp2m-jg93) into Next's dep tree; Next bundles an older one and has no non-breaking fix yet. Not exploitable here (CSS is author-controlled), but keeps `npm audit` clean.",
+  "overrides": {
+    "postcss": "^8.5.10"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -40,7 +43,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"

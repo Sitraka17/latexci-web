@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+// KaTeX styles are self-hosted (bundled) rather than fetched from a CDN, so the
+// math CSS is not a render-blocking cross-origin request on every page.
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 // Self-hosted via next/font — no render-blocking Google Fonts CSS request.
@@ -96,9 +99,7 @@ export default function RootLayout({
       <head>
         {/* Anti-flash: read saved theme before first paint — must be synchronous */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('latexci_theme');if(t==='light'||(t==null&&window.matchMedia('(prefers-color-scheme:light)').matches)){document.documentElement.classList.add('light');}}catch(e){}})();` }} />
-        {/* KaTeX CSS — loaded ONCE here at the root; do NOT import it again in child components */}
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossOrigin="anonymous" />
+        {/* KaTeX CSS is imported (self-hosted/bundled) at the top of this file. */}
         {/* PWA manifest — apple-touch-icon is auto-injected from app/apple-icon.tsx */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -106,7 +107,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="latexci" />
       </head>
       <body className="min-h-full flex flex-col antialiased">
-        {children}
+        <a href="#main" className="skip-link">Skip to content</a>
+        <div id="main" tabIndex={-1}>
+          {children}
+        </div>
         <Analytics />
       </body>
     </html>

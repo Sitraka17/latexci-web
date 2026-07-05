@@ -7,7 +7,7 @@ import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
 export const metadata: Metadata = {
   title: "LaTeX Symbol Search — 380+ Symbols with Live Preview — latexci",
   description:
-    "Search 380+ LaTeX symbols by name, command, or Unicode: Greek letters, math operators, arrows, logic, sets, physics, statistics, CS complexity. Copy the command in one click with live KaTeX preview. Faster than Detexify.",
+    "Search 380+ LaTeX symbols by name, command, or Unicode — Greek, operators, arrows, logic, physics, stats. One-click copy with live KaTeX preview. Faster than Detexify.",
   keywords: [
     "latex symbols",
     "latex symbol search",

@@ -199,6 +199,7 @@ export default function AuthForm() {
       <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
         <input
           type="email"
+          aria-label="Email address"
           placeholder="you@university.edu"
           value={email}
           onChange={e => setEmail(e.target.value)}
@@ -210,6 +211,7 @@ export default function AuthForm() {
         {mode === "password" && (
           <input
             type="password"
+            aria-label="Password"
             placeholder={isSignUp ? "Create a password" : "Password"}
             value={password}
             onChange={e => setPassword(e.target.value)}
@@ -220,7 +222,7 @@ export default function AuthForm() {
         )}
 
         {error && (
-          <p style={{ fontSize: "0.8rem", color: "#ef4444", margin: 0 }}>{error}</p>
+          <p role="alert" style={{ fontSize: "0.8rem", color: "#ef4444", margin: 0 }}>{error}</p>
         )}
 
         <button

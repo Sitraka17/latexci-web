@@ -5,7 +5,7 @@ import TableGenerator from "@/components/TableGenerator";
 export const metadata: Metadata = {
   title: "LaTeX Table Generator — Free, Paste from Excel or CSV — latexci",
   description:
-    "Free LaTeX table generator: paste data from Excel or CSV, pick column alignment (l/c/r), choose booktabs or simple borders, copy the ready-to-use tabular or table environment. No signup, works in any browser.",
+    "Free LaTeX table generator — paste from Excel or CSV, pick alignment, choose booktabs or simple borders, and copy ready-to-use tabular code. No signup.",
   keywords: [
     "latex table generator",
     "latex table generator online",

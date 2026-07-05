@@ -33,6 +33,7 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
   const [copied, setCopied]       = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef  = useRef<HTMLDivElement>(null);
 
   function showError(msg: string) {
     setError(msg);
@@ -52,12 +53,30 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
     if (e.target === overlayRef.current) onClose();
   }
 
-  // Close on Escape
+  // Close on Escape; trap Tab focus inside the dialog (accessible dialog)
   useEffect(() => {
-    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const fn = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE))
+        .filter(el => el.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
   }, [onClose]);
+
+  // Move focus into the dialog on open; restore it on close
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null;
+    const first = dialogRef.current?.querySelector<HTMLElement>('button,a[href],input');
+    (first ?? dialogRef.current)?.focus();
+    return () => prev?.focus();
+  }, []);
 
   async function togglePublic(isPublic: boolean) {
     if (!state) return;
@@ -183,7 +202,13 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
         padding: "1rem",
       }}
     >
-      <div style={{
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Share document"
+        tabIndex={-1}
+        style={{
         background: "var(--bg, #0f0f0f)",
         border: "1px solid var(--border, #222)",
         borderRadius: 14,
@@ -205,6 +230,7 @@ export default function ShareModal({ docId, docTitle, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close share dialog"
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "var(--fg-muted)", lineHeight: 1, padding: 2 }}
           >
             ×

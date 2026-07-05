@@ -24,7 +24,7 @@
   --preview-desk:      #0c0c15;
   --preview-hdr:       #090910;
   --preview-hdr-bdr:   #17172a;
-  --preview-hdr-muted: #56547a;
+  --preview-hdr-muted: #7876a4;
   --preview-hdr-dot:   #2d7a45;
   --paper-bg:          #14142a;
   --paper-fg:          #c8c5e0;
@@ -33,8 +33,8 @@
   --editor-border:     #28283a;
   --editor-sidebar-bg: #0f0f1a;
   --editor-statusbar:  #09090f;
-  --editor-statusbar-fg: rgba(106,104,136,0.85);
-  --editor-statusbar-lang: rgba(138,136,164,0.9);
+  --editor-statusbar-fg: rgba(150,148,180,0.95);
+  --editor-statusbar-lang: rgba(170,168,196,0.95);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ html.light {
   --accent:       #5a46c8;
   --accent2:      #7a62e0;
   --fg:           #1a1714;
-  --fg-muted:     #7a7060;
+  --fg-muted:     #635a4b;   /* darkened for WCAG AA (≥4.5:1) on light surfaces */
   --green:        #166534;
   --red:          #991b1b;
   --amber:        #92400e;
@@ -84,8 +84,37 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Skip-to-content link — visually hidden until keyboard-focused */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+}
+#main:focus { outline: none; }
+
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
+}
+
+/* Respect users who ask for reduced motion — near-instant animations/transitions
+   without removing them entirely (so transitionend handlers still fire). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {
