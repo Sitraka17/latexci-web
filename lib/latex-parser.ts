@@ -241,16 +241,25 @@ function expandUserMacros(src: string): string {
 
   if (macros.size === 0) return out;
 
+  // Cap total expanded size to defuse expansion bombs: a chain of nested
+  // \newcommand definitions where each macro expands to two of the next
+  // (\a→\b\b, \b→\c\c, …) doubles the string per level (~2^N), which would
+  // otherwise freeze/OOM the browser of anyone viewing the document. If we
+  // exceed the budget, stop expanding and return what we have so far.
+  const MAX_EXPANDED = Math.max(out.length * 12, 200_000);
+
   // Expand invocations. Longest names first so \cvsect is matched before \cv.
   // Bounded passes guard against runaway / mutually-recursive macros.
   const names = [...macros.keys()].sort((a, b) => b.length - a.length);
   for (let pass = 0; pass < 8; pass++) {
+    if (out.length > MAX_EXPANDED) break;
     let changed = false;
     for (const name of names) {
       const macro = macros.get(name)!;
       let result = "";
       let idx = 0;
       while (idx < out.length) {
+        if (result.length > MAX_EXPANDED) { result += out.slice(idx); break; }
         const at = out.indexOf(name, idx);
         if (at === -1) { result += out.slice(idx); break; }
         // Don't match a prefix of a longer command name (e.g. \cv vs \cvsect).
@@ -290,11 +299,27 @@ function expandUserMacros(src: string): string {
 
 // ── Pass 2: main renderer ─────────────────────────────────────────────────
 
+// Hard ceiling on the source we will parse client-side. The renderer runs
+// synchronously in a React render path, so an oversized (often hostile)
+// document would freeze the tab. Well above any realistic paper (~80 KB is the
+// PDF-compile cap), so legitimate documents are unaffected.
+const MAX_SOURCE_CHARS = 400_000;
+
 export function latexToHtml(src: string): { html: string; warnings: ParseWarning[] } {
   const warnings: ParseWarning[] = [];
   const blocks = new Map<string, string>();
   let n = 0;
   const block = (html: string) => { const p = PH(n++); blocks.set(p, html); return p; };
+
+  if (src.length > MAX_SOURCE_CHARS) {
+    return {
+      html:
+        `<div class="preview-notice"><p class="preview-notice-title">Document too large to preview</p>` +
+        `<p class="preview-notice-sub">This document exceeds ${Math.round(MAX_SOURCE_CHARS / 1000)}k characters. ` +
+        `Trim it or use PDF export to compile the full source.</p></div>`,
+      warnings: [{ env: "document", reason: "Source exceeds preview size limit" }],
+    };
+  }
 
   // Extract body
   const bodyMatch = src.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
@@ -914,8 +939,8 @@ function sanitizeMathForKaTeX(math: string): string {
 // ── Inline processing ─────────────────────────────────────────────────────────
 
 /** Static version (no footnote collection) — used in prescan bibitem text */
-function processInlineStatic(text: string): string {
-  return processInline(text, new Map(), new Map(), new Map(), [], () => 0);
+function processInlineStatic(text: string, preEscaped = false): string {
+  return processInline(text, new Map(), new Map(), new Map(), [], () => 0, preEscaped);
 }
 
 function processInline(
@@ -925,7 +950,19 @@ function processInline(
   citeAuthorMap: Map<string, string>,
   footnoteList: string[],
   nextFootN: () => number,
+  preEscaped = false,
 ): string {
+  // ── Security: neutralize literal HTML from the (untrusted) document source ──
+  // The rendered output is injected via dangerouslySetInnerHTML, so any raw
+  // `<`, `>`, `&` in prose OR inside a command argument (e.g. \textbf{<script>})
+  // must be escaped BEFORE the formatting rules below re-emit their captures
+  // into HTML. Math is exempt: encodeMath() un-escapes the entities so KaTeX
+  // still receives the raw characters. Quotes are intentionally NOT escaped so
+  // smart-quote typography keeps working; attribute-context safety (href/title)
+  // is handled at each of those sinks. `preEscaped` avoids double-escaping when
+  // a caller (e.g. the \footnote handler) passes already-escaped content.
+  if (!preEscaped) text = escapeHtml(text);
+
   // Inline math: $...$ only ($$...$$ is handled as block in Phase 1)
   text = text.replace(/\$([^$\n]+?)\$/g, (_, m) =>
     `<span class="math-inline" data-math="${encodeMath(sanitizeMathForKaTeX(m))}"></span>`
@@ -990,27 +1027,30 @@ function processInline(
     const n = labelMap.get(key.trim());
     return n !== undefined
       ? `<span class="ref">(${n})</span>`
-      : `<span class="ref unresolved" title="Unresolved: ${escapeHtml(key)}">(??)</span>`;
+      : `<span class="ref unresolved" title="Unresolved: ${escapeAttr(key)}">(??)</span>`;
   });
   text = text.replace(/\\ref\{([^}]*)\}/g, (_, key: string) => {
     const n = labelMap.get(key.trim());
     return n !== undefined
       ? `<span class="ref">${n}</span>`
-      : `<span class="ref unresolved" title="Unresolved: ${escapeHtml(key)}">??</span>`;
+      : `<span class="ref unresolved" title="Unresolved: ${escapeAttr(key)}">??</span>`;
   });
   text = text.replace(/\\label\{[^}]*\}/g, "");  // consume (already in map)
 
   // ── Footnotes ─────────────────────────────────────────────────────────────
   text = text.replace(/\\footnote\{([^}]*)\}/g, (_, content: string) => {
     const n = nextFootN();
-    footnoteList.push(processInlineStatic(content));
-    return `<sup class="footnote" title="${escapeHtml(content)}">${n}</sup>`;
+    // content is already HTML-escaped (escape-first); don't re-escape it.
+    footnoteList.push(processInlineStatic(content, true));
+    return `<sup class="footnote" title="${escapeAttr(content)}">${n}</sup>`;
   });
 
-  // URLs and hrefs — sanitize to block javascript: and other dangerous protocols
+  // URLs and hrefs — safeHref blocks javascript:/data: schemes and any value that
+  // could break out of the href="" attribute. u/label are already escaped for
+  // `<>&` (escape-first); the visible label is safe HTML text as-is.
   text = text.replace(/\\url\{([^}]*)\}/g, (_, u) => {
     const href = safeHref(u);
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(u)}</a>`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${u}</a>`;
   });
   text = text.replace(/\\href\{([^}]*)\}\{([^}]*)\}/g, (_, u, label) => {
     const href = safeHref(u);
@@ -1142,11 +1182,21 @@ function processInline(
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
 function encodeMath(math: string): string {
-  return encodeURIComponent(math.trim());
+  // Math may have been HTML-escaped upstream (escape-first in processInline);
+  // KaTeX needs the raw characters, so reverse the entity encoding here. This
+  // is a no-op for block-phase math (which is never escaped).
+  const raw = math
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+  return encodeURIComponent(raw.trim());
 }
 
 function safeHref(url: string): string {
   const u = url.trim();
+  // Reject any value that could break out of the href="" attribute or smuggle
+  // markup, regardless of scheme (defends the \url / \href attribute context).
+  if (/["'<>`\s]/.test(u) || /&(?:quot|lt|gt|#\d);/i.test(u)) return "#";
   if (/^https?:\/\//i.test(u) || /^mailto:/i.test(u) || /^\//.test(u)) return u;
   return "#";
 }
@@ -1156,6 +1206,15 @@ function escapeHtml(text: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+/**
+ * Escape a value for an HTML attribute context. Assumes `<>&` are already
+ * escaped (escape-first) and only neutralizes the quote characters that could
+ * otherwise terminate a `title="…"` / `href="…"` attribute.
+ */
+function escapeAttr(text: string): string {
+  return text.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 /** Extract the content of \cmd{...} respecting nested braces. */
@@ -1185,5 +1244,7 @@ function escapeForDisplay(text: string): string {
   text = text.replace(/\{([^{}]*)\}/g, "$1");
   text = text.replace(/[{}]/g, "");
   text = text.replace(/\s+/g, " ");
-  return text.trim();
+  // HTML-escape: \title / \author / \date land in element text via the header,
+  // so literal markup in them must not survive to dangerouslySetInnerHTML.
+  return escapeHtml(text.trim());
 }

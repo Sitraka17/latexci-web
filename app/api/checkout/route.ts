@@ -28,13 +28,20 @@ const ALLOWED_PRICE_IDS = new Set([
 
 export async function POST(req: NextRequest) {
   try {
-    // Require authentication — prevents anonymous bots from spamming Stripe sessions
+    // Require authentication — prevents anonymous bots from spamming Stripe
+    // sessions, and (critically) lets us bind the session to the real user so
+    // the webhook grants entitlement by trusted user id rather than by the
+    // payer-typed billing email.
+    let userId: string | undefined;
+    let userEmail: string | undefined;
     if (isSupabaseConfigured) {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         return Response.json({ error: "Authentication required" }, { status: 401 });
       }
+      userId = user.id;
+      userEmail = user.email;
     }
 
     const stripe = getStripe();
@@ -58,6 +65,16 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "auto",
       // Automatically collect tax via Stripe Tax (enable in dashboard)
       automatic_tax: { enabled: false },
+      // Bind the session + resulting subscription to the authenticated user so
+      // the webhook can resolve the profile by trusted id, not payer email.
+      ...(userId
+        ? {
+            client_reference_id: userId,
+            customer_email: userEmail,
+            metadata: { supabase_user_id: userId },
+            subscription_data: { metadata: { supabase_user_id: userId } },
+          }
+        : {}),
     });
 
     if (!session.url) {

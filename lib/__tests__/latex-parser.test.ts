@@ -625,3 +625,96 @@ describe("preamble cleanup", () => {
     expect(out).toContain("Bonjour");
   });
 });
+
+// ── 19. XSS hardening (output is rendered via dangerouslySetInnerHTML) ───────
+
+describe("XSS: literal HTML in the document is neutralized", () => {
+  it("escapes a raw <script> in body text", () => {
+    const out = html("Hello <script>alert(document.cookie)</script> world");
+    expect(out).not.toContain("<script>");
+    expect(out).toContain("&lt;script&gt;");
+  });
+
+  it("escapes <img onerror=...> in body text", () => {
+    const out = html("intro <img src=x onerror=alert(1)> end");
+    expect(out).not.toContain("<img");
+    expect(out).toContain("&lt;img");
+  });
+
+  it("escapes markup smuggled inside \\textbf", () => {
+    const out = html("\\textbf{<script>alert(1)</script>}");
+    // the <strong> wrapper is real, the payload inside is escaped
+    expect(out).toContain("<strong>");
+    expect(out).not.toContain("<script>");
+    expect(out).toContain("&lt;script&gt;");
+  });
+
+  it("escapes markup smuggled inside an \\href label", () => {
+    const out = html("\\href{https://ok.com}{<img src=x onerror=alert(1)>}");
+    expect(out).not.toContain("<img");
+    expect(out).toContain("&lt;img");
+  });
+
+  it("escapes markup smuggled inside \\emph and \\texttt", () => {
+    expect(html("\\emph{<svg onload=alert(1)>}")).not.toContain("<svg");
+    expect(html("\\texttt{</code><script>x</script>}")).not.toContain("<script>");
+  });
+
+  it("neutralizes javascript: URLs in \\href", () => {
+    const out = html("\\href{javascript:alert(1)}{click}");
+    expect(out).not.toContain("javascript:");
+    expect(out).toContain('href="#"');
+  });
+
+  it("rejects an href that tries to break out of the attribute", () => {
+    const out = html('\\url{https://x.com/" onmouseover="alert(1)}');
+    // safeHref must reject the quote-bearing URL rather than emit the handler
+    expect(out).not.toContain('onmouseover="alert(1)"');
+    expect(out).toContain('href="#"');
+  });
+
+  it("escapes literal HTML in \\title (header path)", () => {
+    const out = html("\\title{<script>alert(1)</script>}\n\\begin{document}\\maketitle\\end{document}");
+    expect(out).not.toContain("<script>");
+  });
+
+  it("escapes markup inside a footnote", () => {
+    const out = html("Text\\footnote{<img src=x onerror=alert(1)>}");
+    expect(out).not.toContain("<img");
+  });
+
+  it("still renders inline math containing a literal < (KaTeX gets raw chars)", () => {
+    const out = html("The bound $a < b$ holds.");
+    const m = out.match(/data-math="([^"]*)"/);
+    expect(m).toBeTruthy();
+    // encodeMath un-escapes entities, so the decoded math is the raw "a < b"
+    expect(decodeURIComponent(m![1])).toContain("a < b");
+    // and no live markup leaked
+    expect(out).not.toContain("<b>");
+  });
+});
+
+// ── 20. DoS: macro-expansion bomb is bounded ─────────────────────────────────
+
+describe("macro-expansion bomb is bounded", () => {
+  it("does not hang or explode on a nested doubling chain", () => {
+    // \a -> \b\b -> \c\c ... each level doubles; unbounded this is ~2^N.
+    const defs = [];
+    const letters = "abcdefghijklmnopqrst".split("");
+    for (let i = 0; i < letters.length - 1; i++) {
+      defs.push(`\\newcommand{\\m${letters[i]}}{\\m${letters[i + 1]}\\m${letters[i + 1]}}`);
+    }
+    defs.push(`\\newcommand{\\m${letters[letters.length - 1]}}{x}`);
+    const src = defs.join("\n") + "\n" + Array(50).fill("\\ma").join("");
+    const start = Date.now();
+    const out = html(src);
+    // completes quickly and stays bounded rather than OOM-ing
+    expect(Date.now() - start).toBeLessThan(3000);
+    expect(out.length).toBeLessThan(2_000_000);
+  });
+
+  it("rejects an oversized source with a notice instead of parsing it", () => {
+    const out = html("x".repeat(500_000));
+    expect(out).toContain("too large");
+  });
+});

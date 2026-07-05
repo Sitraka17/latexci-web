@@ -29,9 +29,23 @@ function tierFromSubscription(sub: Stripe.Subscription): SubscriptionTier {
   const priceId = sub.items.data[0]?.price?.id ?? "";
   const tier = PRICE_TO_TIER[priceId];
   if (!tier) {
-    console.warn("[webhook] Unknown priceId — defaulting to 'pro':", priceId);
+    // Fail CLOSED: an unknown/misconfigured price must never silently grant a
+    // paid tier. Default to free and surface the misconfiguration in logs.
+    console.error("[webhook] Unknown priceId — refusing to grant paid tier, defaulting to 'free':", priceId);
   }
-  return tier ?? "pro";
+  return tier ?? "free";
+}
+
+/**
+ * Resolve which profile a subscription event targets. Prefer the trusted
+ * Supabase user id carried in subscription metadata (set at checkout time);
+ * fall back to the Stripe customer id binding. Never key off a payer-typed
+ * email — that lets an attacker bind a customer to someone else's account.
+ */
+function subscriptionTarget(sub: Stripe.Subscription): { col: "id" | "stripe_customer_id"; val: string } {
+  const userId = sub.metadata?.supabase_user_id;
+  if (userId) return { col: "id", val: userId };
+  return { col: "stripe_customer_id", val: sub.customer as string };
 }
 
 // ── Webhook handler ───────────────────────────────────────────────────────────
@@ -62,14 +76,20 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const customerId = session.customer as string;
-        const customerEmail = session.customer_details?.email ?? session.customer_email;
-        if (!customerId || !customerEmail) break;
+        // Bind the Stripe customer to the profile by TRUSTED Supabase user id
+        // (set as client_reference_id/metadata at checkout time), never by the
+        // payer-supplied billing email — that is spoofable and enables
+        // account-takeover / subscription-hijack.
+        const userId = session.client_reference_id ?? session.metadata?.supabase_user_id;
+        if (!customerId || !userId) {
+          console.error("[webhook] checkout.session.completed missing customerId/userId:", session.id);
+          break;
+        }
 
-        // Store stripe_customer_id on profile (lookup by email)
         const { error: e1 } = await db
           .from("profiles")
           .update({ stripe_customer_id: customerId })
-          .eq("email", customerEmail);
+          .eq("id", userId);
         if (e1) console.error("[webhook] checkout.session.completed — profile update failed:", e1.message);
 
         console.log("[webhook] checkout.session.completed", session.id);
@@ -80,7 +100,6 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
-        const customerId = sub.customer as string;
         const tier = tierFromSubscription(sub);
         const status = sub.status as SubscriptionStatus;
         // cancel_at is the explicit end date when set; otherwise null (subscription auto-renews)
@@ -88,6 +107,7 @@ export async function POST(req: NextRequest) {
           ? new Date(sub.cancel_at * 1000).toISOString()
           : null;
 
+        const target = subscriptionTarget(sub);
         const { error: e2 } = await db
           .from("profiles")
           .update({
@@ -95,9 +115,9 @@ export async function POST(req: NextRequest) {
             subscription_status: status,
             subscription_period_end: periodEnd,
           })
-          .eq("stripe_customer_id", customerId);
+          .eq(target.col, target.val);
         if (e2) {
-          console.error("[webhook] subscription upsert failed:", e2.message, { sub: sub.id, customerId });
+          console.error("[webhook] subscription upsert failed:", e2.message, { sub: sub.id, target });
           return new Response("DB update failed", { status: 500 }); // Force Stripe retry
         }
 
@@ -108,7 +128,7 @@ export async function POST(req: NextRequest) {
       // ── Subscription cancelled / expired ─────────────────────────────────
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
-        const customerId = sub.customer as string;
+        const target = subscriptionTarget(sub);
 
         const { error: e3 } = await db
           .from("profiles")
@@ -117,9 +137,9 @@ export async function POST(req: NextRequest) {
             subscription_status: "canceled",
             subscription_period_end: null,
           })
-          .eq("stripe_customer_id", customerId);
+          .eq(target.col, target.val);
         if (e3) {
-          console.error("[webhook] subscription cancel failed:", e3.message, { sub: sub.id, customerId });
+          console.error("[webhook] subscription cancel failed:", e3.message, { sub: sub.id, target });
           return new Response("DB update failed", { status: 500 }); // Force Stripe retry
         }
 
