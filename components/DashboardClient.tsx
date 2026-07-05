@@ -91,12 +91,28 @@ export default function DashboardClient({
   const [search, setSearch]       = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [acctConfirm, setAcctConfirm]   = useState(false);
+  const [acctDeleting, setAcctDeleting] = useState(false);
   const router  = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
   function showToast(message: string, type: "error" | "success" = "error") {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
+  }
+
+  async function deleteAccount() {
+    if (acctDeleting) return;
+    setAcctDeleting(true);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      if (!res.ok) throw new Error();
+      router.push("/");
+    } catch {
+      showToast("Couldn't delete your account. Please try again.");
+      setAcctDeleting(false);
+      setAcctConfirm(false);
+    }
   }
 
   const [creating, setCreating] = useState(false);
@@ -446,6 +462,64 @@ export default function DashboardClient({
 
       {/* Suppress isPending lint warning */}
       {isPending && <span style={{ display: "none" }} />}
+
+      {/* ── Danger zone: account deletion (GDPR right to erasure) ──────────── */}
+      <section style={{
+        marginTop: "3rem",
+        padding: "1.25rem 1.5rem",
+        border: "1px solid color-mix(in srgb, var(--red, #dc2626) 35%, var(--border))",
+        borderRadius: 10,
+        background: "color-mix(in srgb, var(--red, #dc2626) 5%, transparent)",
+      }}>
+        <h2 style={{ margin: "0 0 0.3rem", fontSize: "0.95rem", fontWeight: 700, color: "var(--fg)" }}>
+          Delete account
+        </h2>
+        <p style={{ margin: "0 0 0.9rem", fontSize: "0.8rem", color: "var(--fg-muted)", lineHeight: 1.6 }}>
+          Permanently deletes your account and <strong>all</strong> your saved documents.
+          This cannot be undone.
+        </p>
+        {!acctConfirm ? (
+          <button
+            onClick={() => setAcctConfirm(true)}
+            style={{
+              padding: "0.5rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 600,
+              background: "var(--surface2)", color: "var(--red, #dc2626)",
+              border: "1px solid color-mix(in srgb, var(--red, #dc2626) 45%, var(--border))",
+              cursor: "pointer",
+            }}
+          >
+            Delete my account…
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.82rem", color: "var(--fg)", fontWeight: 600 }}>
+              Are you sure? This is permanent.
+            </span>
+            <button
+              onClick={deleteAccount}
+              disabled={acctDeleting}
+              style={{
+                padding: "0.5rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 700,
+                background: "var(--red, #dc2626)", color: "#fff", border: "none",
+                cursor: acctDeleting ? "wait" : "pointer", opacity: acctDeleting ? 0.7 : 1,
+              }}
+            >
+              {acctDeleting ? "Deleting…" : "Yes, delete everything"}
+            </button>
+            <button
+              onClick={() => setAcctConfirm(false)}
+              disabled={acctDeleting}
+              style={{
+                padding: "0.5rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 600,
+                background: "var(--surface2)", color: "var(--fg)", border: "1px solid var(--border)",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* ── Share modal ───────────────────────────────────────────────────── */}
       {sharingDoc && (
