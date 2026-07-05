@@ -84,7 +84,10 @@ export async function POST(req: NextRequest, { params }: Params) {
         public_can_edit: Boolean(body.public_can_edit ?? false),
       })
       .eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("[share] db error:", error.message);
+      return NextResponse.json({ error: "Operation failed. Please try again." }, { status: 500 });
+    }
     return NextResponse.json({ ok: true, share_token: doc.share_token });
   }
 
@@ -104,7 +107,10 @@ export async function POST(req: NextRequest, { params }: Params) {
         { document_id: id, invited_by: user.id, email, permission },
         { onConflict: "document_id,email" }
       );
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("[share] db error:", error.message);
+      return NextResponse.json({ error: "Operation failed. Please try again." }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -119,7 +125,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       .update({ permission })
       .eq("document_id", id)
       .eq("email", email);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("[share] db error:", error.message);
+      return NextResponse.json({ error: "Operation failed. Please try again." }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -131,7 +140,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       .delete()
       .eq("document_id", id)
       .eq("email", email);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("[share] db error:", error.message);
+      return NextResponse.json({ error: "Operation failed. Please try again." }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
   }
 

@@ -23,7 +23,8 @@ const SECTIONS = [
     body: [
       "latexci is designed to collect as little data as possible.",
       "**Tools that run entirely in your browser** (LaTeX Preview, LaTeX Diff, Table Generator, Word → LaTeX .docx conversion): your LaTeX source, uploaded files, and generated output never leave your device. Nothing is sent to our servers.",
-      "**PDF export**: your LaTeX source is sent to latexonline.cc, a third-party compile service, to generate a PDF. No account information or personal data is transmitted — only the raw LaTeX text.",
+      "**PDF export**: your LaTeX source is sent to YToTech (latex.ytotech.com), a third-party compile service, to generate a PDF. No account information or personal data is transmitted — only the raw LaTeX text.",
+      "**Citation lookups (BibTeX tools)**: when you look up a DOI, arXiv ID, PubMed ID, or ISBN, that identifier is sent to the corresponding public service (CrossRef, arXiv, NCBI PubMed, and Open Library respectively) to fetch the citation. NCBI is operated in the United States, so this is an international data transfer under Art. 44 GDPR. Only the identifier you enter is sent — no account data.",
       "**Account creation (optional)**: if you create an account, we store your email address, a hashed password, and the documents you choose to save. This data is stored in Supabase (EU region).",
       "**Analytics**: we may collect anonymised page-view counts and referrer data via Vercel Analytics. No cookies are set for this purpose.",
       "**Payments**: if you upgrade to a paid plan, payment details are handled entirely by Stripe. latexci never sees or stores your card number.",
@@ -50,7 +51,8 @@ const SECTIONS = [
       "**Supabase** — database and authentication provider. Data is stored in the EU (West region). See supabase.com/privacy.",
       "**Vercel** — hosting and edge network. See vercel.com/legal/privacy-policy.",
       "**Stripe** — payment processing. See stripe.com/privacy.",
-      "**latexonline.cc** — PDF compilation (only when you click the PDF export button). Their privacy policy is available at latexonline.cc.",
+      "**YToTech (latex.ytotech.com)** — PDF compilation (only when you click the PDF export button). Receives your raw LaTeX source.",
+      "**CrossRef, arXiv, NCBI PubMed, and Open Library** — citation metadata lookups in the BibTeX tools. Each receives only the identifier you enter (DOI / arXiv ID / PubMed ID / ISBN). NCBI is a United States service (international transfer).",
     ],
   },
   {

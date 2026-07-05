@@ -25,6 +25,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { getAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -75,9 +76,16 @@ export async function POST(_req: NextRequest) {
     (tier === "pro" || tier === "lab" || tier === "institution") &&
     (status === "active" || status === "trialing");
 
+  // Counter writes MUST go through the service-role client: the profile
+  // sensitive-field trigger (2026-07-04-profile-write-restriction) reverts
+  // word_conversions_* for non-service_role callers, which would otherwise make
+  // every increment a silent no-op (free quota unenforceable). Falls back to the
+  // anon client only when the service-role key is unconfigured (dev).
+  const writer = getAdmin() ?? supabase;
+
   // ── Paid users: increment and allow ───────────────────────────────────────
   if (paid) {
-    await supabase
+    await writer
       .from("profiles")
       .update({
         word_conversions_this_month: profile.word_conversions_this_month + 1,
@@ -117,7 +125,7 @@ export async function POST(_req: NextRequest) {
   // Only update if the DB value still matches what we read (prevents TOCTOU race).
   // If a concurrent request already incremented, count won't match and we return 0 rows.
   const currentCount = profile.word_conversions_this_month ?? 0;
-  const { data: updatedRows } = await supabase
+  const { data: updatedRows } = await writer
     .from("profiles")
     .update({
       word_conversions_this_month: needsReset ? 1 : used + 1,

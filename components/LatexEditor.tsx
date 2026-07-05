@@ -114,6 +114,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [docTitle, setDocTitle]       = useState("Untitled");
   // Role on the open cloud doc: owner | collaborator with edit | view-only
   const [docRole, setDocRole]         = useState<"owner" | "edit" | "view" | null>(null);
+  const [loadError, setLoadError]     = useState(false);
   const [cloudSaving, setCloudSaving] = useState(false);
   const [isLight, setIsLight]         = useState(false);
   const [splitPct, setSplitPct]       = useState(50); // editor width %
@@ -140,6 +141,10 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const editorRef     = useRef<ReactCodeMirrorRef>(null);
   const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Only true after a cloud document has been read successfully. Autosave is
+  // gated on this so a FAILED load never lets autosave overwrite the real
+  // (unread) document with the sample/placeholder content.
+  const docLoadedOk   = useRef(false);
   const splitRef      = useRef<HTMLDivElement>(null);
   const isDragging    = useRef(false);
   const supabase      = useMemo(() => createClient(), []);
@@ -348,12 +353,18 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     if (docId && userId) {
       // No user_id filter: RLS lets owners AND invited collaborators read.
       (async () => {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("documents")
           .select("title, content, user_id")
           .eq("id", docId)
           .single();
-        if (!data) return;
+        // A failed/blocked read must NOT fall through to editing the sample and
+        // then autosaving over the real document. Surface the error and leave
+        // autosave disabled (docLoadedOk stays false).
+        if (error || !data) {
+          setLoadError(true);
+          return;
+        }
         setSource(data.content || SAMPLE);
         setDocTitle(data.title || "Untitled");
         if (data.user_id === userId) {
@@ -367,6 +378,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             .maybeSingle();
           setDocRole(invite?.permission === "edit" ? "edit" : "view");
         }
+        docLoadedOk.current = true;
       })();
       return;
     }
@@ -391,6 +403,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   // actually written so a blocked save shows "Save failed", not "Saved".
   useEffect(() => {
     if (!userId || !docId || docRole === "view" || docRole === null) return;
+    // Never autosave a cloud doc we failed to load — would clobber it.
+    if (!docLoadedOk.current) return;
     if (saveRef.current) clearTimeout(saveRef.current);
     setSaveStatus("saving");
     saveRef.current = setTimeout(async () => {
@@ -825,8 +839,17 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <span style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
             {docId ? docTitle : "main.tex"}
           </span>
+          {/* Document load failure — autosave stays disabled to protect the doc */}
+          {loadError && (
+            <span role="alert" style={{
+              fontSize: "0.68rem", color: "#ef4444", fontWeight: 600,
+              padding: "0.1rem 0.4rem",
+            }}>
+              ⚠ Couldn&apos;t load this document — editing is disabled to avoid overwriting it. Reload to retry.
+            </span>
+          )}
           {/* Autosave status */}
-          {docId && saveStatus !== "idle" && (
+          {docId && !loadError && saveStatus !== "idle" && (
             <span style={{
               fontSize: "0.68rem",
               color: saveStatus === "saved" ? "#10b981" : saveStatus === "error" ? "#ef4444" : "var(--fg-muted)",

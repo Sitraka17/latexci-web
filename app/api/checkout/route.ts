@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { NextRequest } from "next/server";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 // Lazy getter — only instantiated at request time, never at build time
 function getStripe() {
@@ -28,6 +29,10 @@ const ALLOWED_PRICE_IDS = new Set([
 
 export async function POST(req: NextRequest) {
   try {
+    // Throttle Stripe session creation (each call hits the Stripe API).
+    const rl = rateLimit(req, { limit: 10, windowMs: 60_000 });
+    if (!rl.ok) return Response.json({ error: rl.message }, { status: 429, headers: rl.headers });
+
     // Require authentication — prevents anonymous bots from spamming Stripe
     // sessions, and (critically) lets us bind the session to the real user so
     // the webhook grants entitlement by trusted user id rather than by the
@@ -85,6 +90,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal error";
     console.error("[checkout] Stripe error:", message);
-    return Response.json({ error: message }, { status: 500 });
+    // Don't leak raw Stripe/internal error strings to the client.
+    return Response.json({ error: "Could not start checkout. Please try again." }, { status: 500 });
   }
 }

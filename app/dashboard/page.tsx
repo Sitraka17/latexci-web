@@ -19,7 +19,11 @@ export default async function DashboardPage() {
   if (!user) redirect("/auth");
 
   // Load profile, own docs, and docs shared with me — in parallel
-  const [{ data: profile }, { data: documents }, { data: sharedRaw }] = await Promise.all([
+  const [
+    { data: profile, error: profileError },
+    { data: documents, error: documentsError },
+    { data: sharedRaw },
+  ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
       .from("documents")
@@ -42,6 +46,10 @@ export default async function DashboardPage() {
       .limit(20),
   ]);
 
+  // Distinguish "load failed" from "no data". A failed profile/documents query
+  // must NOT silently degrade a paying user to the free tier or hide their docs
+  // behind an empty state — that reads as data loss during an outage.
+  const loadFailed = Boolean(profileError || documentsError);
   const tier = profile?.subscription_tier ?? "free";
 
   return (
@@ -81,8 +89,26 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {/* Upgrade banner for free tier */}
-        {tier === "free" && (
+        {/* Load-error banner — shown instead of misleading empty/free states */}
+        {loadFailed && (
+          <div style={{
+            marginBottom: "1.5rem",
+            padding: "1rem 1.25rem",
+            background: "color-mix(in srgb, var(--red, #dc2626) 8%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--red, #dc2626) 30%, transparent)",
+            borderRadius: 10,
+          }}>
+            <p style={{ fontSize: "0.85rem", color: "var(--fg)", margin: 0 }}>
+              <strong>Couldn&apos;t load your account.</strong> We had trouble reaching the
+              database — this is usually temporary. Your documents are safe. Please{" "}
+              <Link href="/dashboard" style={{ color: "var(--accent)", fontWeight: 600 }}>reload</Link>.
+            </p>
+          </div>
+        )}
+
+        {/* Upgrade banner for free tier — suppressed when the load failed so we
+            never tell a paying user they're on free during an outage */}
+        {!loadFailed && tier === "free" && (
           <div style={{
             marginBottom: "1.5rem",
             padding: "1rem 1.25rem",

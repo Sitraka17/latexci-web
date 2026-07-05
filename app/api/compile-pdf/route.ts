@@ -6,6 +6,13 @@ import { rateLimit } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
+/** A valid PDF starts with the "%PDF-" magic bytes (0x25 50 44 46 2D). */
+function isPdf(buf: ArrayBuffer): boolean {
+  if (buf.byteLength < 5) return false;
+  const b = new Uint8Array(buf, 0, 5);
+  return b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46 && b[4] === 0x2d;
+}
+
 /** Returns true when this user's tier allows PDF export. */
 async function checkPdfAccess(): Promise<{ allowed: boolean; reason?: string }> {
   // Dev / unconfigured: open access so local development works.
@@ -92,7 +99,10 @@ export async function POST(req: NextRequest) {
     });
     if (r.ok) {
       const buf = await r.arrayBuffer();
-      if (buf.byteLength > 0) pdf = buf; // guard: reject empty-body 200
+      // Guard: only accept a real PDF. YToTech can return a 200 with an error
+      // page / JSON body, which must not be handed back as a corrupt .pdf.
+      if (isPdf(buf)) pdf = buf;
+      else lastError = "Compiler returned a non-PDF response (likely a LaTeX error).";
     } else {
       const txt = await r.text().catch(() => "");
       lastError =
@@ -118,7 +128,7 @@ export async function POST(req: NextRequest) {
       });
       if (r.ok) {
         const buf = await r.arrayBuffer();
-        if (buf.byteLength > 0) pdf = buf;
+        if (isPdf(buf)) pdf = buf;
       }
     } catch { /* ignore xelatex fallback errors */ }
   }
