@@ -76,6 +76,26 @@ export default function SiteFooter() {
               </svg>
               Star on GitHub
             </a>
+
+            {/* Support the project */}
+            <a
+              href="https://buymeacoffee.com/sitraka"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.45rem",
+                marginTop: "0.6rem", marginLeft: "0.6rem",
+                padding: "0.38rem 0.85rem", borderRadius: 7,
+                border: "1px solid #e0b100", background: "#ffdd00",
+                fontSize: "0.78rem", fontWeight: 700, color: "#3a2f00",
+                textDecoration: "none", transition: "opacity 0.15s",
+              }}
+              onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.opacity = "0.88")}
+              onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.opacity = "1")}
+            >
+              <span aria-hidden="true">☕</span>
+              Buy me a coffee
+            </a>
           </div>
 
           {/* Tools column */}
