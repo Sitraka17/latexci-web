@@ -8,7 +8,7 @@ const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://latexci.com";
 export const metadata: Metadata = {
   title: "Pricing — latexci Pro at $49/year",
   description:
-    "latexci Pro: $49/year or $9/month. Unlimited Word→LaTeX, PDF export, all 13+ templates, priority support. Lab plan $199/year for 5-seat research groups. Grant-reimbursable.",
+    "latexci Pro: $49/year or $9/month. Unlimited Word→LaTeX, PDF export, priority support, grant-reimbursable invoicing. Lab plan $199/year for 5-seat research groups. All 28 templates free for everyone.",
   keywords: [
     "latex tools pricing", "latex pro plan", "cheap overleaf alternative",
     "academic software grant fundable", "research lab latex tools", "latex pdf export",

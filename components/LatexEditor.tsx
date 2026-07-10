@@ -350,6 +350,12 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   useEffect(() => {
     if (initialValue) return;
 
+    // docId comes from useSearchParams, so switching ?doc=A→B updates it WITHOUT
+    // remounting — reset the load guards for the new doc so a stale docLoadedOk
+    // can't let autosave write the previous doc's content onto this one.
+    docLoadedOk.current = false;
+    setLoadError(false);
+
     if (docId && userId) {
       // No user_id filter: RLS lets owners AND invited collaborators read.
       (async () => {
@@ -475,6 +481,10 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   // switch the URL to ?doc=<id> so autosave takes over.
   const saveToCloud = useCallback(async () => {
     if (!userId || cloudSaving) return;
+    // If the current cloud doc failed to load, don't "save" — that would insert a
+    // NEW document full of the sample/placeholder text (the message says editing
+    // is disabled precisely to avoid this).
+    if (loadError) return;
     setCloudSaving(true);
     const titleMatch = source.match(/\\title\{([^}]*)\}/);
     const title = titleMatch?.[1]?.trim() || "Untitled";
@@ -498,7 +508,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     setDocTitle(title);
     setDocRole("owner");
     router.replace(`/tools/preview?doc=${data.id}`);
-  }, [userId, userEmail, cloudSaving, source, supabase, router]);
+  }, [userId, userEmail, cloudSaving, source, supabase, router, loadError]);
 
   const copyHtml = useCallback(async () => {
     try {
@@ -947,6 +957,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                   ref={editorRef}
                   value={source}
                   onChange={setSource}
+                  editable={!loadError}
                   extensions={extensions as import("@uiw/react-codemirror").ReactCodeMirrorProps["extensions"]}
                   height="100%"
                   style={{ height: "100%", fontSize: "13px" }}

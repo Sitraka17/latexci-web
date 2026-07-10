@@ -93,7 +93,7 @@ const FAQS = [
   { q: "Is Pro grant-fundable?",
     a: "Yes. Pro at $49/year fits in most lab software budgets and comes with an invoice you can submit. Lab plan ($199/year, 5 seats) works for a whole research group and includes budget justification language for NSF, NIH, or ERC applications." },
   { q: "Can I try Pro before paying?",
-    a: "Yes — you get the first PDF export and Word → LaTeX conversion free after signing in. If the output isn't right for your document, don't upgrade." },
+    a: "Everything except PDF export is free with no credit card — including the live preview, so you can see your fully-rendered document before deciding anything. Word → LaTeX includes 3 free conversions a month to test the quality on your own files. If the output isn't right for your documents, don't upgrade." },
 ];
 
 // ── Structured data ────────────────────────────────────────────────────────

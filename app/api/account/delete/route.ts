@@ -7,16 +7,21 @@
  * complete, orphan-free erasure. Backs the GDPR "right to erasure" promised in
  * the privacy policy.
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   if (!isSupabaseConfigured) {
     return NextResponse.json({ error: "Not configured" }, { status: 503 });
   }
+
+  // Defense-in-depth on the most destructive action in the app.
+  const rl = rateLimit(req, { limit: 3, windowMs: 60_000 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: 429, headers: rl.headers });
 
   // Identify the caller from their own session (never trust a client-supplied id).
   const supabase = await createClient();
@@ -30,7 +35,14 @@ export async function POST() {
     return NextResponse.json({ error: "Not configured" }, { status: 503 });
   }
 
-  // Cascades to profile, documents, and collaborator rows.
+  // The cascade removes rows tied to the user's OWN documents, but their email
+  // also sits (as plain text, not an FK) in collaborator rows on OTHER people's
+  // documents they were invited to. Erase those first for a complete PII wipe.
+  if (user.email) {
+    await admin.from("document_collaborators").delete().eq("email", user.email);
+  }
+
+  // Cascades to profile, documents, and the user's own collaborator rows.
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) {
     console.error("[account/delete] failed:", error.message);

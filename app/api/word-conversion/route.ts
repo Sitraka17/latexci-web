@@ -79,9 +79,19 @@ export async function POST(_req: NextRequest) {
   // Counter writes MUST go through the service-role client: the profile
   // sensitive-field trigger (2026-07-04-profile-write-restriction) reverts
   // word_conversions_* for non-service_role callers, which would otherwise make
-  // every increment a silent no-op (free quota unenforceable). Falls back to the
-  // anon client only when the service-role key is unconfigured (dev).
-  const writer = getAdmin() ?? supabase;
+  // every increment a silent no-op (free quota unenforceable).
+  const admin = getAdmin();
+  if (!admin) {
+    // In a configured production env this means SUPABASE_SERVICE_ROLE_KEY is
+    // missing/rotated — the anon fallback below would be reverted by the trigger,
+    // silently granting unlimited free conversions. Make it LOUD, not silent.
+    console.error(
+      "[word-conversion] SUPABASE_SERVICE_ROLE_KEY unavailable — the free quota " +
+      "CANNOT be enforced (counter writes are reverted by the profile trigger). " +
+      "Set the service-role key to restore metering."
+    );
+  }
+  const writer = admin ?? supabase;
 
   // ── Paid users: increment and allow ───────────────────────────────────────
   if (paid) {

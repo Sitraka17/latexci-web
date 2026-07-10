@@ -168,7 +168,7 @@ export default function UpgradeModal({ feature, reason = "upgrade_required", use
             </div>
             {[
               feature === "pdf_export" ? "✓ PDF export — no timeouts" : "✓ Unlimited Word → LaTeX",
-              "✓ All 13+ templates",
+              "✓ Invoice for grant / lab reimbursement",
               "✓ Priority support (24 h)",
               "✓ $49 / year or $9 / month",
             ].map(f => (
