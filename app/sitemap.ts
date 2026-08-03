@@ -5,21 +5,56 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://latexci.com");
 
+// lastmod = the date each page's content last MATERIALLY changed, taken from git
+// history (`git log -1 --format=%cI -- <source>`) rather than `new Date()`. A build
+// timestamp would tell Google every page changes on every deploy, which is false and
+// trains crawlers to ignore our lastmod. These are honest, stable dates — bump the
+// relevant entry when you materially edit a page (templates also covers lib/templates.ts).
+const LAST_MODIFIED: Record<string, string> = {
+  "/": "2026-07-10",
+  "/academics": "2026-07-05",
+  "/tools/preview": "2026-07-06",
+  "/tools/table": "2026-07-06",
+  "/tools/diff": "2026-07-05",
+  "/tools/word-to-latex": "2026-06-04",
+  "/tools/bibtex": "2026-06-05",
+  "/tools/symbols": "2026-07-06",
+  "/tools/templates": "2026-07-06",
+  "/after-overleaf": "2026-07-05",
+  "/pricing": "2026-07-10",
+  "/privacy": "2026-07-06",
+  "/terms": "2026-07-05",
+};
+
+type Entry = {
+  path: string;
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+  priority: number;
+};
+
+// Only public, canonical, indexable, final-200 pages. Deliberately excluded:
+// /auth, /dashboard, /pricing/success, /pricing/cancel, /shared/[token] — all noindex.
+const PAGES: Entry[] = [
+  { path: "/",                  changeFrequency: "weekly",  priority: 1.0 },
+  { path: "/academics",         changeFrequency: "monthly", priority: 0.95 },
+  { path: "/tools/preview",     changeFrequency: "monthly", priority: 0.9 },
+  { path: "/tools/table",       changeFrequency: "monthly", priority: 0.9 },
+  { path: "/tools/diff",        changeFrequency: "monthly", priority: 0.85 },
+  { path: "/tools/word-to-latex", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/tools/bibtex",      changeFrequency: "monthly", priority: 0.9 },
+  { path: "/tools/symbols",     changeFrequency: "monthly", priority: 0.9 },
+  { path: "/tools/templates",   changeFrequency: "weekly",  priority: 0.8 },
+  { path: "/after-overleaf",    changeFrequency: "monthly", priority: 0.85 },
+  { path: "/pricing",           changeFrequency: "monthly", priority: 0.9 },
+  { path: "/privacy",           changeFrequency: "yearly",  priority: 0.3 },
+  { path: "/terms",             changeFrequency: "yearly",  priority: 0.3 },
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    { url: BASE_URL,                            lastModified: new Date(), changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${BASE_URL}/academics`,             lastModified: new Date(), changeFrequency: "monthly", priority: 0.95 },
-    { url: `${BASE_URL}/tools/preview`,         lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/tools/table`,           lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/tools/diff`,            lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
-    { url: `${BASE_URL}/tools/word-to-latex`,   lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
-    { url: `${BASE_URL}/tools/bibtex`,          lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/tools/symbols`,         lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/tools/templates`,       lastModified: new Date(), changeFrequency: "weekly",  priority: 0.8 },
-    { url: `${BASE_URL}/after-overleaf`,        lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
-    { url: `${BASE_URL}/pricing`,              lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
-    // /auth is noindex — deliberately excluded from sitemap
-    { url: `${BASE_URL}/privacy`,             lastModified: new Date(), changeFrequency: "yearly",  priority: 0.3 },
-    { url: `${BASE_URL}/terms`,               lastModified: new Date(), changeFrequency: "yearly",  priority: 0.3 },
-  ];
+  return PAGES.map(({ path, changeFrequency, priority }) => ({
+    url: path === "/" ? BASE_URL : `${BASE_URL}${path}`,
+    lastModified: LAST_MODIFIED[path],
+    changeFrequency,
+    priority,
+  }));
 }
