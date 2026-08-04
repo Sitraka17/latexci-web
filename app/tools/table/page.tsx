@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import ToolLayout from "@/components/ToolLayout";
 import TableGenerator from "@/components/TableGenerator";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "LaTeX Table Generator — Free, Paste from Excel or CSV — latexci",
+  title: "LaTeX Table Generator — Free, Paste from Excel or CSV",
   description:
     "Free LaTeX table generator — paste from Excel or CSV, pick alignment, choose booktabs or simple borders, and copy ready-to-use tabular code. No signup.",
   keywords: [
@@ -86,6 +87,7 @@ export default function TablePage() {
     <ToolLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Table Generator", path: "/tools/table" })) }} />
       <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
         LaTeX Table Generator — Free, Paste from Excel or CSV
       </h1>

@@ -1,24 +1,26 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+// The <html> class list (set pre-hydration by the anti-flash script in
+// app/layout.tsx, and by toggle() below) is the single source of truth.
+// useSyncExternalStore subscribes to it directly instead of copying it into
+// component state from an effect — this also keeps the desktop and mobile
+// toggle instances in sync (each used to hold its own separate state).
+function subscribe(onChange: () => void) {
+  const obs = new MutationObserver(onChange);
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => obs.disconnect();
+}
+const getIsLight = () => document.documentElement.classList.contains("light");
+const getServerIsLight = () => false; // server markup renders the dark default
 
 export default function ThemeToggle() {
-  const [isLight, setIsLight] = useState(false);
-
-  // Sync with whatever the anti-flash script already applied
-  useEffect(() => {
-    setIsLight(document.documentElement.classList.contains("light"));
-  }, []);
+  const isLight = useSyncExternalStore(subscribe, getIsLight, getServerIsLight);
 
   function toggle() {
-    const next = !isLight;
-    setIsLight(next);
-    if (next) {
-      document.documentElement.classList.add("light");
-      localStorage.setItem("latexci_theme", "light");
-    } else {
-      document.documentElement.classList.remove("light");
-      localStorage.setItem("latexci_theme", "dark");
-    }
+    const next = !document.documentElement.classList.contains("light");
+    document.documentElement.classList.toggle("light", next);
+    localStorage.setItem("latexci_theme", next ? "light" : "dark");
   }
 
   return (

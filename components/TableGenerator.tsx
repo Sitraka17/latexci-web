@@ -156,7 +156,7 @@ export default function TableGenerator() {
     lines.push("\\end{table}");
 
     return lines.join("\n");
-  }, [data, aligns, borders, headerRow, hlines, cols]);
+  }, [data, aligns, borders, headerRow, hlines]);
 
   const copy = () => {
     navigator.clipboard.writeText(latex).then(() => {

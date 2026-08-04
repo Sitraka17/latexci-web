@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import TemplatesFilter from "@/components/TemplatesFilter";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis & More",
@@ -44,6 +45,7 @@ export const metadata: Metadata = {
 export default function TemplatesPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "LaTeX Templates", path: "/tools/templates" })) }} />
       <Navbar />
 
       <div

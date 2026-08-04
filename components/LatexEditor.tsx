@@ -106,7 +106,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [isMobile, setIsMobile]       = useState(false);
   const [activePane, setActivePane]   = useState<"editor" | "preview">("editor");
   const [extensions, setExtensions]   = useState<unknown[]>([]);
-  const [lineCount, setLineCount]     = useState(0);
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pdfStatus, setPdfStatus]     = useState<"idle" | "compiling" | "error">("idle");
   const [userId, setUserId]           = useState<string | null>(null);
@@ -354,6 +353,10 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     // remounting — reset the load guards for the new doc so a stale docLoadedOk
     // can't let autosave write the previous doc's content onto this one.
     docLoadedOk.current = false;
+    // Deliberately synchronous: the guard must be cleared BEFORE the async load
+    // below starts, or a stale docLoadedOk could let autosave write the previous
+    // doc's content onto the newly selected one (F2 audit fix).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadError(false);
 
     if (docId && userId) {
@@ -425,8 +428,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     return () => { if (saveRef.current) clearTimeout(saveRef.current); };
   }, [source, userId, docId, docRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Track line count
-  useEffect(() => { setLineCount(source.split("\n").length); }, [source]);
+  // Line count is pure derivation from source — no state/effect needed.
+  const lineCount = useMemo(() => source.split("\n").length, [source]);
 
   // Debounced render — preserve preview scroll position
   useEffect(() => {
@@ -667,7 +670,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       const cells = (r: string) => r.split("&").map((c: string) => c.trim());
       const header = cells(rows[0]).join(" | ");
       const sep = cells(rows[0]).map(() => "---").join(" | ");
-      const body = rows.slice(1).map((r: string) => cells(r).join(" | ")).join("\n");
       return `\n| ${header} |\n| ${sep} |\n${rows.slice(1).length ? rows.slice(1).map((r: string) => `| ${cells(r).join(" | ")} |`).join("\n") : ""}\n`;
     });
 

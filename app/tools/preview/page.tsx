@@ -4,9 +4,10 @@ import type { CSSProperties, ReactNode } from "react";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import LatexEditor from "@/components/LatexEditor";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Online LaTeX Preview with KaTeX Math Rendering — latexci",
+  title: "Online LaTeX Preview with KaTeX Math Rendering",
   description:
     "Paste LaTeX source and see a live preview instantly — equations rendered by KaTeX, sections, tables, figures, theorem environments. No install, no signup, no compiler wait.",
   keywords: [
@@ -85,6 +86,7 @@ export default function PreviewPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "LaTeX Preview", path: "/tools/preview" })) }} />
 
       <Navbar />
 

@@ -11,8 +11,14 @@ export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get("id")?.trim() ?? "";
   if (!raw) return NextResponse.json({ error: "Missing id param" }, { status: 400 });
 
-  // Strip "PMID:" prefix, whitespace, leading zeros
-  const pmid = raw.replace(/^pmid:?\s*/i, "").replace(/\s/g, "").replace(/^0+/, "") || raw;
+  // Strip full PubMed URL (the UI placeholder and landing-page FAQ promise URL
+  // support), "PMID:" prefix, whitespace, trailing slashes, leading zeros
+  const pmid = raw
+    .replace(/^https?:\/\/(?:www\.)?pubmed\.ncbi\.nlm\.nih\.gov\//i, "")
+    .replace(/\/+$/, "")
+    .replace(/^pmid:?\s*/i, "")
+    .replace(/\s/g, "")
+    .replace(/^0+/, "") || raw;
 
   // Validate: PubMed IDs are pure numeric, ≤ 9 digits
   if (!/^\d{1,9}$/.test(pmid)) {

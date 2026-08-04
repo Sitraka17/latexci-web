@@ -17,7 +17,11 @@ export default function AuthForm() {
   // Show error from URL param (e.g. after failed OAuth callback)
   const [nextPath, setNextPath] = useState("/dashboard");
   useEffect(() => {
+    // Post-hydration is the earliest the query string exists client-side (the
+    // server can't render request-specific ?error/?next into this static page),
+    // so this one-time sync from the URL is deliberately a setState-in-effect.
     const p = new URLSearchParams(window.location.search);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (p.get("error")) setError("Authentication failed. Please try again.");
     // Forward ?next= so sign-in returns the user to where they started
     // (the callback route validates it is a safe same-origin path).
@@ -203,7 +207,7 @@ export default function AuthForm() {
           placeholder="you@university.edu"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") mode === "magic" ? handleMagicLink() : handlePassword(); }}
+          onKeyDown={e => { if (e.key === "Enter") { if (mode === "magic") handleMagicLink(); else handlePassword(); } }}
           style={inputStyle}
           autoComplete="email"
         />

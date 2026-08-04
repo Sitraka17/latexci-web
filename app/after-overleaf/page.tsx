@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "After Overleaf — Free LaTeX Tools When Your University License Ends",
@@ -86,6 +87,7 @@ const LOCAL_EDITORS = [
 export default function AfterOverleafPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Life after Overleaf", path: "/after-overleaf" })) }} />
       <Navbar />
 
       <main style={{ flex: 1 }}>
@@ -99,7 +101,7 @@ export default function AfterOverleafPage() {
               padding: "0.3rem 0.9rem", borderRadius: 20, marginBottom: "1.5rem",
               textTransform: "uppercase",
             }}>
-              Graduated? We've got you.
+              Graduated? We&rsquo;ve got you.
             </div>
             <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.15, marginBottom: "1rem" }}>
               Lost your Overleaf license.<br />
@@ -108,7 +110,7 @@ export default function AfterOverleafPage() {
               </span>
             </h1>
             <p style={{ fontSize: "1.1rem", color: "var(--fg-muted)", lineHeight: 1.75, marginBottom: "2rem" }}>
-              When you graduate, your institution's Overleaf Premium license disappears.
+              When you graduate, your institution&rsquo;s Overleaf Premium license disappears.
               latexci gives you the tools that Overleaf never had — free, browser-based,
               no signup, no subscription. Forever.
             </p>
@@ -205,7 +207,7 @@ export default function AfterOverleafPage() {
               Where to write LaTeX now
             </h2>
             <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", marginBottom: "2rem" }}>
-              You don't need a cloud editor. A local setup is faster, private, and works offline.
+              You don&rsquo;t need a cloud editor. A local setup is faster, private, and works offline.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
               {LOCAL_EDITORS.map(editor => (
@@ -233,7 +235,7 @@ export default function AfterOverleafPage() {
             }}>
               <h3 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>Ready to keep writing?</h3>
               <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "1.25rem", lineHeight: 1.65 }}>
-                latexci's tools are free, require no signup, and work in any browser.
+                latexci&rsquo;s tools are free, require no signup, and work in any browser.
                 Use them alongside whatever editor you choose next.
               </p>
               <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>

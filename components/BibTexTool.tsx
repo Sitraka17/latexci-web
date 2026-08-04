@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef } from "react";
 import { cleanBibTeX } from "@/lib/bibtex";
 
-type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
+export type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
 
 // ── tiny shared button ────────────────────────────────────────────────────────
 function Btn({
@@ -138,7 +138,7 @@ function CleanTab() {
             <option value="key">By key</option>
             <option value="year">By year ↓</option>
             <option value="type">By type</option>
-            <option value="none">Don't sort</option>
+            <option value="none">Don&rsquo;t sort</option>
           </select>
         </div>
         <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", color: "var(--fg-muted)", cursor: "pointer" }}>
@@ -533,8 +533,18 @@ function IsbnTab() {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function BibTexTool() {
-  const [tab, setTab] = useState<Tab>("clean");
+export default function BibTexTool({
+  initialTab = "clean",
+  heading = "BibTeX Tools",
+  tagline = "Clean .bib files · DOI · arXiv · PubMed · ISBN — all in one place, zero signup.",
+}: {
+  /** Which tab is active on load — lets dedicated converter landing pages deep-link a mode. */
+  initialTab?: Tab;
+  /** Page H1 — landing pages pass their own so each page keeps a unique heading. */
+  heading?: string;
+  tagline?: string;
+}) {
+  const [tab, setTab] = useState<Tab>(initialTab);
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: "clean",  label: "Clean & Format",  icon: "✦" },
@@ -554,10 +564,10 @@ export default function BibTexTool() {
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           marginBottom: "0.5rem",
         }}>
-          BibTeX Tools
+          {heading}
         </h1>
         <p style={{ color: "var(--fg-muted)", fontSize: "1rem", lineHeight: 1.65, maxWidth: 620, margin: "0 auto" }}>
-          Clean .bib files · DOI · arXiv · PubMed · ISBN — all in one place, zero signup.
+          {tagline}
         </p>
       </div>
 

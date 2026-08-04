@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import ToolLayout from "@/components/ToolLayout";
 import WordToLatex from "@/components/WordToLatex";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Word to LaTeX Converter — Convert .docx to .tex Free — latexci",
+  title: "Word to LaTeX Converter — Convert .docx to .tex Free",
   description:
     "Convert Microsoft Word (.docx), LibreOffice (.odt), and RTF files to clean LaTeX source. Powered by pandoc. Edit inline and download your .tex file. Free, no signup.",
   keywords: [
@@ -34,6 +35,7 @@ export default function WordToLatexPage() {
   return (
     <ToolLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Word to LaTeX", path: "/tools/word-to-latex" })) }} />
       <WordToLatex />
     </ToolLayout>
   );

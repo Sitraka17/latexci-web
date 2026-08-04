@@ -4,6 +4,10 @@ import Link from "next/link";
 const TOOLS = [
   { label: "Live Preview",   href: "/tools/preview" },
   { label: "BibTeX Tools",   href: "/tools/bibtex" },
+  { label: "DOI → BibTeX",   href: "/tools/doi-to-bibtex" },
+  { label: "arXiv → BibTeX", href: "/tools/arxiv-to-bibtex" },
+  { label: "PubMed → BibTeX",href: "/tools/pubmed-to-bibtex" },
+  { label: "ISBN → BibTeX",  href: "/tools/isbn-to-bibtex" },
   { label: "LaTeX Diff",     href: "/tools/diff" },
   { label: "Word → LaTeX",   href: "/tools/word-to-latex" },
   { label: "Symbol Search",  href: "/tools/symbols" },

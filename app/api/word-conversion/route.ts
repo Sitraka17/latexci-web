@@ -23,7 +23,7 @@
  *   403 { allowed: false, error: "sign_in_required", feature: "word_conversion" }
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getAdmin } from "@/lib/supabase/admin";
 
@@ -37,7 +37,7 @@ function currentPeriod(): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST() {
   // ── Dev / unconfigured → always allow ─────────────────────────────────────
   if (!isSupabaseConfigured) {
     return NextResponse.json({ allowed: true, used: 0, limit: null, remaining: null });

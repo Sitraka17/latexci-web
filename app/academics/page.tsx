@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import CopyButton from "@/components/CopyButton";
 import { TEMPLATES } from "@/lib/templates";
 import LZString from "lz-string";
@@ -135,6 +136,7 @@ export default function AcademicsPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "For Academics", path: "/academics" })) }} />
       <Navbar />
 
       {/* ── Hero ──────────────────────────────────── */}

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import SymbolSearch from "@/components/SymbolSearch";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
 
 export const metadata: Metadata = {
-  title: "LaTeX Symbol Search — 380+ Symbols with Live Preview — latexci",
+  title: "LaTeX Symbol Search — 380+ Symbols with Live Preview",
   description:
     "Search 380+ LaTeX symbols by name, command, or Unicode — Greek, operators, arrows, logic, physics, stats. One-click copy with live KaTeX preview. Faster than Detexify.",
   keywords: [
@@ -45,6 +46,7 @@ export default function SymbolsPage() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Symbol Search", path: "/tools/symbols" })) }} />
       <Navbar />
 
       <main style={{ flex: 1 }}>

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import PricingCards from "@/components/PricingCards";
-
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://latexci.com";
+import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Pricing — latexci Pro at $49/year",
@@ -61,6 +60,7 @@ const faqSchema = {
 export default function PricingPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Pricing", path: "/pricing" })) }} />
       <Navbar />
 
       <main style={{ flex: 1 }}>

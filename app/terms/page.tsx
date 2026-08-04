@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — latexci",
+  title: "Terms of Service",
   description: "Terms of service for latexci — free, open-source LaTeX tools for researchers and students.",
   alternates: { canonical: "/terms" },
   openGraph: {

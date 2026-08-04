@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { SYMBOLS, CATEGORIES, searchSymbols, type SymbolEntry } from "@/lib/symbols";
+import { CATEGORIES, searchSymbols, type SymbolEntry } from "@/lib/symbols";
 
 // ── KaTeX lazy loader ────────────────────────────────────────────────────────
 let katexLoaded = false;
@@ -41,14 +41,14 @@ function pkgStyle(pkg: string): React.CSSProperties {
 
 // ── Symbol Card ───────────────────────────────────────────────────────────────
 function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cmd: string) => void; katexReady: boolean }) {
-  const [html, setHtml] = useState("");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (katexRender) {
-      setHtml(renderKaTeX(sym.command));
-    }
-  }, [sym.command, katexReady]);
+  // Derived, not state — recomputes when the symbol changes or when KaTeX
+  // finishes loading (katexReady flips exactly once per page load).
+  const html = useMemo(
+    () => (katexReady && katexRender ? renderKaTeX(sym.command) : ""),
+    [sym.command, katexReady],
+  );
 
   function copy() {
     navigator.clipboard.writeText(sym.command).catch(() => {});
@@ -132,7 +132,7 @@ export default function SymbolSearch() {
   const [inputValue, setInputValue] = useState(""); // raw keystroke value
   const [query, setQuery]           = useState(""); // debounced search query
   const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [katexReady, setKatexReady] = useState(false);
+  const [katexReady, setKatexReady] = useState(() => katexLoaded);
   const [lastCopied, setLastCopied] = useState<string | null>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -148,14 +148,16 @@ export default function SymbolSearch() {
 
   // Load KaTeX on mount
   useEffect(() => {
-    if (katexLoaded) { setKatexReady(true); return; }
+    if (katexReady) return; // already loaded (lazy initial state caught it)
+    let alive = true;
     import("katex").then((mod) => {
       const k = (mod.default ?? mod) as { renderToString: (tex: string, opts: object) => string };
       katexRender = k.renderToString.bind(k);
       katexLoaded = true;
-      setKatexReady(true);
+      if (alive) setKatexReady(true);
     });
-  }, []);
+    return () => { alive = false; };
+  }, [katexReady]);
 
   // Force re-render all cards once KaTeX is ready
   const results = useMemo(() => {
@@ -282,7 +284,7 @@ export default function SymbolSearch() {
           color: "var(--fg-muted)", fontSize: "0.9rem",
         }}>
           <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>∅</div>
-          <div>No symbols found for <strong>"{query}"</strong></div>
+          <div>No symbols found for <strong>&ldquo;{query}&rdquo;</strong></div>
           <button
             onClick={() => { setInputValue(""); setQuery(""); setActiveCategory("All"); }}
             style={{
