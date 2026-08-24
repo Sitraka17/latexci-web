@@ -39,6 +39,26 @@ const _symbolBySlug = new Map<string, SymbolEntry>();
   }
 }
 
+// Canonical slug per \command: the first symbol (in data order) to use a given
+// command owns the canonical URL. Symbols that repeat a command in another
+// category (e.g. \Omega as both "Omega" and "ohm", or the exact \nabla dup)
+// point their canonical at that primary page, so Google consolidates the ~27
+// near-duplicate pages instead of treating them as competing duplicates.
+const _primarySlugByCommand = new Map<string, string>();
+for (const sym of SYMBOLS) {
+  if (!_primarySlugByCommand.has(sym.command)) {
+    _primarySlugByCommand.set(sym.command, _slugBySymbol.get(sym)!);
+  }
+}
+/** The URL a symbol should declare as canonical (may be another symbol's slug). */
+export function canonicalSlug(sym: SymbolEntry): string {
+  return _primarySlugByCommand.get(sym.command) ?? _slugBySymbol.get(sym)!;
+}
+/** Only the primary (canonical) slugs — one per distinct command; for the sitemap. */
+export function canonicalSymbolSlugs(): string[] {
+  return [..._primarySlugByCommand.values()];
+}
+
 export function symbolSlug(sym: SymbolEntry): string {
   return _slugBySymbol.get(sym)!;
 }

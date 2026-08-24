@@ -12,6 +12,7 @@ import {
   allSymbolSlugs,
   symbolBySlug,
   symbolSlug,
+  canonicalSlug,
   relatedSymbols,
   titleCase,
 } from "@/lib/seo-pages";
@@ -32,10 +33,10 @@ function renderMath(tex: string, displayMode = false): string | null {
   }
 }
 
-// The bare command renders standalone for almost everything; accents need an
-// argument (\hat alone is invalid, \hat{a} is fine).
+// The stored command already includes any argument it needs (accents are stored
+// as \hat{x}, \vec{x}, … not the bare macro), so it renders standalone as-is.
 function displayTex(sym: SymbolEntry): string {
-  return sym.category === "Accents" ? `${sym.command}{a}` : sym.command;
+  return sym.command;
 }
 
 // A meaningful in-context example, only for categories where one template is
@@ -51,7 +52,8 @@ const EXAMPLE: Record<string, (c: string) => string> = {
   "Number Sets": (c) => `x \\in ${c}`,
   "Operators": (c) => `${c}_{i=1}^{n} x_i`,
   "Calculus & Analysis": (c) => `${c} f(x)`,
-  "Accents": (c) => `${c}{a}`,
+  // Accents are stored complete (\hat{x}); the hero already shows them, so no
+  // separate example is needed — appending anything would malform the command.
 };
 
 function pkgNote(pkg: string): string | null {
@@ -66,15 +68,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sym = symbolBySlug(slug);
   if (!sym) return {};
   const name = titleCase(sym.name);
-  const path = `/tools/symbols/${slug}`;
+  // Canonical points at the primary page for this command so duplicate-command
+  // pages (e.g. \Omega as "Omega" and "ohm") consolidate instead of competing.
+  const canonPath = `/tools/symbols/${canonicalSlug(sym)}`;
   return {
     title: `${name} in LaTeX — ${sym.command}`,
     description: `The LaTeX command for the ${sym.name} symbol (${sym.unicode}) is ${sym.command}. Copy the code, see it rendered, and browse related ${sym.category} symbols — free, no signup.`,
-    alternates: { canonical: path },
+    alternates: { canonical: canonPath },
     openGraph: {
       title: `${name} in LaTeX — ${sym.command}`,
       description: `LaTeX code for ${sym.name} (${sym.unicode}): ${sym.command}.`,
-      url: path,
+      url: canonPath,
       type: "website",
     },
     twitter: { card: "summary_large_image", title: `${name} in LaTeX — ${sym.command}` },
