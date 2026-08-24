@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import Link from "next/link";
 import SymbolSearch from "@/components/SymbolSearch";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
+import { symbolsByCategory, symbolSlug, titleCase } from "@/lib/seo-pages";
 
 export const metadata: Metadata = {
   title: "LaTeX Symbol Search — 380+ Symbols with Live Preview",
@@ -146,6 +148,44 @@ export default function SymbolsPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Crawlable directory — a dedicated page per symbol (SEO + deep links). */}
+        <section style={{ padding: "3rem 1.5rem", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+              Browse every LaTeX symbol
+            </h2>
+            <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 1.5rem", maxWidth: 640 }}>
+              Every symbol has its own page with the command, a rendered preview, the package it needs,
+              and related symbols. Handy when you land here from a search like “argmax latex”.
+            </p>
+            {symbolsByCategory().map(({ category, symbols }) => (
+              <div key={category} style={{ marginBottom: "1.75rem" }}>
+                <h3 style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.6rem" }}>
+                  {category}
+                </h3>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                  {symbols.map((s) => (
+                    <Link
+                      key={symbolSlug(s)}
+                      href={`/tools/symbols/${symbolSlug(s)}`}
+                      title={`${titleCase(s.name)} — ${s.command}`}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                        padding: "0.25rem 0.55rem", borderRadius: 6,
+                        border: "1px solid var(--border)", background: "var(--surface2)",
+                        fontSize: "0.75rem", color: "var(--fg-muted)", textDecoration: "none",
+                      }}
+                    >
+                      <span aria-hidden="true" style={{ color: "var(--fg)" }}>{s.unicode}</span>
+                      <code style={{ fontFamily: "var(--font-mono), monospace" }}>{s.command}</code>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       </main>

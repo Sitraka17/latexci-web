@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import Link from "next/link";
 import TemplatesFilter from "@/components/TemplatesFilter";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
+import { TEMPLATES } from "@/lib/templates";
 
 export const metadata: Metadata = {
   title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis & More",
@@ -116,6 +118,35 @@ export default function TemplatesPage() {
             Each template opens directly in the latexci live preview editor — see the rendered
             output immediately and edit the source, no local LaTeX installation required.
           </p>
+        </section>
+
+        {/* Crawlable directory — each template also has its own detail page (SEO). */}
+        <section style={{ padding: "2.5rem 1.5rem 3.5rem", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <h2 style={{ fontSize: "1.15rem", fontWeight: 700, marginBottom: "0.4rem" }}>
+              All templates, one page each
+            </h2>
+            <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 1.25rem", maxWidth: 640 }}>
+              Prefer a direct link? Each template has its own page with the full source, the packages it
+              uses, and a one-click “open in editor”.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              {TEMPLATES.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/tools/templates/${t.id}`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.45rem",
+                    padding: "0.4rem 0.8rem", borderRadius: 8,
+                    border: "1px solid var(--border)", background: "var(--surface2)",
+                    fontSize: "0.83rem", color: "var(--fg-muted)", textDecoration: "none",
+                  }}
+                >
+                  <span aria-hidden="true">{t.icon}</span> {t.title}
+                </Link>
+              ))}
+            </div>
+          </div>
         </section>
       </div>
 

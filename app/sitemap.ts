@@ -1,5 +1,11 @@
 export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
+import { allSymbolSlugs, allTemplateIds } from "@/lib/seo-pages";
+
+// Date the programmatic per-symbol / per-template pages were created. They are
+// generated from static data, so a single honest creation date is correct until
+// that data changes (bump when lib/symbols.ts or lib/templates.ts changes shape).
+const PROGRAMMATIC_LASTMOD = "2026-08-10";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -59,10 +65,26 @@ const PAGES: Entry[] = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return PAGES.map(({ path, changeFrequency, priority }) => ({
+  const core: MetadataRoute.Sitemap = PAGES.map(({ path, changeFrequency, priority }) => ({
     url: path === "/" ? BASE_URL : `${BASE_URL}${path}`,
     lastModified: LAST_MODIFIED[path],
     changeFrequency,
     priority,
   }));
+
+  // Programmatic reference pages: one per LaTeX symbol, one per template.
+  const symbols: MetadataRoute.Sitemap = allSymbolSlugs().map((slug) => ({
+    url: `${BASE_URL}/tools/symbols/${slug}`,
+    lastModified: PROGRAMMATIC_LASTMOD,
+    changeFrequency: "yearly",
+    priority: 0.5,
+  }));
+  const templates: MetadataRoute.Sitemap = allTemplateIds().map((slug) => ({
+    url: `${BASE_URL}/tools/templates/${slug}`,
+    lastModified: PROGRAMMATIC_LASTMOD,
+    changeFrequency: "yearly",
+    priority: 0.6,
+  }));
+
+  return [...core, ...symbols, ...templates];
 }
