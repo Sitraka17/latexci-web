@@ -166,7 +166,9 @@ button, a, [role="button"] {
    KaTeX
 ───────────────────────────────────────────────────── */
 .katex { color: inherit; }
-.katex-display { overflow-x: auto; padding: 0.5rem 0; }
+/* overflow-y hidden: with only overflow-x:auto the computed overflow-y becomes
+   auto too, and KaTeX's sub-pixel struts then show a stray scrollbar. */
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.5rem 0; }
 
 /* ─────────────────────────────────────────────────────
    Editor panel — warm/parchment palette (light only)
@@ -560,4 +562,320 @@ html.light .has-grid::before {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
+}
+
+/* ─────────────────────────────────────────────────────
+   Below-the-fold sections: the browser skips their style,
+   layout and paint until they approach the viewport. Cuts the
+   main-thread work of long pages (the homepage spent >1 s in
+   style & layout on mobile). Content stays in the DOM, so it
+   remains searchable, accessible and indexable.
+───────────────────────────────────────────────────── */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 640px;
+}
+
+/* ─────────────────────────────────────────────────────
+   FAQ (components/Faq.tsx): native <details>, no JS
+───────────────────────────────────────────────────── */
+.faq { display: flex; flex-direction: column; gap: 0.5rem; }
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.faq-item[open] { border-color: var(--accent); }
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 0.91rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item[open] summary { background: var(--surface2); }
+.faq-item summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.faq-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  transition: transform 0.2s ease;
+}
+.faq-item[open] .faq-plus { transform: rotate(45deg); }
+.faq-answer {
+  padding: 0.75rem 1.25rem 1rem;
+  background: var(--surface);
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  line-height: 1.75;
+  border-top: 1px solid var(--border);
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-item, .faq-plus, .faq-item summary { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────
+   Navbar (components/Navbar.tsx)
+   Kept in this single global stylesheet on purpose: one
+   cached request instead of extra render-blocking files.
+───────────────────────────────────────────────────── */
+.site-nav {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.site-nav-inner {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  height: 54px;
+  gap: 0.25rem;
+}
+.site-logo {
+  font-weight: 800; font-size: 1.05rem; letter-spacing: -0.03em;
+  text-decoration: none; flex-shrink: 0; margin-right: 0.75rem;
+}
+.site-logo span {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-main { display: flex; flex: 1; align-items: center; min-width: 0; }
+.nav-links { display: flex; gap: 0.1rem; align-items: center; }
+.nav-link {
+  padding: 0.3rem 0.75rem; border-radius: 6px;
+  font-size: 0.84rem; font-weight: 400; white-space: nowrap;
+  text-decoration: none; color: var(--fg-muted);
+  background: transparent; border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--fg); }
+.nav-link[aria-current="page"] {
+  font-weight: 600; color: var(--fg);
+  background: var(--surface2); border-color: var(--border);
+}
+.nav-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.nav-pricing {
+  display: flex; align-items: center; gap: 0.3rem;
+  padding: 0.3rem 0.85rem; border-radius: 6px; white-space: nowrap;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  font-size: 0.78rem; font-weight: 700; color: var(--accent2);
+  text-decoration: none; letter-spacing: 0.01em;
+}
+.nav-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--fg-muted); text-decoration: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.nav-icon-btn:hover { color: var(--fg); border-color: var(--accent); }
+.nav-discord {
+  color: #5865F2;
+  border-color: rgba(88,101,242,0.35);
+  background: rgba(88,101,242,0.08);
+}
+.nav-discord:hover {
+  color: #5865F2;
+  border-color: rgba(88,101,242,0.6);
+  background: rgba(88,101,242,0.16);
+}
+
+/* Mobile */
+.mobile-controls { display: none; align-items: center; gap: 0.5rem; margin-left: auto; }
+.mobile-menu > summary {
+  list-style: none; cursor: pointer; color: var(--fg);
+  /* min 44x44 px touch target (Apple HIG + WCAG 2.5.8) */
+  min-width: 44px; min-height: 44px; padding: 0.6rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.mobile-menu > summary::-webkit-details-marker { display: none; }
+.mobile-menu > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.burger { display: flex; flex-direction: column; gap: 4px; }
+.burger span {
+  display: block; width: 20px; height: 2px; background: currentColor;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.mobile-menu[open] .burger span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+.mobile-menu[open] .burger span:nth-child(2) { opacity: 0; }
+.mobile-menu[open] .burger span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+.mobile-panel {
+  position: absolute; left: 0; right: 0; top: 100%;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.5rem 1.25rem 1rem;
+  /* Safe-area bottom padding for iPhone home indicator */
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.mobile-link {
+  display: block; padding: 0.7rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem; color: var(--fg); text-decoration: none;
+}
+.mobile-link[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.mobile-pricing { color: var(--accent2); font-weight: 700; }
+.mobile-discord { color: #5865F2; font-weight: 600; }
+.mobile-muted { color: var(--fg-muted); }
+
+/* Collapse to the hamburger when the full bar no longer fits. */
+@media (max-width: 1080px) {
+  .desktop-nav { display: none !important; }
+  .mobile-controls { display: flex !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .burger span, .nav-link, .nav-icon-btn { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────
+   Footer (components/SiteFooter.tsx)
+   Kept in this single global stylesheet on purpose: one
+   cached request instead of extra render-blocking files.
+───────────────────────────────────────────────────── */
+.footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+@media (max-width: 800px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 400px) {
+  .footer-grid { grid-template-columns: 1fr; }
+}
+.ft-col { display: flex; flex-direction: column; gap: 0.55rem; }
+.ft-link { font-size: 0.84rem; color: var(--fg-muted); text-decoration: none; transition: color 0.15s; }
+.ft-link:hover { color: var(--fg); }
+.ft-link-accent { color: #5865F2; font-weight: 600; }
+.ft-link-accent:hover { color: #7983f5; }
+.ft-star {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.38rem 0.85rem; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface2);
+  font-size: 0.78rem; color: var(--fg-muted); text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ft-star:hover { border-color: var(--accent); color: var(--fg); }
+.ft-coffee {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  margin-top: 0.6rem; margin-left: 0.6rem;
+  padding: 0.38rem 0.85rem; border-radius: 7px;
+  border: 1px solid #e0b100; background: #ffdd00;
+  font-size: 0.78rem; font-weight: 700; color: #3a2f00;
+  text-decoration: none; transition: opacity 0.15s;
+}
+.ft-coffee:hover { opacity: 0.88; }
+/* iPhone home-indicator safe area */
+footer {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─────────────────────────────────────────────────────
+   Homepage (app/page.tsx), scoped under .home so these
+   rules never leak into other pages (e.g. KaTeX sizing in the editor).
+   Kept in this single global stylesheet on purpose: one
+   cached request instead of extra render-blocking files.
+───────────────────────────────────────────────────── */
+/* Discord CTA button */
+.home .discord-cta-btn {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  padding: 0.7rem 1.5rem; border-radius: 8px;
+  background: #5865F2; color: #fff;
+  font-weight: 700; font-size: 0.95rem; text-decoration: none;
+  box-shadow: 0 4px 18px rgba(88,101,242,0.35);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.home .discord-cta-btn:hover {
+  background: #4752C4;
+  box-shadow: 0 6px 24px rgba(88,101,242,0.45);
+}
+
+/* Hover effects */
+.home .callout-card:hover { border-color: var(--accent) !important; }
+.home .scenario-card > div { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
+.home .scenario-card:hover > div { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.home .ge-callout:hover { box-shadow: var(--shadow-md); }
+
+/* KaTeX hero formula: keep it compact inside the preview card */
+.home .katex-display { margin: 0.4rem 0 !important; overflow-x: auto; }
+.home .katex-display > .katex { font-size: 1.05em !important; }
+
+/* Responsive: hero grid → single column */
+@media (max-width: 760px) {
+  .home .hero-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+  .home .hero-mockup { display: none !important; }
+  .home .hero-mobile-preview { display: block !important; }
+}
+
+/* Hero section: less vertical padding on phones */
+@media (max-width: 480px) {
+  .home .hero-section { padding: 2.5rem 1rem 2rem !important; }
+  .home .hero-cta-row { flex-direction: column !important; }
+  .home .hero-cta-row a { text-align: center; justify-content: center; }
+}
+
+/* Responsive: stats band: tighter on small screens */
+@media (max-width: 480px) {
+  .home .stats-band { padding: 0.75rem 0.75rem !important; gap: 0 !important; }
+  .home .stats-band > div { padding: 0.4rem 0.5rem !important; }
+}
+
+/* Announcement strip: hide long copy on tiny screens */
+.home .announce-short { display: none; }
+@media (max-width: 520px) {
+  .home .announce-long { display: none; }
+  .home .announce-short { display: inline; }
+  .home .announce-strip { font-size: 0.72rem !important; padding: 0.45rem 1rem !important; }
+}
+
+/* Tool cards: maintain 2 columns on small phones */
+@media (max-width: 540px) {
+  .home .tool-card { min-width: 0 !important; }
+  .home .tools-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+}
+@media (max-width: 360px) {
+  .home .tools-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Scenarios: full width on mobile */
+@media (max-width: 640px) {
+  .home .scenario-card > div { border-left-width: 4px !important; }
+}
+
+/* GE callout: stack on mobile */
+@media (max-width: 540px) {
+  .home .ge-callout { padding: 0.9rem 1rem !important; gap: 0.75rem !important; }
+}
+
+/* Academics callout: stack on mobile */
+@media (max-width: 640px) {
+  .home .callout-card { padding: 1.4rem !important; gap: 1.25rem !important; }
+  .home .callout-card > div:last-child { width: 100% !important; text-align: center !important; }
+}
+
+/* Discord CTA: stack on phones */
+@media (max-width: 540px) {
+  .home .discord-cta-section { text-align: center !important; }
+  .home .discord-cta-section > div { flex-direction: column !important; align-items: center !important; }
 }

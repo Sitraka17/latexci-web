@@ -18,6 +18,9 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500"],
   variable: "--font-mono",
   display: "swap",
+  // Only used for code snippets: fetched on demand instead of preloaded, so it
+  // no longer competes with the HTML, CSS and text font on first load.
+  preload: false,
 });
 
 /* ── Viewport ─────────────────────────────────────────────────────────────────

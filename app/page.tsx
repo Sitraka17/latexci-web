@@ -3,8 +3,7 @@ import Link from "next/link";
 import katex from "katex";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
-import AdUnit from "@/components/AdUnit";
-import FaqAccordion from "@/components/FaqAccordion";
+import Faq from "@/components/Faq";
 
 // Pre-render at build time — no runtime cost, pixel-perfect math
 const HERO_FORMULA = katex.renderToString(
@@ -123,7 +122,7 @@ const SCHEMAS = [
 
 export default function HomePage() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="home" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       {SCHEMAS.map((s, i) => (
         <script key={i} type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
@@ -389,6 +388,7 @@ export default function HomePage() {
 
       {/* ── Tools ───────────────────────────────────────────── */}
       <section
+        className="cv-auto"
         style={{
           padding: "2.5rem 1.5rem 2.5rem",
           maxWidth: 1100,
@@ -458,13 +458,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Ad unit ─────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", width: "100%", padding: "0 1.5rem" }}>
-        <AdUnit />
-      </div>
 
       {/* ── Scenarios ───────────────────────────────────────── */}
       <section
+        className="cv-auto"
         style={{
           padding: "2.5rem 1.5rem 3rem",
           maxWidth: 1100,
@@ -539,7 +536,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Grande École callout ────────────────────────────────── */}
-      <section style={{ padding: "0 1.5rem 1.25rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
+      <section className="cv-auto" style={{ padding: "0 1.5rem 1.25rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
         <Link href="/tools/templates?cat=Grande+%C3%89cole" style={{ textDecoration: "none", display: "block" }}>
           <div className="ge-callout" style={{
             background: "linear-gradient(135deg, rgba(0,56,168,0.07) 0%, rgba(95,106,122,0.04) 100%)",
@@ -569,6 +566,7 @@ export default function HomePage() {
 
       {/* ── Academics callout ────────────────────────────────── */}
       <section
+        className="cv-auto"
         style={{
           padding: "0 1.5rem 3rem",
           maxWidth: 1100,
@@ -630,6 +628,7 @@ export default function HomePage() {
 
       {/* ── FAQ ─────────────────────────────────────────────── */}
       <section
+        className="cv-auto"
         style={{
           padding: "0 1.5rem 5rem",
           maxWidth: 740,
@@ -647,11 +646,11 @@ export default function HomePage() {
         >
           Questions
         </h2>
-        <FaqAccordion items={FAQS} />
+        <Faq items={FAQS} />
       </section>
 
       {/* ── Discord community CTA ────────────────────────── */}
-      <section style={{
+      <section className="cv-auto discord-cta-section" style={{
         padding: "3.5rem 1.5rem",
         background: "var(--surface)",
         borderTop: "1px solid var(--border)",
@@ -697,90 +696,6 @@ export default function HomePage() {
 
       <SiteFooter />
 
-      <style>{`
-        /* Discord CTA button */
-        .discord-cta-btn {
-          display: inline-flex; align-items: center; gap: 0.55rem;
-          padding: 0.7rem 1.5rem; border-radius: 8px;
-          background: #5865F2; color: #fff;
-          font-weight: 700; font-size: 0.95rem; text-decoration: none;
-          box-shadow: 0 4px 18px rgba(88,101,242,0.35);
-          transition: background 0.15s, box-shadow 0.15s;
-        }
-        .discord-cta-btn:hover {
-          background: #4752C4;
-          box-shadow: 0 6px 24px rgba(88,101,242,0.45);
-        }
-
-        /* Hover effects */
-        .callout-card:hover { border-color: var(--accent) !important; }
-        .scenario-card > div { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
-        .scenario-card:hover > div { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-        .ge-callout:hover { box-shadow: var(--shadow-md); }
-
-        /* KaTeX hero formula — keep it compact inside the preview card */
-        .katex-display { margin: 0.4rem 0 !important; overflow-x: auto; }
-        .katex-display > .katex { font-size: 1.05em !important; }
-
-        /* Responsive: hero grid → single column */
-        @media (max-width: 760px) {
-          .hero-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
-          .hero-mockup { display: none !important; }
-          .hero-mobile-preview { display: block !important; }
-        }
-
-        /* Hero section — less vertical padding on phones */
-        @media (max-width: 480px) {
-          .hero-section { padding: 2.5rem 1rem 2rem !important; }
-          .hero-cta-row { flex-direction: column !important; }
-          .hero-cta-row a { text-align: center; justify-content: center; }
-        }
-
-        /* Responsive: stats band — tighter on small screens */
-        @media (max-width: 480px) {
-          .stats-band { padding: 0.75rem 0.75rem !important; gap: 0 !important; }
-          .stats-band > div { padding: 0.4rem 0.5rem !important; }
-        }
-
-        /* Announcement strip — hide long copy on tiny screens */
-        .announce-short { display: none; }
-        @media (max-width: 520px) {
-          .announce-long { display: none; }
-          .announce-short { display: inline; }
-          .announce-strip { font-size: 0.72rem !important; padding: 0.45rem 1rem !important; }
-        }
-
-        /* Tool cards — maintain 2 columns on small phones */
-        @media (max-width: 540px) {
-          .tool-card { min-width: 0 !important; }
-          .tools-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
-        }
-        @media (max-width: 360px) {
-          .tools-grid { grid-template-columns: 1fr !important; }
-        }
-
-        /* Scenarios — full width on mobile */
-        @media (max-width: 640px) {
-          .scenario-card > div { border-left-width: 4px !important; }
-        }
-
-        /* GE callout — stack on mobile */
-        @media (max-width: 540px) {
-          .ge-callout { padding: 0.9rem 1rem !important; gap: 0.75rem !important; }
-        }
-
-        /* Academics callout — stack on mobile */
-        @media (max-width: 640px) {
-          .callout-card { padding: 1.4rem !important; gap: 1.25rem !important; }
-          .callout-card > div:last-child { width: 100% !important; text-align: center !important; }
-        }
-
-        /* Discord CTA — stack on phones */
-        @media (max-width: 540px) {
-          .discord-cta-section { text-align: center !important; }
-          .discord-cta-section > div { flex-direction: column !important; align-items: center !important; }
-        }
-      `}</style>
     </div>
   );
 }

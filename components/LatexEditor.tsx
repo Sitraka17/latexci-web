@@ -960,6 +960,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                   value={source}
                   onChange={setSource}
                   editable={!loadError}
+                  // "none": our own createTheme() (dark AND light palettes) lives in
+                  // `extensions`. Without this, @uiw/react-codemirror also injects its
+                  // default *light* theme, whose white background won over ours, so
+                  // dark mode showed pale text on a white editor.
+                  theme="none"
                   extensions={extensions as import("@uiw/react-codemirror").ReactCodeMirrorProps["extensions"]}
                   height="100%"
                   style={{ height: "100%", fontSize: "13px" }}
