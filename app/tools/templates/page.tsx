@@ -129,6 +129,8 @@ export default function TemplatesPage() {
             <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 1.25rem", maxWidth: 640 }}>
               Prefer a direct link? Each template has its own page with the full source, the packages it
               uses, and a one-click “open in editor”.
+              Need a CV without writing LaTeX? Fill in the{" "}
+              <Link href="/tools/cv-builder" style={{ color: "var(--accent)" }}>CV generator</Link>.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               {TEMPLATES.map((t) => (

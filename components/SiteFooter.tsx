@@ -16,6 +16,7 @@ const TOOLS = [
   { label: "Symbol Search",  href: "/tools/symbols" },
   { label: "Table Generator",href: "/tools/table" },
   { label: "Templates",      href: "/tools/templates" },
+  { label: "CV Generator",   href: "/tools/cv-builder" },
 ];
 
 const LEARN = [

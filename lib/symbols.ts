@@ -5,6 +5,8 @@ export interface SymbolEntry {
   category: string;
   unicode: string;    // actual Unicode glyph for search
   description?: string;
+  /** KaTeX-renderable stand-in when `command` needs a package KaTeX lacks (e.g. \mathbbm). */
+  render?: string;
 }
 
 export const CATEGORIES = [
@@ -171,11 +173,11 @@ export const SYMBOLS: SymbolEntry[] = [
   { name: "longmapsto",        command: "\\longmapsto",        package: "base",    category: "Arrows", unicode: "⟼" },
   { name: "hookrightarrow",    command: "\\hookrightarrow",    package: "base",    category: "Arrows", unicode: "↪", description: "injection / includes into" },
   { name: "hookleftarrow",     command: "\\hookleftarrow",     package: "base",    category: "Arrows", unicode: "↩" },
-  { name: "twoheadrightarrow", command: "\\twoheadrightarrow", package: "base",    category: "Arrows", unicode: "↠", description: "surjection / onto" },
+  { name: "twoheadrightarrow", command: "\\twoheadrightarrow", package: "amssymb",    category: "Arrows", unicode: "↠", description: "surjection / onto" },
   { name: "twoheadleftarrow",  command: "\\twoheadleftarrow",  package: "amssymb", category: "Arrows", unicode: "↞" },
   { name: "rightharpoonup",    command: "\\rightharpoonup",    package: "base",    category: "Arrows", unicode: "⇀" },
   { name: "rightharpoondown",  command: "\\rightharpoondown",  package: "base",    category: "Arrows", unicode: "⇁" },
-  { name: "leftrightharpoons", command: "\\leftrightharpoons", package: "base",    category: "Arrows", unicode: "⇋" },
+  { name: "leftrightharpoons", command: "\\leftrightharpoons", package: "amssymb",    category: "Arrows", unicode: "⇋" },
   { name: "rightleftharpoons", command: "\\rightleftharpoons", package: "base",    category: "Arrows", unicode: "⇌", description: "equilibrium (chemistry)" },
   { name: "dashrightarrow",    command: "\\dashrightarrow",    package: "amssymb", category: "Arrows", unicode: "⇢" },
   { name: "circlearrowleft",   command: "\\circlearrowleft",   package: "amssymb", category: "Arrows", unicode: "↺" },
@@ -199,7 +201,7 @@ export const SYMBOLS: SymbolEntry[] = [
   { name: "because",   command: "\\because",  package: "amssymb", category: "Logic", unicode: "∵", description: "because" },
   { name: "lozenge",   command: "\\lozenge",  package: "amssymb", category: "Logic", unicode: "◊", description: "diamond / modal possibility" },
   { name: "square",    command: "\\square",   package: "amssymb", category: "Logic", unicode: "□", description: "square / modal necessity" },
-  { name: "Dashv",     command: "\\Dashv",    package: "amssymb", category: "Logic", unicode: "⫤", description: "double turnstile reverse" },
+  { name: "Dashv",     command: "\\Dashv",    package: "fdsymbol", category: "Logic", unicode: "⫤", description: "double turnstile reverse" },
   { name: "vDash",     command: "\\vDash",    package: "amssymb", category: "Logic", unicode: "⊨", description: "semantic entailment" },
   { name: "Vdash",     command: "\\Vdash",    package: "amssymb", category: "Logic", unicode: "⊩", description: "forces" },
 
@@ -296,7 +298,7 @@ export const SYMBOLS: SymbolEntry[] = [
   { name: "variance",              command: "\\operatorname{Var}",        package: "amsmath", category: "Statistics & Probability", unicode: "Var", description: "variance" },
   { name: "covariance Cov",        command: "\\operatorname{Cov}",        package: "amsmath", category: "Statistics & Probability", unicode: "Cov", description: "covariance" },
   { name: "correlation Cor",       command: "\\operatorname{Cor}",        package: "amsmath", category: "Statistics & Probability", unicode: "Cor" },
-  { name: "indicator function",    command: "\\mathbb{1}",                package: "amssymb", category: "Statistics & Probability", unicode: "𝟙", description: "indicator function / characteristic function" },
+  { name: "indicator function",    command: "\\mathds{1}",                package: "dsfont",  category: "Statistics & Probability", unicode: "𝟙", description: "indicator function / characteristic function", render: "\\text{𝟙}" },
   { name: "normal distribution",   command: "\\mathcal{N}",              package: "base",    category: "Statistics & Probability", unicode: "𝒩", description: "normal / Gaussian distribution" },
   { name: "independent",          command: "\\perp\\!\\!\\!\\perp",       package: "base",    category: "Statistics & Probability", unicode: "⊥⊥", description: "statistically independent" },
   { name: "convergence in distribution", command: "\\xrightarrow{d}",    package: "amsmath", category: "Statistics & Probability", unicode: "→d", description: "converges in distribution" },
@@ -335,8 +337,8 @@ export const SYMBOLS: SymbolEntry[] = [
   { name: "ket",              command: "| \\psi \\rangle",       package: "base",    category: "Physics", unicode: "|ψ⟩", description: "Dirac ket (quantum mechanics)" },
   { name: "braket",           command: "\\langle \\phi | \\psi \\rangle", package: "base", category: "Physics", unicode: "⟨φ|ψ⟩", description: "inner product (quantum mechanics)" },
   { name: "equilibrium",      command: "\\rightleftharpoons",    package: "base",    category: "Physics", unicode: "⇌", description: "chemical equilibrium" },
-  { name: "angstrom",         command: "\\text{\\AA}",           package: "base",    category: "Physics", unicode: "Å", description: "angstrom (length unit)" },
-  { name: "degree celsius",   command: "^\\circ\\text{C}",       package: "base",    category: "Physics", unicode: "°C" },
+  { name: "angstrom",         command: "\\text{\\AA}",           package: "amsmath",    category: "Physics", unicode: "Å", description: "angstrom (length unit)" },
+  { name: "degree celsius",   command: "^\\circ\\mathrm{C}",     package: "base",    category: "Physics", unicode: "°C" },
   { name: "infinity",         command: "\\infty",                package: "base",    category: "Physics", unicode: "∞" },
   { name: "dagger adjoint",   command: "\\dagger",               package: "base",    category: "Physics", unicode: "†", description: "adjoint / conjugate transpose" },
 

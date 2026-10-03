@@ -128,6 +128,11 @@ export default async function TemplatePage({ params }: Props) {
               ✦ Open in editor
             </Link>
             <CopyButton text={t.source} label="Copy source" />
+            {t.id.startsWith("cv") && (
+              <Link href="/tools/cv-builder" style={{ fontSize: "0.85rem", color: "var(--accent)" }}>
+                Prefer a form? Use the CV generator
+              </Link>
+            )}
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
               <span style={chip}>{t.category}</span>
               {docClass && <span style={chip}>{docClass}</span>}

@@ -5,7 +5,7 @@ import { canonicalSymbolSlugs, allTemplateIds } from "@/lib/seo-pages";
 // Date the programmatic per-symbol / per-template pages were created. They are
 // generated from static data, so a single honest creation date is correct until
 // that data changes (bump when lib/symbols.ts or lib/templates.ts changes shape).
-const PROGRAMMATIC_LASTMOD = "2026-08-10";
+const PROGRAMMATIC_LASTMOD = "2026-10-03";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -30,6 +30,7 @@ const LAST_MODIFIED: Record<string, string> = {
   "/tools/isbn-to-bibtex": "2026-08-04",
   "/tools/symbols": "2026-07-06",
   "/tools/templates": "2026-07-06",
+  "/tools/cv-builder": "2026-10-03",
   "/after-overleaf": "2026-07-05",
   "/pricing": "2026-07-10",
   "/privacy": "2026-07-06",
@@ -58,6 +59,7 @@ const PAGES: Entry[] = [
   { path: "/tools/isbn-to-bibtex",   changeFrequency: "monthly", priority: 0.85 },
   { path: "/tools/symbols",     changeFrequency: "monthly", priority: 0.9 },
   { path: "/tools/templates",   changeFrequency: "weekly",  priority: 0.8 },
+  { path: "/tools/cv-builder",  changeFrequency: "monthly", priority: 0.85 },
   { path: "/after-overleaf",    changeFrequency: "monthly", priority: 0.85 },
   { path: "/pricing",           changeFrequency: "monthly", priority: 0.9 },
   { path: "/privacy",           changeFrequency: "yearly",  priority: 0.3 },

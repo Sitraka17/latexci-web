@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
-import { createClient } from "@/lib/supabase/client";
+import type { createClient as CreateSupabaseClient } from "@/lib/supabase/client";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import UpgradeModal from "@/components/UpgradeModal";
 
@@ -146,7 +146,17 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const docLoadedOk   = useRef(false);
   const splitRef      = useRef<HTMLDivElement>(null);
   const isDragging    = useRef(false);
-  const supabase      = useMemo(() => createClient(), []);
+  // supabase-js (~55 KB) is only downloaded for signed-in users: every cloud
+  // feature below is gated on userId, which is only ever set after this lazy
+  // client confirms a session. Anonymous visitors never fetch it.
+  const supabaseRef   = useRef<ReturnType<typeof CreateSupabaseClient> | null>(null);
+  const getSupabase   = useCallback(async () => {
+    if (!supabaseRef.current) {
+      const { createClient } = await import("@/lib/supabase/client");
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
 
   // Track theme (dark/light toggle)
   useEffect(() => {
@@ -201,11 +211,15 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
 
   // Get logged-in user
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
-      setUserEmail(data.user?.email ?? null);
-    });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // No "sb-*" session cookie means nobody is signed in: skip supabase-js entirely.
+    if (!document.cookie.split("; ").some((c) => c.startsWith("sb-"))) return;
+    getSupabase().then((supabase) =>
+      supabase.auth.getUser().then(({ data }) => {
+        setUserId(data.user?.id ?? null);
+        setUserEmail(data.user?.email ?? null);
+      }),
+    );
+  }, [getSupabase]);
 
   // Load CodeMirror extensions — theme + LaTeX keybindings. Re-runs on dark/light toggle.
   useEffect(() => {
@@ -362,6 +376,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     if (docId && userId) {
       // No user_id filter: RLS lets owners AND invited collaborators read.
       (async () => {
+        const supabase = await getSupabase();
         const { data, error } = await supabase
           .from("documents")
           .select("title, content, user_id")
@@ -417,6 +432,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     if (saveRef.current) clearTimeout(saveRef.current);
     setSaveStatus("saving");
     saveRef.current = setTimeout(async () => {
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from("documents")
         .update({ content: source, updated_at: new Date().toISOString() })
@@ -493,6 +509,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     const title = titleMatch?.[1]?.trim() || "Untitled";
     // Ensure the profiles row exists (documents.user_id FK → profiles.id);
     // best-effort, the insert below surfaces the real error if anything fails.
+    const supabase = await getSupabase();
     await supabase
       .from("profiles")
       .upsert({ id: userId, email: userEmail ?? "" }, { onConflict: "id", ignoreDuplicates: true });
@@ -511,7 +528,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     setDocTitle(title);
     setDocRole("owner");
     router.replace(`/tools/preview?doc=${data.id}`);
-  }, [userId, userEmail, cloudSaving, source, supabase, router, loadError]);
+  }, [userId, userEmail, cloudSaving, source, getSupabase, router, loadError]);
 
   const copyHtml = useCallback(async () => {
     try {

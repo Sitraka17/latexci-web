@@ -46,8 +46,8 @@ function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cm
   // Derived, not state — recomputes when the symbol changes or when KaTeX
   // finishes loading (katexReady flips exactly once per page load).
   const html = useMemo(
-    () => (katexReady && katexRender ? renderKaTeX(sym.command) : ""),
-    [sym.command, katexReady],
+    () => (katexReady && katexRender ? renderKaTeX(sym.render ?? sym.command) : ""),
+    [sym.command, sym.render, katexReady],
   );
 
   function copy() {

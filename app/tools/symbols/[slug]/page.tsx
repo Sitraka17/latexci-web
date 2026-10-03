@@ -8,6 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CopyButton from "@/components/CopyButton";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import type { SymbolEntry } from "@/lib/symbols";
+import { noteFor } from "@/lib/symbol-notes";
 import {
   allSymbolSlugs,
   symbolBySlug,
@@ -36,7 +37,9 @@ function renderMath(tex: string, displayMode = false): string | null {
 // The stored command already includes any argument it needs (accents are stored
 // as \hat{x}, \vec{x}, … not the bare macro), so it renders standalone as-is.
 function displayTex(sym: SymbolEntry): string {
-  return sym.command;
+  // `render` is a KaTeX-safe stand-in when the real command needs a package
+  // KaTeX lacks (e.g. \mathds{1} from dsfont); the page always shows `command`.
+  return sym.render ?? sym.command;
 }
 
 // A meaningful in-context example, only for categories where one template is
@@ -53,7 +56,7 @@ const EXAMPLE: Record<string, (c: string) => string> = {
   "Operators": (c) => `${c}_{i=1}^{n} x_i`,
   "Calculus & Analysis": (c) => `${c} f(x)`,
   // Accents are stored complete (\hat{x}); the hero already shows them, so no
-  // separate example is needed — appending anything would malform the command.
+  // separate example is needed; appending anything would malform the command.
 };
 
 function pkgNote(pkg: string): string | null {
@@ -62,6 +65,15 @@ function pkgNote(pkg: string): string | null {
 }
 
 type Props = { params: Promise<{ slug: string }> };
+
+function describe(sym: SymbolEntry): string {
+  const where = sym.package === "base" ? "no package needed" : `package ${sym.package}`;
+  const note = noteFor(sym.name);
+  const alts = note ? note.variants.slice(1).map((v) => v.code).join(", ") : "";
+  return `Type ${sym.command} for ${sym.name} (${sym.unicode}) in LaTeX, ${where}.` +
+    (alts ? ` Alternatives that compile: ${alts}.` : "") +
+    ` Copy it, see it rendered and browse related ${sym.category} symbols. Free, no signup.`;
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -72,16 +84,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // pages (e.g. \Omega as "Omega" and "ohm") consolidate instead of competing.
   const canonPath = `/tools/symbols/${canonicalSlug(sym)}`;
   return {
-    title: `${name} in LaTeX — ${sym.command}`,
-    description: `The LaTeX command for the ${sym.name} symbol (${sym.unicode}) is ${sym.command}. Copy the code, see it rendered, and browse related ${sym.category} symbols — free, no signup.`,
+    // Answer first: searchers want the command, so it leads the title and description.
+    title: `${name} in LaTeX: ${sym.command}`,
+    description: describe(sym),
     alternates: { canonical: canonPath },
     openGraph: {
-      title: `${name} in LaTeX — ${sym.command}`,
+      title: `${name} in LaTeX: ${sym.command}`,
       description: `LaTeX code for ${sym.name} (${sym.unicode}): ${sym.command}.`,
       url: canonPath,
       type: "website",
     },
-    twitter: { card: "summary_large_image", title: `${name} in LaTeX — ${sym.command}` },
+    twitter: { card: "summary_large_image", title: `${name} in LaTeX: ${sym.command}` },
   };
 }
 
@@ -101,8 +114,14 @@ export default async function SymbolPage({ params }: Props) {
 
   const name = titleCase(sym.name);
   const hero = renderMath(displayTex(sym), true);
-  const exampleTex = EXAMPLE[sym.category]?.(sym.command) ?? null;
-  const exampleHtml = exampleTex ? renderMath(exampleTex, true) : null;
+  const note = noteFor(sym.name);
+  const isText = sym.category === "Text Symbols";
+  // Shown code uses the real command; the render uses the KaTeX-safe stand-in.
+  const exampleTex = note?.example?.code ?? EXAMPLE[sym.category]?.(sym.command) ?? null;
+  const exampleRender = note?.example
+    ? (note.example.render ?? note.example.code)
+    : (EXAMPLE[sym.category]?.(displayTex(sym)) ?? null);
+  const exampleHtml = exampleRender ? renderMath(exampleRender, true) : null;
   const related = relatedSymbols(sym);
   const pkg = pkgNote(sym.package);
   // Some "unicode" fields are words (e.g. operators like "argmax"), not a glyph.
@@ -115,14 +134,15 @@ export default async function SymbolPage({ params }: Props) {
   const faqs = [
     {
       q: `How do you write ${sym.name} (${sym.unicode}) in LaTeX?`,
-      a: `Use ${sym.command} in math mode${pkg ? ` after adding ${pkg} to your preamble` : " — it needs no extra package"}. For example, $${(exampleTex ?? sym.command)}$.`,
+      a: `Use ${sym.command} ${isText ? "in normal text" : "in math mode"}${pkg ? ` after adding ${pkg} to your preamble` : "; it needs no extra package"}. For example, ${isText ? sym.command : `$${exampleTex ?? sym.command}$`}.`,
     },
     {
       q: `Which package provides ${sym.command}?`,
       a: pkg
-        ? `It comes from the ${sym.package} package — add ${pkg} to your preamble.`
-        : `None — ${sym.command} is built into LaTeX's math mode, so no extra package is required.`,
+        ? `It comes from the ${sym.package} package: add ${pkg} to your preamble.`
+        : `None: ${sym.command} is built into LaTeX, so no extra package is required.`,
     },
+    ...(note?.pitfall ? [{ q: `What is the most common mistake with ${sym.name} in LaTeX?`, a: note.pitfall }] : []),
   ];
   const faqSchema = {
     "@context": "https://schema.org",
@@ -153,7 +173,7 @@ export default async function SymbolPage({ params }: Props) {
           </h1>
           <p style={{ ...para, marginBottom: "1.75rem" }}>
             The LaTeX command for {sym.name}{isGlyph ? ` (${sym.unicode})` : ""} is <code style={codeStyle}>{sym.command}</code>
-            {sym.description ? ` — ${sym.description}.` : "."}
+            {sym.description ? ` (${sym.description}).` : "."}
           </p>
 
           {/* Hero card: rendered glyph + command + copy */}
@@ -178,12 +198,54 @@ export default async function SymbolPage({ params }: Props) {
             </div>
           </div>
 
+          {/* Curated, compile-verified alternatives for the most-searched symbols */}
+          {note && (
+            <>
+              <h2 style={h2}>Which command should you use?</h2>
+              <figure style={{ margin: "0 0 1rem" }}>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="note-table">
+                    <thead>
+                      <tr><th scope="col">Command</th><th scope="col">Package</th><th scope="col">Use it when</th></tr>
+                    </thead>
+                    <tbody>
+                      {note.variants.map((v, i) => (
+                        <tr key={v.code}>
+                          <td>
+                            <code style={codeStyle}>{v.code}</code>{" "}
+                            <CopyButton text={v.code} label="Copy" />
+                            {i === 0 && <span className="note-reco">recommended</span>}
+                          </td>
+                          <td>{v.pkg ? <code style={codeStyle}>{v.pkg}</code> : "none"}{v.preamble ? " (preamble)" : ""}</td>
+                          <td>{v.use}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <figcaption className="note-caption">
+                  Table 1. Ways to write {sym.name} in LaTeX. Every line was compiled with pdfLaTeX
+                  (TeX Live 2026) loading only the package shown.
+                </figcaption>
+              </figure>
+              {note.pitfall && (
+                <div className="note-pitfall" role="note">
+                  <strong>Common mistake.</strong> {note.pitfall}
+                </div>
+              )}
+            </>
+          )}
+
           {/* Usage */}
           <h2 style={h2}>How to type {name}</h2>
           <p style={para}>
-            Write <code style={codeStyle}>{sym.command}</code> inside math mode — that is, between{" "}
-            <code style={codeStyle}>$…$</code> for inline math or in a <code style={codeStyle}>\[ … \]</code> /{" "}
-            <code style={codeStyle}>equation</code> block for display math.
+            {isText ? (
+              <>Write <code style={codeStyle}>{sym.command}</code> in normal text, outside math mode.</>
+            ) : (
+              <>Write <code style={codeStyle}>{sym.command}</code> inside math mode, that is between{" "}
+                <code style={codeStyle}>$…$</code> for inline math or in a <code style={codeStyle}>\[ … \]</code> or{" "}
+                <code style={codeStyle}>equation</code> block for display math.</>
+            )}
             {pkg ? (
               <> This symbol needs the <code style={codeStyle}>{sym.package}</code> package, so add{" "}
                 <code style={codeStyle}>{pkg}</code> to your preamble.</>
@@ -203,7 +265,7 @@ export default async function SymbolPage({ params }: Props) {
           <p style={para}>
             Prefer to see it live? Paste it into the{" "}
             <Link href="/tools/preview" style={{ color: "var(--accent)" }}>LaTeX preview</Link>{" "}
-            and it renders as you type — no compiler, no signup.
+            and it renders as you type: no compiler, no signup.
           </p>
 
           {/* Related */}
@@ -215,7 +277,7 @@ export default async function SymbolPage({ params }: Props) {
                   <Link
                     key={symbolSlug(r)}
                     href={`/tools/symbols/${symbolSlug(r)}`}
-                    title={`${titleCase(r.name)} — ${r.command}`}
+                    title={`${titleCase(r.name)}: ${r.command}`}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "0.4rem",
                       padding: "0.35rem 0.7rem", borderRadius: 7,
