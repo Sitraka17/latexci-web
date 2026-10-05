@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback, useRef } from "react";
 import { cleanBibTeX } from "@/lib/bibtex";
+import { normalizeDoi } from "@/lib/bib-escape";
 
 export type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
 
@@ -252,7 +253,8 @@ function DoiTab() {
   const [loading, setLoading] = useState(false);
 
   const lookup = async () => {
-    const d = doi.trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, "");
+    // Strip "doi:", https://doi.org/, http://dx.doi.org/ and similar wrappers.
+    const d = normalizeDoi(doi);
     if (!d) return;
     setLoading(true); setError(""); setResult("");
     try {

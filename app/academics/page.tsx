@@ -8,9 +8,9 @@ import { TEMPLATES } from "@/lib/templates";
 import LZString from "lz-string";
 
 export const metadata: Metadata = {
-  title: "LaTeX for PhD Students & Researchers — Thesis Templates, Diff & Tools",
+  title: "LaTeX for PhD Students: Thesis Templates, Diff and Tools",
   description:
-    "Free LaTeX tools built for academic writing: PhD and Master's thesis templates, live preview, advisor diff workflow, Word-to-LaTeX conversion, and a 12-package reference guide. No signup.",
+    "Free LaTeX tools for academic writing: thesis templates, live preview, advisor diff, Word to LaTeX and a 12-package reference guide. No signup.",
   alternates: { canonical: "/academics" },
   keywords: [
     "phd thesis latex template",
@@ -339,7 +339,7 @@ export default function AcademicsPage() {
                 {p.pkg.split(",")[0]}
               </code>
               <span style={{ fontSize: "0.83rem", color: "var(--fg-muted)", lineHeight: 1.5, flex: 1 }}>{p.use}</span>
-              <CopyButton text={`\\usepackage{${p.pkg}}`} label="\\usepackage" />
+              <CopyButton text={`\\usepackage{${p.pkg}}`} label={"\\usepackage"} />
             </div>
           ))}
         </div>

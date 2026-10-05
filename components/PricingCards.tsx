@@ -88,6 +88,11 @@ async function startCheckout(priceId: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ priceId }),
   });
+  if (res.status === 401) {
+    // Pro is tied to a Google account: sign in, then come back to pricing.
+    window.location.href = "/auth?next=/pricing";
+    return;
+  }
   if (!res.ok) throw new Error("Checkout failed");
   const { url } = await res.json();
   window.location.href = url;

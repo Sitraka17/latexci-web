@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { arxivAuthors, bibText, decodeXmlEntities, escapeLatex, safeKeyPart } from "@/lib/bib-escape";
 
 export const runtime = "edge";
 
+/** Raw inner XML of the first <tag>, tags stripped, entities NOT decoded. */
 function xmlText(xml: string, tag: string): string {
   const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
   return m ? m[1].replace(/<[^>]+>/g, "").trim() : "";
-}
-
-function xmlAll(xml: string, tag: string): string[] {
-  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
-  const out: string[] = [];
-  let m;
-  while ((m = re.exec(xml)) !== null) {
-    out.push(m[1].replace(/<[^>]+>/g, "").trim());
-  }
-  return out;
 }
 
 export async function GET(req: NextRequest) {
@@ -60,31 +52,27 @@ export async function GET(req: NextRequest) {
     // which previously leaked into the BibTeX title field.
     const entry = xml.match(/<entry[\s\S]*?<\/entry>/i)?.[0] ?? xml;
 
-    const title  = xmlText(entry, "title").replace(/\s+/g, " ").replace(/\n/g, " ");
+    const rawTitle = decodeXmlEntities(xmlText(entry, "title")).replace(/\s+/g, " ").trim();
     // Defense-in-depth: for bad queries arXiv returns a well-formed feed whose
     // only entry is titled "Error" — treat that as not-found, never as a paper.
-    if (title === "Error") {
+    if (rawTitle === "Error") {
       return NextResponse.json({ error: "arXiv paper not found. Check the ID (e.g. 2301.07041)" }, { status: 404 });
     }
     const year   = (xmlText(entry, "published").match(/^(\d{4})/) ?? [])[1] ?? "";
     const month  = (xmlText(entry, "published").match(/^\d{4}-(\d{2})/) ?? [])[1] ?? "";
-    const abstract = xmlText(entry, "summary").replace(/\s+/g, " ");
+    // arXiv titles and abstracts are author-written TeX: keep balanced $...$
+    // math, escape the rest. The abstract is kept whole (a fixed-length cut
+    // could split a brace group or a math span and break the entry).
+    const title    = bibText(rawTitle, { keepMath: true });
+    const abstract = bibText(xmlText(entry, "summary"), { keepMath: true });
     // arXiv namespaces the DOI as <arxiv:doi> — try both spellings.
-    const doi    = xmlText(entry, "arxiv:doi") || xmlText(entry, "doi") || "";
+    const doi    = decodeXmlEntities(xmlText(entry, "arxiv:doi") || xmlText(entry, "doi") || "");
 
-    const authors = xmlAll(entry, "author")
-      .map(a => {
-        // Each <author> contains <name>...</name>
-        const name = a.match(/<name>([^<]+)<\/name>/)?.[1]?.trim()
-                  ?? a.replace(/<[^>]+>/g, "").trim();
-        return name;
-      })
-      .filter(Boolean)
-      .join(" and ");
+    const authorNames = arxivAuthors(entry);
+    const authors = authorNames.map(n => escapeLatex(n)).join(" and ");
 
     const citeKey = (() => {
-      const firstAuthorLast = (authors.split(" and ")[0] ?? "").split(",")[0].trim()
-        .split(" ").pop() ?? "Unknown";
+      const firstAuthorLast = safeKeyPart(authorNames[0]?.split(" ").pop() ?? "") || "Unknown";
       return `${firstAuthorLast}${year}_${id.replace(/[./]/g, "_")}`;
     })();
 
@@ -97,14 +85,14 @@ export async function GET(req: NextRequest) {
       `  author       = {${authors}}`,
       `  title        = {${title}}`,
       `  year         = {${year}}`,
-      month ? `  month        = {${monthNames[month] ?? month}}` : "",
+      month ? `  month        = ${monthNames[month] ?? month}` : "", // bare macro
       `  journal      = {arXiv preprint}`,
       `  howpublished = {\\url{https://arxiv.org/abs/${id}}}`,
       `  eprint       = {${id}}`,
       `  archivePrefix= {arXiv}`,
       doi ? `  doi          = {${doi}}` : "",
       `  note         = {arXiv:${id}}`,
-      abstract ? `  abstract     = {${abstract.slice(0, 400)}${abstract.length > 400 ? "..." : ""}}` : "",
+      abstract ? `  abstract     = {${abstract}}` : "",
     ].filter(Boolean);
 
     const bibtex = `@article{${citeKey},\n${lines.join(",\n")}\n}`;

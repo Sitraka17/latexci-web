@@ -153,7 +153,8 @@ export default function CvBuilder() {
     a.href = URL.createObjectURL(blob);
     a.download = "cv.tex";
     a.click();
-    URL.revokeObjectURL(a.href);
+    // Revoking synchronously can cancel the download in Safari and Firefox.
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
   async function openInEditor() {

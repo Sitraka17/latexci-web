@@ -6,14 +6,18 @@ type Align = "l" | "c" | "r";
 const DEFAULT_ROWS = 4;
 const DEFAULT_COLS = 3;
 
-function escapeLatex(text: string): string {
-  return text
-    .replace(/\\/g, "\\textbackslash{}")
-    .replace(/\{/g, "\\{").replace(/\}/g, "\\}")
-    .replace(/\$/g, "\\$").replace(/&/g, "\\&")
-    .replace(/%/g, "\\%").replace(/#/g, "\\#")
-    .replace(/\^/g, "\\textasciicircum{}")
-    .replace(/_/g, "\\_").replace(/~/g, "\\textasciitilde{}");
+// Single pass: escaping in sequence would re-escape the braces of an earlier
+// replacement (\ -> \textbackslash{} -> \textbackslash\{\}).
+const LATEX_ESCAPES: Record<string, string> = {
+  "\\": "\\textbackslash{}",
+  "&": "\\&", "%": "\\%", "$": "\\$", "#": "\\#", "_": "\\_",
+  "{": "\\{", "}": "\\}",
+  "~": "\\textasciitilde{}",
+  "^": "\\textasciicircum{}",
+};
+
+export function escapeLatex(text: string): string {
+  return text.replace(/[\\&%$#_{}~^]/g, (ch) => LATEX_ESCAPES[ch]);
 }
 
 function makeGrid(rows: number, cols: number, old?: string[][]): string[][] {
@@ -167,15 +171,21 @@ export default function TableGenerator() {
 
   // ── CSV / Excel paste handler ───────────────────────────────────────────
   // Accepts tab-separated (Excel copy) or comma-separated pasted text.
-  // Automatically resizes the grid to fit the pasted data.
+  // Automatically resizes the grid to fit the pasted data. Only multi-cell
+  // pastes (a tab or a newline) are intercepted: a plain value such as
+  // "Smith, J." pasted into one cell keeps the browser's default behaviour.
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData("text");
-    if (!text.includes("\t") && !text.includes("\n") && !text.includes(",")) return;
+    if (!text.includes("\t") && !text.includes("\n")) return;
     e.preventDefault();
 
-    // Split rows by newline, then cells by tab (Excel) or comma (CSV)
-    const pasted = text.trim().split(/\r?\n/).map(row => {
-      if (row.includes("\t")) return row.split("\t");
+    // Split rows by newline, then cells by tab (Excel) or comma (CSV). Only the
+    // trailing newline is dropped: trim() would also eat leading empty cells.
+    // The delimiter is chosen once per paste so a TSV row holding "Smith, J."
+    // is not split on its comma.
+    const isTsv = text.includes("\t");
+    const pasted = text.replace(/(\r?\n)+$/, "").split(/\r?\n/).map(row => {
+      if (isTsv) return row.split("\t");
       // Naive CSV: handle quoted fields
       const cells: string[] = [];
       let cur = "", inQ = false;

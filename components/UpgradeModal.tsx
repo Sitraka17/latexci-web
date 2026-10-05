@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export type UpgradeFeature = "pdf_export" | "word_conversion";
 
@@ -32,6 +33,7 @@ const FEATURE_COPY: Record<UpgradeFeature, { icon: string; title: string; free: 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export default function UpgradeModal({ feature, reason = "upgrade_required", used, limit, onClose }: Props) {
+  const pathname = usePathname() ?? "/";
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef  = useRef<HTMLDivElement>(null);
   const copy = FEATURE_COPY[feature];
@@ -182,7 +184,7 @@ export default function UpgradeModal({ feature, reason = "upgrade_required", use
           {needsSignIn ? (
             <>
               <Link
-                href="/auth"
+                href={`/auth?next=${encodeURIComponent(pathname)}`}
                 onClick={onClose}
                 style={{
                   display: "block", textAlign: "center",
@@ -223,7 +225,7 @@ export default function UpgradeModal({ feature, reason = "upgrade_required", use
                 Upgrade to Pro — $49 / year →
               </Link>
               <Link
-                href="/auth"
+                href={`/auth?next=${encodeURIComponent(pathname)}`}
                 onClick={onClose}
                 style={{
                   display: "block", textAlign: "center",

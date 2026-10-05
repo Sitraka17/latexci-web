@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
-import type { createClient as CreateSupabaseClient } from "@/lib/supabase/client";
+import { createDoc, getDoc, updateDoc } from "@/lib/local-docs";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import UpgradeModal from "@/components/UpgradeModal";
 
@@ -108,13 +108,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [extensions, setExtensions]   = useState<unknown[]>([]);
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pdfStatus, setPdfStatus]     = useState<"idle" | "compiling" | "error">("idle");
-  const [userId, setUserId]           = useState<string | null>(null);
-  const [userEmail, setUserEmail]     = useState<string | null>(null);
   const [docTitle, setDocTitle]       = useState("Untitled");
-  // Role on the open cloud doc: owner | collaborator with edit | view-only
-  const [docRole, setDocRole]         = useState<"owner" | "edit" | "view" | null>(null);
   const [loadError, setLoadError]     = useState(false);
-  const [cloudSaving, setCloudSaving] = useState(false);
   const [isLight, setIsLight]         = useState(false);
   const [splitPct, setSplitPct]       = useState(50); // editor width %
   const [upgradeModal, setUpgradeModal] = useState<{
@@ -140,24 +135,12 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const editorRef     = useRef<ReactCodeMirrorRef>(null);
   const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Only true after a cloud document has been read successfully. Autosave is
+  // Only true after a saved document has been read successfully. Autosave is
   // gated on this so a FAILED load never lets autosave overwrite the real
   // (unread) document with the sample/placeholder content.
   const docLoadedOk   = useRef(false);
   const splitRef      = useRef<HTMLDivElement>(null);
   const isDragging    = useRef(false);
-  // supabase-js (~55 KB) is only downloaded for signed-in users: every cloud
-  // feature below is gated on userId, which is only ever set after this lazy
-  // client confirms a session. Anonymous visitors never fetch it.
-  const supabaseRef   = useRef<ReturnType<typeof CreateSupabaseClient> | null>(null);
-  const getSupabase   = useCallback(async () => {
-    if (!supabaseRef.current) {
-      const { createClient } = await import("@/lib/supabase/client");
-      supabaseRef.current = createClient();
-    }
-    return supabaseRef.current;
-  }, []);
-
   // Track theme (dark/light toggle)
   useEffect(() => {
     const check = () => setIsLight(document.documentElement.classList.contains("light"));
@@ -208,18 +191,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       window.removeEventListener("mouseup", onMouseUp);
     };
   }, [isMobile]);
-
-  // Get logged-in user
-  useEffect(() => {
-    // No "sb-*" session cookie means nobody is signed in: skip supabase-js entirely.
-    if (!document.cookie.split("; ").some((c) => c.startsWith("sb-"))) return;
-    getSupabase().then((supabase) =>
-      supabase.auth.getUser().then(({ data }) => {
-        setUserId(data.user?.id ?? null);
-        setUserEmail(data.user?.email ?? null);
-      }),
-    );
-  }, [getSupabase]);
 
   // Load CodeMirror extensions — theme + LaTeX keybindings. Re-runs on dark/light toggle.
   useEffect(() => {
@@ -359,51 +330,23 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     })();
   }, [isLight]); // re-run whenever dark⇄light toggles
 
-  // Load document: priority = docId (cloud) > URL hash > localStorage
+  // Load document: priority = docId (saved in this browser) > URL hash > scratch
   useEffect(() => {
     if (initialValue) return;
 
     // docId comes from useSearchParams, so switching ?doc=A→B updates it WITHOUT
-    // remounting — reset the load guards for the new doc so a stale docLoadedOk
-    // can't let autosave write the previous doc's content onto this one.
+    // remounting: reset the guard before loading, or autosave could write the
+    // previous doc's content onto the newly selected one.
     docLoadedOk.current = false;
-    // Deliberately synchronous: the guard must be cleared BEFORE the async load
-    // below starts, or a stale docLoadedOk could let autosave write the previous
-    // doc's content onto the newly selected one (F2 audit fix).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadError(false);
 
-    if (docId && userId) {
-      // No user_id filter: RLS lets owners AND invited collaborators read.
-      (async () => {
-        const supabase = await getSupabase();
-        const { data, error } = await supabase
-          .from("documents")
-          .select("title, content, user_id")
-          .eq("id", docId)
-          .single();
-        // A failed/blocked read must NOT fall through to editing the sample and
-        // then autosaving over the real document. Surface the error and leave
-        // autosave disabled (docLoadedOk stays false).
-        if (error || !data) {
-          setLoadError(true);
-          return;
-        }
-        setSource(data.content || SAMPLE);
-        setDocTitle(data.title || "Untitled");
-        if (data.user_id === userId) {
-          setDocRole("owner");
-        } else {
-          // RLS limits this to the signed-in user's own invite row.
-          const { data: invite } = await supabase
-            .from("document_collaborators")
-            .select("permission")
-            .eq("document_id", docId)
-            .maybeSingle();
-          setDocRole(invite?.permission === "edit" ? "edit" : "view");
-        }
-        docLoadedOk.current = true;
-      })();
+    if (docId) {
+      const doc = getDoc(docId);
+      if (!doc) { setLoadError(true); return; }
+      setSource(doc.content);
+      setDocTitle(doc.title);
+      docLoadedOk.current = true;
       return;
     }
 
@@ -412,37 +355,29 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       const dec = LZString.decompressFromEncodedURIComponent(hash.slice(2));
       if (dec) { setSource(dec); return; }
     }
-    const saved = localStorage.getItem(STORAGE_KEY);
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* storage blocked */ }
     if (saved) setSource(saved);
-  }, [initialValue, docId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialValue, docId]);
 
-  // Persist scratch work to localStorage — but never overwrite it with a
-  // cloud doc's content (opening a shared paper must not clobber drafts).
+  // Persist scratch work, but never overwrite it with a saved document's
+  // content (opening a saved paper must not clobber the scratch draft).
   useEffect(() => {
-    if (!docId) localStorage.setItem(STORAGE_KEY, source);
+    if (docId) return;
+    try { localStorage.setItem(STORAGE_KEY, source); } catch { /* storage blocked */ }
   }, [source, docId]);
 
-  // Autosave to Supabase (debounced 2 s) — owners and edit-collaborators.
-  // RLS enforces permissions server-side; .select() confirms a row was
-  // actually written so a blocked save shows "Save failed", not "Saved".
+  // Autosave the open document (debounced 800 ms).
   useEffect(() => {
-    if (!userId || !docId || docRole === "view" || docRole === null) return;
-    // Never autosave a cloud doc we failed to load — would clobber it.
-    if (!docLoadedOk.current) return;
+    if (!docId || !docLoadedOk.current) return;
     if (saveRef.current) clearTimeout(saveRef.current);
-    setSaveStatus("saving");
-    saveRef.current = setTimeout(async () => {
-      const supabase = await getSupabase();
-      const { data, error } = await supabase
-        .from("documents")
-        .update({ content: source, updated_at: new Date().toISOString() })
-        .eq("id", docId)
-        .select("id");
-      setSaveStatus(error || !data?.length ? "error" : "saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
-    }, 2000);
+    saveRef.current = setTimeout(() => {
+      const ok = updateDoc(docId, { content: source });
+      setSaveStatus(ok ? "saved" : "error");
+      setTimeout(() => setSaveStatus("idle"), 1500);
+    }, 800);
     return () => { if (saveRef.current) clearTimeout(saveRef.current); };
-  }, [source, userId, docId, docRole]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [source, docId]);
 
   // Line count is pure derivation from source — no state/effect needed.
   const lineCount = useMemo(() => source.split("\n").length, [source]);
@@ -496,39 +431,19 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     })();
   }, [html]);
 
-  // Save the current scratch document to the user's cloud space, then
-  // switch the URL to ?doc=<id> so autosave takes over.
-  const saveToCloud = useCallback(async () => {
-    if (!userId || cloudSaving) return;
-    // If the current cloud doc failed to load, don't "save" — that would insert a
-    // NEW document full of the sample/placeholder text (the message says editing
-    // is disabled precisely to avoid this).
+  // Save the scratch document to "My documents" (this browser), then switch
+  // the URL to ?doc=<id> so autosave takes over.
+  const saveDoc = useCallback(() => {
     if (loadError) return;
-    setCloudSaving(true);
-    const titleMatch = source.match(/\\title\{([^}]*)\}/);
-    const title = titleMatch?.[1]?.trim() || "Untitled";
-    // Ensure the profiles row exists (documents.user_id FK → profiles.id);
-    // best-effort, the insert below surfaces the real error if anything fails.
-    const supabase = await getSupabase();
-    await supabase
-      .from("profiles")
-      .upsert({ id: userId, email: userEmail ?? "" }, { onConflict: "id", ignoreDuplicates: true });
-    const { data, error } = await supabase
-      .from("documents")
-      .insert({ user_id: userId, title, content: source })
-      .select("id")
-      .single();
-    setCloudSaving(false);
-    if (error || !data) {
-      console.error("saveToCloud failed:", error);
+    const doc = createDoc(source);
+    if (!doc) {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
       return;
     }
-    setDocTitle(title);
-    setDocRole("owner");
-    router.replace(`/tools/preview?doc=${data.id}`);
-  }, [userId, userEmail, cloudSaving, source, getSupabase, router, loadError]);
+    setDocTitle(doc.title);
+    router.replace(`/tools/preview?doc=${doc.id}`);
+  }, [source, router, loadError]);
 
   const copyHtml = useCallback(async () => {
     try {
@@ -824,10 +739,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               {clearPending ? "Sure?" : "Clear"}
             </Btn>
             <div style={{ flex: 1 }} />
-            {!docId && userId && (
-              <Btn onClick={saveToCloud} title="Save to your documents (cloud)">
-                {cloudSaving ? "…" : "☁"}
-              </Btn>
+            {!docId && (
+              <Btn onClick={saveDoc} title="Save to My documents (kept in this browser)">Save</Btn>
             )}
             <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
               {shared ? "✓" : "🔗"}
@@ -874,7 +787,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               fontSize: "0.68rem", color: "#ef4444", fontWeight: 600,
               padding: "0.1rem 0.4rem",
             }}>
-              ⚠ Couldn&apos;t load this document — editing is disabled to avoid overwriting it. Reload to retry.
+              This document is not saved in this browser. Open it from the device where you saved it, or use My documents.
             </span>
           )}
           {/* Autosave status */}
@@ -887,16 +800,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "✓ Saved" : "Save failed"}
             </span>
           )}
-          {/* View-only badge for collaborators without edit permission */}
-          {docId && docRole === "view" && (
-            <span style={{
-              fontSize: "0.66rem", fontWeight: 600, color: "var(--fg-muted)",
-              background: "var(--surface2)", border: "1px solid var(--border)",
-              padding: "0.12rem 0.5rem", borderRadius: 99,
-            }}>
-              View only
-            </span>
-          )}
           <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
           <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
           <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>
@@ -904,16 +807,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             {clearPending ? "Sure?" : "Clear"}
           </Btn>
           <div style={{ flex: 1 }} />
-          {/* Save to cloud — signed-in users on scratch docs */}
-          {!docId && userId && (
-            <Btn onClick={saveToCloud} title="Save to your documents (cloud)">
-              {cloudSaving ? "Saving…" : "☁ Save"}
-            </Btn>
-          )}
-          {!docId && !userId && (
-            <Btn onClick={() => { window.location.href = "/auth?next=/tools/preview"; }} title="Sign in to save this paper to your cloud space">
-              ☁ Sign in to save
-            </Btn>
+          {!docId && (
+            <Btn onClick={saveDoc} title="Save to My documents (kept in this browser)">Save</Btn>
           )}
           <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
             {shared ? "✓ Copied!" : "🔗 Share"}

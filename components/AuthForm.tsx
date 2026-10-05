@@ -1,256 +1,75 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-type Mode = "magic" | "password";
-type Stage = "input" | "sent";
+const ERRORS: Record<string, string> = {
+  cancelled: "Sign-in was cancelled.",
+  state: "The sign-in link expired. Please try again.",
+  exchange: "Google could not confirm the sign-in. Please try again.",
+  token: "Google returned an invalid sign-in. Please try again.",
+  email: "Your Google account has no verified email address.",
+  unavailable: "Sign-in is not available right now. Every free tool still works without an account.",
+};
 
-export default function AuthForm() {
-  const [mode, setMode] = useState<Mode>("magic");
-  const [stage, setStage] = useState<Stage>("input");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
+
+export default function AuthForm({ configured }: { configured: boolean }) {
   const [error, setError] = useState<string | null>(null);
-
-  // Show error from URL param (e.g. after failed OAuth callback)
   const [nextPath, setNextPath] = useState("/dashboard");
+
   useEffect(() => {
-    // Post-hydration is the earliest the query string exists client-side (the
-    // server can't render request-specific ?error/?next into this static page),
-    // so this one-time sync from the URL is deliberately a setState-in-effect.
+    // The page is static, so ?error / ?next can only be read after hydration.
     const p = new URLSearchParams(window.location.search);
+    const e = p.get("error");
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (p.get("error")) setError("Authentication failed. Please try again.");
-    // Forward ?next= so sign-in returns the user to where they started
-    // (the callback route validates it is a safe same-origin path).
+    if (e) setError(ERRORS[e] ?? "Sign-in failed. Please try again.");
     const n = p.get("next");
-    if (n) setNextPath(n);
+    if (n && n.startsWith("/") && !n.startsWith("//")) setNextPath(n);
   }, []);
 
-  const supabase = useMemo(() => createClient(), []);
-  const callbackUrl = () =>
-    `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-  async function handleMagicLink() {
-    setLoading(true);
-    setError(null);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: callbackUrl(),
-      },
-    });
-    if (error) { setError(error.message); setLoading(false); return; }
-    setStage("sent");
-    setLoading(false);
-  }
-
-  async function handlePassword() {
-    setLoading(true);
-    setError(null);
-    const fn = isSignUp
-      ? supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } })
-      : supabase.auth.signInWithPassword({ email, password });
-    const { error } = await fn;
-    if (error) { setError(error.message); setLoading(false); return; }
-    if (isSignUp) { setStage("sent"); setLoading(false); return; }
-    window.location.href = nextPath;
-  }
-
-  async function handleGitHub() {
-    setLoading(true);
-    setError(null);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "github",
-        options: { redirectTo: callbackUrl() },
-      });
-      if (error) { setError(error.message); setLoading(false); }
-      // On success the browser redirects — leave loading=true
-    } catch {
-      setError("Failed to connect to GitHub. Please try again.");
-      setLoading(false);
-    }
-  }
-
-  async function handleGoogle() {
-    setLoading(true);
-    setError(null);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: callbackUrl() },
-      });
-      if (error) { setError(error.message); setLoading(false); }
-    } catch {
-      setError("Failed to connect to Google. Please try again.");
-      setLoading(false);
-    }
-  }
-
-  if (stage === "sent") {
-    return (
-      <div style={{ maxWidth: 420, width: "100%", textAlign: "center" }}>
-        <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
-        <h1 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: "0.5rem" }}>Check your inbox</h1>
-        <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", lineHeight: 1.65 }}>
-          We sent a magic link to <strong>{email}</strong>. Click it to sign in — no password needed.
-        </p>
-      </div>
-    );
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "0.65rem 0.85rem",
-    borderRadius: 8,
-    border: "1px solid var(--border)",
-    background: "var(--surface)",
-    color: "var(--fg)",
-    fontSize: "0.9rem",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-
-  const btnPrimary: React.CSSProperties = {
-    width: "100%",
-    padding: "0.7rem",
-    borderRadius: 8,
-    border: "none",
-    background: "var(--accent)",
-    color: "#fff",
-    fontWeight: 700,
-    fontSize: "0.9rem",
-    cursor: loading ? "wait" : "pointer",
-    opacity: loading ? 0.7 : 1,
-  };
-
-  const btnSecondary: React.CSSProperties = {
-    width: "100%",
-    padding: "0.65rem",
-    borderRadius: 8,
-    border: "1px solid var(--border)",
-    background: "var(--surface)",
-    color: "var(--fg)",
-    fontWeight: 600,
-    fontSize: "0.85rem",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "0.5rem",
-  };
-
   return (
-    <div style={{ maxWidth: 420, width: "100%" }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.6rem", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: "0.4rem" }}>
-          {isSignUp ? "Create an account" : "Welcome back"}
-        </h1>
-        <p style={{ color: "var(--fg-muted)", fontSize: "0.85rem" }}>
-          {isSignUp ? "Save and sync your LaTeX documents for free." : "Sign in to access your documents."}
-        </p>
-      </div>
+    <div style={{ maxWidth: 420, width: "100%", border: "1px solid var(--border)", background: "var(--surface)", padding: "2rem 1.75rem" }}>
+      <h1 style={{ fontSize: "1.45rem", fontWeight: 800, margin: "0 0 0.5rem" }}>Sign in to latexci</h1>
+      <p style={{ color: "var(--fg-muted)", fontSize: "0.88rem", lineHeight: 1.65, margin: "0 0 1.5rem" }}>
+        Sign in to use Pro features (PDF export, unlimited Word conversions) and manage your plan. Every
+        other tool works without an account.
+      </p>
 
-      {/* OAuth buttons */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.5rem" }}>
-        <button style={btnSecondary} onClick={handleGitHub} disabled={loading}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-          Continue with GitHub
-        </button>
-        <button style={btnSecondary} onClick={handleGoogle} disabled={loading}>
-          <svg width="16" height="16" viewBox="0 0 48 48" fill="none">
-            <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z" fill="#FFC107"/>
-            <path d="M6.3 14.7l7 5.1C15.1 16.1 19.3 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 16.3 2 9.7 7.4 6.3 14.7z" fill="#FF3D00"/>
-            <path d="M24 46c5.5 0 10.5-1.9 14.3-5.1l-6.6-5.6C29.7 36.9 27 38 24 38c-6.1 0-11.2-4.1-13-9.6l-7 5.4C7.5 41.6 15.2 46 24 46z" fill="#4CAF50"/>
-            <path d="M44.5 20H24v8.5h11.8c-.8 2.5-2.5 4.5-4.7 5.9l6.6 5.6c3.8-3.6 6.3-9 6.3-16 0-1.3-.2-2.7-.5-4z" fill="#1976D2"/>
-          </svg>
-          Continue with Google
-        </button>
-      </div>
+      {error && (
+        <p role="alert" style={{ fontSize: "0.84rem", color: "#ef4444", margin: "0 0 1rem" }}>{error}</p>
+      )}
 
-      {/* Divider */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-        <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-        <span style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>or email</span>
-        <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-      </div>
-
-      {/* Mode toggle */}
-      <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 8, border: "1px solid var(--border)", marginBottom: "1.25rem", overflow: "hidden" }}>
-        {(["magic", "password"] as Mode[]).map(m => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            style={{
-              flex: 1, padding: "0.5rem", border: "none", cursor: "pointer",
-              fontSize: "0.8rem", fontWeight: 600,
-              background: mode === m ? "var(--accent)" : "transparent",
-              color: mode === m ? "#fff" : "var(--fg-muted)",
-            }}
-          >
-            {m === "magic" ? "✨ Magic link" : "🔑 Password"}
-          </button>
-        ))}
-      </div>
-
-      {/* Form */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-        <input
-          type="email"
-          aria-label="Email address"
-          placeholder="you@university.edu"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") { if (mode === "magic") handleMagicLink(); else handlePassword(); } }}
-          style={inputStyle}
-          autoComplete="email"
-        />
-
-        {mode === "password" && (
-          <input
-            type="password"
-            aria-label="Password"
-            placeholder={isSignUp ? "Create a password" : "Password"}
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") handlePassword(); }}
-            style={inputStyle}
-            autoComplete={isSignUp ? "new-password" : "current-password"}
-          />
-        )}
-
-        {error && (
-          <p role="alert" style={{ fontSize: "0.8rem", color: "#ef4444", margin: 0 }}>{error}</p>
-        )}
-
-        <button
-          style={btnPrimary}
-          onClick={mode === "magic" ? handleMagicLink : handlePassword}
-          disabled={loading || !email}
+      {configured ? (
+        <a
+          href={`/api/auth/google?next=${encodeURIComponent(nextPath)}`}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.7rem",
+            width: "100%", boxSizing: "border-box", padding: "0.7rem 1rem",
+            border: "1px solid #dadce0", borderRadius: 4, background: "#fff", color: "#1f1f1f",
+            fontWeight: 600, fontSize: "0.92rem", textDecoration: "none",
+          }}
         >
-          {loading ? "Please wait…" : mode === "magic" ? "Send magic link" : isSignUp ? "Create account" : "Sign in"}
-        </button>
+          <GoogleMark />
+          Sign in with Google
+        </a>
+      ) : (
+        <p style={{ fontSize: "0.86rem", lineHeight: 1.6, margin: 0, padding: "0.75rem 0.9rem", border: "1px solid var(--border)", background: "var(--surface2)" }}>
+          Sign-in is being set up. In the meantime every tool is open to everyone, including PDF export.
+        </p>
+      )}
 
-        {mode === "password" && (
-          <button
-            onClick={() => setIsSignUp(s => !s)}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.82rem", color: "var(--fg-muted)", padding: 0 }}
-          >
-            {isSignUp ? "Already have an account? Sign in" : "No account? Create one free"}
-          </button>
-        )}
-      </div>
-
-      <p style={{ marginTop: "1.5rem", fontSize: "0.72rem", color: "var(--fg-muted)", textAlign: "center", lineHeight: 1.6 }}>
-        By continuing you agree to our{" "}
-        <a href="/terms" style={{ color: "var(--accent)" }}>Terms</a> and{" "}
-        <a href="/privacy" style={{ color: "var(--accent)" }}>Privacy Policy</a>.
+      <p style={{ color: "var(--fg-muted)", fontSize: "0.78rem", lineHeight: 1.6, margin: "1.5rem 0 0" }}>
+        We only receive your name and email from Google. Your documents stay in your browser. See the{" "}
+        <Link href="/privacy" style={{ color: "var(--accent)" }}>privacy policy</Link>.
       </p>
     </div>
   );

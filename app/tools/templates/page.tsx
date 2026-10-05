@@ -7,7 +7,7 @@ import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { TEMPLATES } from "@/lib/templates";
 
 export const metadata: Metadata = {
-  title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis & More",
+  title: "Free LaTeX Templates: NeurIPS, ICML, CV, PhD Thesis",
   description:
     "28 free LaTeX templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer, and more. Open any template instantly in the browser. No download, no signup.",
   keywords: [

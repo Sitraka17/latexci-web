@@ -1,16 +1,12 @@
-import Stripe from "stripe";
 import { NextRequest } from "next/server";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { getSession, isAuthConfigured } from "@/lib/session";
+import { getStripe as stripeClient } from "@/lib/entitlement";
 import { rateLimit } from "@/lib/rate-limit";
 
-// Lazy getter — only instantiated at request time, never at build time
 function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY is not configured");
-  }
-  return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2026-05-27.dahlia",
-  });
+  const s = stripeClient();
+  if (!s) throw new Error("STRIPE_SECRET_KEY is not configured");
+  return s;
 }
 
 function getBaseUrl() {
@@ -35,18 +31,17 @@ export async function POST(req: NextRequest) {
 
     // Require authentication — prevents anonymous bots from spamming Stripe
     // sessions, and (critically) lets us bind the session to the real user so
-    // the webhook grants entitlement by trusted user id rather than by the
-    // payer-typed billing email.
+    // lib/entitlement.ts finds the subscription by the trusted Google id
+    // rather than by the payer-typed billing email.
     let userId: string | undefined;
     let userEmail: string | undefined;
-    if (isSupabaseConfigured) {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    if (isAuthConfigured) {
+      const session = await getSession();
+      if (!session) {
         return Response.json({ error: "Authentication required" }, { status: 401 });
       }
-      userId = user.id;
-      userEmail = user.email;
+      userId = session.sub;
+      userEmail = session.email;
     }
 
     const stripe = getStripe();
@@ -70,14 +65,13 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "auto",
       // Automatically collect tax via Stripe Tax (enable in dashboard)
       automatic_tax: { enabled: false },
-      // Bind the session + resulting subscription to the authenticated user so
-      // the webhook can resolve the profile by trusted id, not payer email.
+      // Bind the subscription to the signed-in Google account (see lib/entitlement.ts).
       ...(userId
         ? {
             client_reference_id: userId,
             customer_email: userEmail,
-            metadata: { supabase_user_id: userId },
-            subscription_data: { metadata: { supabase_user_id: userId } },
+            metadata: { google_sub: userId },
+            subscription_data: { metadata: { google_sub: userId } },
           }
         : {}),
     });

@@ -96,7 +96,8 @@ function typesettable(ch: string): boolean {
  */
 export function tex(s: string): string {
   let out = "";
-  for (const ch of s.trim()) out += SPECIALS[ch] ?? MAPPED[ch] ?? (typesettable(ch) ? ch : "?");
+  // NFC first: macOS pastes "é" as e + combining accent, which would become "e?".
+  for (const ch of s.normalize("NFC").trim()) out += SPECIALS[ch] ?? MAPPED[ch] ?? (typesettable(ch) ? ch : "?");
   return out;
 }
 

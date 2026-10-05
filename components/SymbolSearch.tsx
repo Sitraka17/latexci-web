@@ -51,18 +51,27 @@ function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cm
   );
 
   function copy() {
-    navigator.clipboard.writeText(sym.command).catch(() => {});
-    setCopied(true);
-    onCopy(sym.command);
-    setTimeout(() => setCopied(false), 1500);
+    // Only confirm once the clipboard write actually succeeded (it rejects on
+    // insecure origins or when permission is denied).
+    navigator.clipboard?.writeText(sym.command).then(() => {
+      setCopied(true);
+      onCopy(sym.command);
+      setTimeout(() => setCopied(false), 1500);
+    }).catch(() => {});
   }
 
   return (
     <button
       onClick={copy}
       title={`Copy: ${sym.command}${sym.description ? ` — ${sym.description}` : ""}`}
+      // No `all: "unset"`: as an inline style it would also reset `outline`
+      // and beat the global :focus-visible ring. Reset only what a button needs.
       style={{
-        all: "unset",
+        appearance: "none",
+        margin: 0,
+        font: "inherit",
+        color: "inherit",
+        textAlign: "inherit",
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",
@@ -356,6 +365,11 @@ export default function SymbolSearch() {
           box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 15%, transparent);
         }
         .symbol-card:active { transform: translateY(0); }
+        .symbol-card:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+          border-color: var(--accent);
+        }
       `}</style>
     </div>
   );

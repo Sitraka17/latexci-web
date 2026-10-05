@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clampDescription } from "@/lib/snippet";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -28,18 +29,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = templateById(slug);
   if (!t) return {};
   const path = `/tools/templates/${slug}`;
+  const title = templateTitle(t.title);
   return {
-    title: `${t.title} — Free LaTeX Template`,
-    description: `${t.desc} Open this ${t.category.toLowerCase()} template in the browser editor — no install, no signup — or copy the full source.`,
+    title,
+    description: clampDescription(`${t.desc} Open it in the browser editor, free and without signup, or copy the full source.`),
     alternates: { canonical: path },
-    openGraph: {
-      title: `${t.title} — Free LaTeX Template`,
-      description: t.desc,
-      url: path,
-      type: "website",
-    },
-    twitter: { card: "summary_large_image", title: `${t.title} — Free LaTeX Template` },
+    openGraph: { title, description: clampDescription(t.desc), url: path, type: "website" },
+    twitter: { card: "summary_large_image", title },
   };
+}
+
+// The layout appends " | latexci" (10 chars); keep the whole title within ~65.
+function templateTitle(name: string): string {
+  for (const t of [`${name}: Free LaTeX Template`, `${name} LaTeX Template`]) if (t.length <= 55) return t;
+  return name;
 }
 
 const wrap: CSSProperties = { maxWidth: 860, margin: "0 auto", padding: "2.5rem 1.5rem 3.5rem" };

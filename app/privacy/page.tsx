@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   },
 };
 
-const YEAR = new Date().getFullYear();
 
 const SECTIONS = [
   {
@@ -26,7 +25,7 @@ const SECTIONS = [
       "**PDF export**: your LaTeX source is sent to YToTech (latex.ytotech.com), a third-party compile service, to generate a PDF. No account information or personal data is transmitted — only the raw LaTeX text.",
       "**Citation lookups (BibTeX tools)**: when you look up a DOI, arXiv ID, PubMed ID, or ISBN, that identifier is sent to the corresponding public service (CrossRef with a DataCite fallback for dataset and software DOIs, arXiv, NCBI PubMed, and Open Library respectively) to fetch the citation. NCBI is operated in the United States, so this is an international data transfer under Art. 44 GDPR. Only the identifier you enter is sent — no account data.",
       "**CV generator**: your CV draft stays in your browser (local storage) and is never sent to latexci. If you use the optional ORCID import, only the ORCID iD you enter is sent to ORCID (orcid.org) to list your public works. ORCID is operated in the United States, so this is an international data transfer under Art. 44 GDPR.",
-      "**Account creation (optional)**: if you create an account, we store your email address, a hashed password, and the documents you choose to save. This data is stored in Supabase (EU region).",
+      "**Sign-in (optional)**: you sign in with your Google account. Google tells us your name, your email address and a stable account id; we keep them only in a signed cookie in your browser, not in a database. Documents you save in the editor are stored in your browser (local storage) and never sent to latexci.",
       "**Analytics**: we may collect anonymised page-view counts and referrer data via Vercel Analytics. No cookies are set for this purpose.",
       "**Payments**: if you upgrade to a paid plan, payment details are handled entirely by Stripe. latexci never sees or stores your card number.",
     ],
@@ -34,22 +33,22 @@ const SECTIONS = [
   {
     title: "2. How we use your data",
     body: [
-      "Email address: to authenticate you, send transactional emails (password reset, receipts), and contact you about your account.",
-      "Saved documents: to display them in your dashboard and sync them across your devices.",
+      "Email address and Google account id: to recognise you when you sign in and to look up your subscription at Stripe.",
+      "Saved documents: shown in your dashboard, on the device where you saved them. They are not synchronised between devices.",
       "We do not sell, rent, or share your personal data with third parties for marketing purposes.",
     ],
   },
   {
     title: "3. Cookies",
     body: [
-      "We use a single, essential session cookie for authenticated users. This cookie stores your login state and expires when you sign out.",
+      "We use essential cookies only for signed-in users: a signed session cookie (your name, email and Google account id, valid 30 days or until you sign out), a plain flag telling the page you are signed in, and a counter for free Word conversions.",
       "We do not use advertising cookies, tracking pixels, or third-party analytics cookies.",
     ],
   },
   {
     title: "4. Third-party services",
     body: [
-      "**Supabase** — database and authentication provider. Data is stored in the EU (West region). See supabase.com/privacy.",
+      "**Google** (sign-in only): authenticates you when you click \"Sign in with Google\" and returns your name and email. See policies.google.com/privacy.",
       "**Vercel** — hosting and edge network. See vercel.com/legal/privacy-policy.",
       "**Stripe** — payment processing. See stripe.com/privacy.",
       "**YToTech (latex.ytotech.com)** — PDF compilation (only when you click the PDF export button). Receives your raw LaTeX source.",
@@ -60,8 +59,8 @@ const SECTIONS = [
   {
     title: "5. Data retention",
     body: [
-      "Your account and saved documents are retained until you delete your account.",
-      "You can delete your account at any time from your dashboard settings. All associated documents are permanently deleted within 30 days.",
+      "latexci stores no account data on its servers. Your session cookie expires after 30 days or when you sign out; saved documents stay in your browser until you delete them.",
+      "\"Delete my data\" in the dashboard removes your documents from the browser and clears the session immediately. Billing records are kept by Stripe for as long as tax law requires.",
     ],
   },
   {
@@ -75,7 +74,7 @@ const SECTIONS = [
     title: "7. Changes to this policy",
     body: [
       "We may update this policy from time to time. Material changes will be communicated via the GitHub repository changelog or by email to registered users.",
-      `This policy was last updated in ${YEAR}.`,
+      "This policy was last updated on 5 October 2026.",
     ],
   },
 ];

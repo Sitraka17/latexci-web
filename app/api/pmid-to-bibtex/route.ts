@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { bibText, pubmedAuthor, safeKeyPart, type PubmedAuthor } from "@/lib/bib-escape";
 
 export const runtime = "edge";
 
@@ -45,8 +46,10 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Extract fields ────────────────────────────────────────────────────────
-    const title   = (article.title as string ?? "").replace(/\.$/, "").trim();
-    const journal = (article.fulljournalname as string ?? article.source ?? "").trim();
+    // PubMed titles may carry inline HTML (<i>in vivo</i>) and entities.
+    const stripTags = (v: string) => v.replace(/<\/?(?:i|b|u|em|strong|sup|sub|scp)>/gi, "");
+    const title   = bibText(stripTags(article.title as string ?? "").trim().replace(/\.$/, ""));
+    const journal = bibText(article.fulljournalname as string ?? article.source ?? "");
     const volume  = (article.volume as string ?? "").trim();
     const issue   = (article.issue as string ?? "").trim();
     const pages   = (article.pages as string ?? "").trim();
@@ -64,35 +67,28 @@ export async function GET(req: NextRequest) {
     const monthKey = pubdate.match(/\b([A-Z][a-z]{2})\b/)?.[1] ?? "";
     const month    = monthMap[monthKey] ?? "";
 
-    // Authors: array of {name: "Doe JA"} objects
-    const authors = ((article.authors as Array<{name: string}>) ?? [])
-      .map(a => {
-        // Convert "Doe JA" → "Doe, JA" (BibTeX author format)
-        const parts = a.name.trim().split(/\s+/);
-        if (parts.length >= 2) {
-          const last = parts[0];
-          const initials = parts.slice(1).join(" ");
-          return `${last}, ${initials}`;
-        }
-        return a.name.trim();
-      })
-      .join(" and ");
+    // Authors: esummary gives {name: "Doe JA", authtype: "Author" | "CollectiveName"}.
+    // The last token is the initials, an optional suffix (Jr, III) follows
+    // it, and group authors must be braced so BibTeX keeps them whole.
+    const parsedAuthors = ((article.authors as PubmedAuthor[]) ?? [])
+      .map(pubmedAuthor)
+      .filter(a => a.bib);
+    const authors = parsedAuthors.map(a => a.bib).join(" and ");
 
     // ── Cite key ──────────────────────────────────────────────────────────────
-    const firstAuthorLast = ((article.authors as Array<{name: string}>)?.[0]?.name ?? "Unknown")
-      .split(/\s+/)[0];
+    const firstAuthorLast = safeKeyPart(parsedAuthors[0]?.family ?? "") || "Unknown";
     const citeKey = `${firstAuthorLast}${year}_pmid${pmid}`;
 
     // ── Build BibTeX ──────────────────────────────────────────────────────────
     const lines: string[] = [
-      `  author   = {${authors}}`,
+      authors ? `  author   = {${authors}}` : "",
       `  title    = {${title}}`,
       `  journal  = {${journal}}`,
       year   ? `  year     = {${year}}`   : "",
-      month  ? `  month    = {${month}}`  : "",
-      volume ? `  volume   = {${volume}}` : "",
-      issue  ? `  number   = {${issue}}`  : "",
-      pages  ? `  pages    = {${pages}}`  : "",
+      month  ? `  month    = ${month}`  : "", // bare macro (jan), not {jan}
+      volume ? `  volume   = {${bibText(volume)}}` : "",
+      issue  ? `  number   = {${bibText(issue)}}`  : "",
+      pages  ? `  pages    = {${bibText(pages)}}`  : "",
       doi    ? `  doi      = {${doi}}`    : "",
       pmcid  ? `  pmcid    = {${pmcid}}`  : "",
       `  note     = {PMID: ${pmid}}`,

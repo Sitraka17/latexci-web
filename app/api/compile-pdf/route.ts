@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { getSession, isAuthConfigured } from "@/lib/session";
+import { getTier, isBillingConfigured, isPaid } from "@/lib/entitlement";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+// Both attempts share one budget: two sequential 25 s timeouts used to exceed
+// the function limit and end in a non-JSON 504.
+export const maxDuration = 60;
 
 /** A valid PDF starts with the "%PDF-" magic bytes (0x25 50 44 46 2D). */
 function isPdf(buf: ArrayBuffer): boolean {
@@ -15,36 +17,11 @@ function isPdf(buf: ArrayBuffer): boolean {
 
 /** Returns true when this user's tier allows PDF export. */
 async function checkPdfAccess(): Promise<{ allowed: boolean; reason?: string }> {
-  // Dev / unconfigured: open access so local development works.
-  if (!isSupabaseConfigured) return { allowed: true };
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { allowed: false, reason: "sign_in_required" };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("subscription_tier, subscription_status")
-    .eq("id", user.id)
-    .single();
-
-  const tier = profile?.subscription_tier ?? "free";
-  const status = profile?.subscription_status;
-
-  // Active paid subscription → allow
-  const paid =
-    (tier === "pro" || tier === "lab" || tier === "institution") &&
-    (status === "active" || status === "trialing");
-
-  if (!paid) {
-    return { allowed: false, reason: "upgrade_required" };
-  }
-
+  // Sign-in or billing not set up: nobody could unlock Pro, so stay open.
+  if (!isAuthConfigured || !isBillingConfigured) return { allowed: true };
+  const session = await getSession();
+  if (!session) return { allowed: false, reason: "sign_in_required" };
+  if (!isPaid(await getTier(session))) return { allowed: false, reason: "upgrade_required" };
   return { allowed: true };
 }
 
@@ -86,6 +63,10 @@ export async function POST(req: NextRequest) {
   let pdf: ArrayBuffer | null = null;
   let lastError = "";
 
+  // Set when the compile service itself failed (timeout, network): retrying
+  // with another engine would only burn the remaining time budget.
+  let upstreamDown = false;
+
   // Primary: pdflatex (25 s timeout — YToTech can be slow on first compile)
   try {
     const r = await fetch("https://latex.ytotech.com/builds/sync", {
@@ -109,13 +90,14 @@ export async function POST(req: NextRequest) {
         txt.slice(0, 300).replace(/<[^>]+>/g, " ").trim() || `HTTP ${r.status}`;
     }
   } catch (err) {
+    upstreamDown = true;
     lastError = err instanceof Error && err.name === "TimeoutError"
       ? "Compilation timed out (>25 s). Try simplifying your document."
       : "Compilation service unreachable. Check your internet connection.";
   }
 
   // Fallback: xelatex (handles Unicode / fontspec)
-  if (!pdf) {
+  if (!pdf && !upstreamDown) {
     try {
       const r = await fetch("https://latex.ytotech.com/builds/sync", {
         method: "POST",
@@ -135,8 +117,8 @@ export async function POST(req: NextRequest) {
 
   if (!pdf) {
     return NextResponse.json(
-      { error: `LaTeX compilation failed: ${lastError}` },
-      { status: 422 }
+      { error: upstreamDown ? lastError : `LaTeX compilation failed: ${lastError}` },
+      { status: upstreamDown ? 502 : 422 }
     );
   }
 

@@ -1,16 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { bibText, normalizeDoi } from "@/lib/bib-escape";
+import { formatEntry, parseBibTeX } from "@/lib/bibtex";
 
 export const runtime = "edge";
 
 /** Basic DOI format check — must start with "10." followed by registrant code. */
 const DOI_RE = /^10\.\d{4,}[\w.()/:;-]*\/\S+$/;
 
+/** Fields that hold identifiers or links: never LaTeX-escaped. */
+const RAW_FIELDS = new Set(["url", "doi", "issn", "isbn", "eprint", "archiveprefix", "file"]);
+
+/**
+ * Registry BibTeX is not TeX-safe: CrossRef emits `journal={Computers &amp;
+ * Security}` (an XML entity, and a raw `&` once decoded), which stops
+ * pdflatex with "Misplaced alignment tab". Decode entities and escape every
+ * text field; identifiers and URLs stay raw, bare macros (month=May) stay bare.
+ */
+function sanitiseRegistryBib(bib: string): string {
+  const entries = parseBibTeX(bib);
+  if (entries.length === 0) return bib;
+  return entries.map(e => {
+    const bare = new Set(e.bare ?? []);
+    for (const [k, v] of Object.entries(e.fields)) {
+      if (bare.has(k) || RAW_FIELDS.has(k)) continue;
+      e.fields[k] = bibText(v, { keepMath: true });
+    }
+    return formatEntry(e, false, true);
+  }).join("\n\n");
+}
+
 export async function GET(req: NextRequest) {
   const rl = rateLimit(req, { limit: 30, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: 429, headers: rl.headers });
 
-  const doi = req.nextUrl.searchParams.get("doi")?.trim();
+  // Accept "doi:10.x/y", "https://doi.org/10.x/y", "dx.doi.org/10.x/y" too.
+  const doi = normalizeDoi(req.nextUrl.searchParams.get("doi") ?? "");
   if (!doi) return NextResponse.json({ error: "Missing doi param" }, { status: 400 });
 
   if (!DOI_RE.test(doi)) {
@@ -46,7 +71,7 @@ export async function GET(req: NextRequest) {
         if (dc?.ok) {
           const dcBib = (await dc.text()).trim();
           if (dcBib.startsWith("@")) {
-            return new NextResponse(dcBib, {
+            return new NextResponse(sanitiseRegistryBib(dcBib), {
               headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" },
             });
           }
@@ -64,7 +89,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "CrossRef returned unexpected content" }, { status: 502 });
     }
 
-    return new NextResponse(bibtex, {
+    return new NextResponse(sanitiseRegistryBib(bibtex), {
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" },
     });
   } catch (err) {

@@ -5,9 +5,9 @@ import PricingCards from "@/components/PricingCards";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Pricing — latexci Pro at $49/year",
+  title: "Pricing: latexci Pro at $49/year",
   description:
-    "latexci Pro: $49/year or $9/month. Unlimited Word→LaTeX, PDF export, priority support, grant-reimbursable invoicing. Lab plan $199/year for 5-seat research groups. All 28 templates free for everyone.",
+    "latexci Pro costs $49 a year or $9 a month: PDF export and unlimited Word to LaTeX. Lab plan $199 a year for 5 seats. All 28 templates stay free.",
   keywords: [
     "latex tools pricing", "latex pro plan", "cheap overleaf alternative",
     "academic software grant fundable", "research lab latex tools", "latex pdf export",

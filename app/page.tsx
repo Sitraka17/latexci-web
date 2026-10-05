@@ -14,7 +14,7 @@ const HERO_FORMULA = katex.renderToString(
 export const metadata: Metadata = {
   title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
   description:
-    "latexci: BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. The free utility belt every Overleaf user needs. No signup, no install, works in any browser.",
+    "Free LaTeX tools for researchers: BibTeX cleaner, Word to LaTeX converter, live preview, diff and 28 templates. No signup, no install, any browser.",
   keywords: [
     "bibtex cleaner online", "word to latex converter", "latex diff tool",
     "doi to bibtex", "arxiv to bibtex", "latex preview online",

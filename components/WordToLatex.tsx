@@ -161,6 +161,7 @@ function inlineOmmlEquations(xml: string): { xml: string; equations: { latex: st
 
 // ── HTML → LaTeX converter ────────────────────────────────────────────────────
 let imgCounter = 0;
+let tableCols = 1;
 
 function htmlToLatex(html: string): { latex: string; stats: Partial<QualityReport> } {
   imgCounter = 0;
@@ -169,14 +170,19 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
     lists: 0, links: 0, footnotes: 0, unresolvedImages: 0,
   };
 
-  const escTex = (text: string) =>
-    text
-      .replace(/\\/g, "\\textbackslash{}")
-      .replace(/\{/g, "\\{").replace(/\}/g, "\\}")
-      .replace(/\$/g, "\\$").replace(/&/g, "\\&")
-      .replace(/%/g, "\\%").replace(/#/g, "\\#")
-      .replace(/\^/g, "\\textasciicircum{}")
-      .replace(/_/g, "\\_").replace(/~/g, "\\textasciitilde{}");
+  // One pass, so the braces of \textbackslash{} are never escaped again.
+  const TEX_ESC: Record<string, string> = {
+    "\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", $: "\\$", "&": "\\&", "%": "\\%",
+    "#": "\\#", _: "\\_", "^": "\\textasciicircum{}", "~": "\\textasciitilde{}",
+  };
+  const escTex = (text: string) => text.replace(/[\\{}$&%#_^~]/g, (c) => TEX_ESC[c]);
+  // Inside \href{...}: hyperref reads the URL verbatim except for these.
+  const escUrl = (url: string) => url.replace(/[\\%#{}]/g, (c) => (c === "\\" ? "/" : `\\${c}`));
+
+  // Word footnotes: mammoth emits <sup><a href="#footnote-N">[N]</a></sup> in
+  // the text and the notes as <li id="footnote-N"> at the end. Turn them into
+  // real \footnote{...} and drop the trailing list.
+  const notes = new Map<string, Element>();
 
   function walk(node: Node): string {
     if (node.nodeType === Node.TEXT_NODE) return escTex(node.textContent ?? "");
@@ -190,27 +196,43 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
       case "h2": s.headings = (s.headings ?? 0) + 1; return `\n\n\\subsection{${kids()}}\n`;
       case "h3": s.headings = (s.headings ?? 0) + 1; return `\n\n\\subsubsection{${kids()}}\n`;
       case "h4": case "h5": case "h6": s.headings = (s.headings ?? 0) + 1; return `\n\n\\paragraph{${kids()}}\n`;
-      case "p":
+      case "p": {
         s.paragraphs = (s.paragraphs ?? 0) + 1;
-        return kids().trim() ? `\n${kids().trim()}\n` : "";
+        const text = kids().trim();
+        return text ? `\n${text}\n` : "";
+      }
       case "strong": case "b": return `\\textbf{${kids()}}`;
       case "em": case "i":    return `\\textit{${kids()}}`;
       case "u":               return `\\underline{${kids()}}`;
       case "s":               return `\\sout{${kids()}}`;
-      case "sup":             return `\\textsuperscript{${kids()}}`;
+      case "sup": {
+        const ref = el.querySelector('a[href^="#footnote-"], a[href^="#endnote-"]');
+        const note = ref && notes.get(ref.getAttribute("href")!.slice(1));
+        if (note) {
+          s.footnotes = (s.footnotes ?? 0) + 1;
+          return `\\footnote{${Array.from(note.childNodes).map(walk).join("").trim()}}`;
+        }
+        return `\\textsuperscript{${kids()}}`;
+      }
       case "sub":             return `\\textsubscript{${kids()}}`;
       case "code":            return `\\texttt{${kids()}}`;
       case "pre":             return `\n\\begin{verbatim}\n${el.textContent ?? ""}\n\\end{verbatim}\n`;
       case "br":              return "\\\\\n";
       case "hr":              return "\n\\noindent\\rule{\\linewidth}{0.4pt}\n";
-      case "ul": s.lists = (s.lists ?? 0) + 1; return `\n\\begin{itemize}\n${kids()}\\end{itemize}\n`;
-      case "ol": s.lists = (s.lists ?? 0) + 1; return `\n\\begin{enumerate}\n${kids()}\\end{enumerate}\n`;
+      case "ul": case "ol": {
+        const items = kids();
+        if (!items.includes("\\item")) return items; // an empty list does not compile
+        s.lists = (s.lists ?? 0) + 1;
+        const env = tag === "ul" ? "itemize" : "enumerate";
+        return `\n\\begin{${env}}\n${items}\\end{${env}}\n`;
+      }
       case "li":              return `  \\item ${kids().trim()}\n`;
       case "blockquote":      return `\n\\begin{quote}\n${kids().trim()}\n\\end{quote}\n`;
       case "a": {
         s.links = (s.links ?? 0) + 1;
         const href = el.getAttribute("href") ?? "";
-        return href ? `\\href{${href}}{${kids()}}` : kids();
+        if (!href || href.startsWith("#")) return kids(); // internal anchors and backlinks
+        return `\\href{${escUrl(href)}}{${kids()}}`;
       }
       case "img": {
         s.images = (s.images ?? 0) + 1;
@@ -229,9 +251,11 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
       }
       case "table": {
         s.tables = (s.tables ?? 0) + 1;
-        // Count max columns from first row
-        const firstRow = el.querySelector("tr");
-        const cols = firstRow ? firstRow.querySelectorAll("td, th").length : 1;
+        // Widest row, counting merged cells (colspan), sets the column count.
+        const cols = Math.max(1, ...Array.from(el.querySelectorAll("tr")).map(r =>
+          Array.from(r.querySelectorAll(":scope > td, :scope > th"))
+            .reduce((n, c) => n + Math.max(1, Number(c.getAttribute("colspan")) || 1), 0)));
+        tableCols = cols;
         const spec = Array(cols).fill("l").join(""); // booktabs: no vertical rules
         // Use booktabs style
         return (
@@ -247,8 +271,14 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
       case "tbody": return kids();
       case "tfoot": return kids();
       case "tr": {
-        const cells = Array.from(el.querySelectorAll(":scope > td, :scope > th"))
-          .map(c => Array.from(c.childNodes).map(walk).join("").trim());
+        let width = 0;
+        const cells = Array.from(el.querySelectorAll(":scope > td, :scope > th")).map(c => {
+          const span = Math.max(1, Number(c.getAttribute("colspan")) || 1);
+          width += span;
+          const text = Array.from(c.childNodes).map(walk).join("").trim();
+          return span > 1 ? `\\multicolumn{${span}}{l}{${text}}` : text;
+        });
+        while (width++ < tableCols) cells.push(""); // short rows still need every column
         // First row after toprule gets midrule
         const isHead = el.closest("thead") !== null || (el as HTMLTableRowElement).rowIndex === 0;
         return `    ${cells.join(" & ")} \\\\\n` + (isHead ? "    \\midrule\n" : "");
@@ -262,6 +292,13 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
+  doc.querySelectorAll('li[id^="footnote-"], li[id^="endnote-"]').forEach(li => {
+    li.querySelectorAll('a[href^="#footnote-ref-"], a[href^="#endnote-ref-"]').forEach(a => a.remove());
+    notes.set(li.id, li.querySelector("p") ?? li);
+    const list = li.parentElement;
+    li.remove();
+    if (list && !list.querySelector("li")) list.remove();
+  });
   const body = Array.from(doc.body.childNodes).map(walk).join("");
 
   const packages = [
@@ -271,7 +308,8 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
     "\\usepackage{hyperref}",
     "\\usepackage{graphicx}",
     "\\usepackage{booktabs}",
-    ...(body.includes("\\sout")  ? ["\\usepackage{ulem}"] : []),
+    // normalem: keep \emph as italics (plain ulem would underline it).
+    ...(body.includes("\\sout")  ? ["\\usepackage[normalem]{ulem}"] : []),
     ...(s.images! > 0 ? ["\\usepackage{float}"] : []),
   ];
 
@@ -291,7 +329,7 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
 
 // ── Score calculator ──────────────────────────────────────────────────────────
 function calcScore(report: QualityReport): QualityReport["score"] {
-  const issues = (report.equations > 0 ? 2 : 0) + (report.unresolvedImages > 0 ? 1 : 0);
+  const issues = (report.equations > 0 ? 1 : 0) + (report.unresolvedImages > 0 ? 1 : 0);
   if (issues === 0) return "excellent";
   if (issues === 1) return "good";
   if (issues === 2) return "fair";
@@ -336,6 +374,11 @@ export default function WordToLatex() {
     if (ext === "docx") {
       try {
         const gateRes = await fetch("/api/word-conversion", { method: "POST" });
+        if (gateRes.status === 429) {
+          setError("Too many conversions at once. Please wait a few seconds and try again.");
+          setStatus("idle");
+          return;
+        }
         if (gateRes.status === 403) {
           const body = await gateRes.json().catch(() => ({}));
           setUpgradeModal({

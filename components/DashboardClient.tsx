@@ -1,536 +1,162 @@
 "use client";
-import { useState, useMemo, useRef, useTransition, lazy, Suspense } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { clearAllDocs, createDoc, deleteDoc, listDocs, updateDoc, type LocalDoc } from "@/lib/local-docs";
 
-const ShareModal = lazy(() => import("./ShareModal"));
+type Me = { configured: boolean; user: { email: string; name: string | null } | null; tier: string };
 
-type DocRow = {
-  id: string;
-  title: string;
-  updated_at: string;
-  is_pinned: boolean;
-  tags: string[];
-  is_public: boolean;
-};
+const cell: CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid var(--border)", fontSize: "0.86rem", verticalAlign: "middle" };
+const head: CSSProperties = { ...cell, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)", textAlign: "left" };
+const linkBtn: CSSProperties = { background: "none", border: "none", padding: 0, color: "var(--accent)", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 };
+const btn: CSSProperties = { padding: "0.5rem 1rem", border: "1px solid var(--border)", background: "var(--surface)", color: "var(--fg)", fontWeight: 600, fontSize: "0.84rem", cursor: "pointer", textDecoration: "none", display: "inline-block" };
 
-export type SharedDoc = {
-  document_id: string;
-  permission: "view" | "edit";
-  documents: {
-    id: string;
-    title: string;
-    share_token: string;
-    updated_at: string;
-    profiles: { display_name: string | null; email: string } | null;
-  } | null;
-};
-
-function relativeTime(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+function fmt(iso: string) {
+  try {
+    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return iso;
+  }
 }
 
-// ── Simple toast component ───────────────────────────────────────────────────
-function Toast({ message, type }: { message: string; type: "error" | "success" }) {
-  return (
-    <div style={{
-      position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 9999,
-      padding: "0.75rem 1.1rem",
-      background: type === "error" ? "#ef4444" : "#10b981",
-      color: "#fff", borderRadius: 10, fontSize: "0.84rem", fontWeight: 600,
-      boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
-      animation: "fadeIn 0.2s ease",
-    }}>
-      {type === "error" ? "⚠ " : "✓ "}{message}
-    </div>
-  );
+function download(doc: LocalDoc) {
+  const url = URL.createObjectURL(new Blob([doc.content], { type: "application/x-tex" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: `${doc.title.replace(/[^\w.-]+/g, "-") || "document"}.tex` });
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-const STARTER_TEX = `\\documentclass[11pt]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{amsmath}
+export default function DashboardClient() {
+  const [docs, setDocs] = useState<LocalDoc[] | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-\\title{Untitled}
-\\author{}
-\\date{\\today}
+  const refresh = useCallback(() => setDocs(listDocs()), []);
 
-\\begin{document}
-\\maketitle
+  useEffect(() => {
+    // localStorage only exists after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refresh();
+    fetch("/api/auth/me").then((r) => r.json()).then(setMe).catch(() => setMe(null));
+  }, [refresh]);
 
-\\section{Introduction}
-Start writing here.
+  const importTex = (file: File) => {
+    file.text().then((text) => {
+      if (createDoc(text)) refresh();
+      else setNotice("Could not save: this browser's storage is full or blocked.");
+    });
+  };
 
-\\end{document}
-`;
+  const signOut = async () => {
+    await fetch("/api/auth/signout", { method: "POST" });
+    window.location.href = "/";
+  };
 
-export default function DashboardClient({
-  userId,
-  userEmail,
-  initialDocuments,
-  sharedWithMe,
-}: {
-  userId: string;
-  userEmail: string;
-  initialDocuments: DocRow[];
-  sharedWithMe: SharedDoc[];
-}) {
-  const [docs, setDocs]           = useState<DocRow[]>(initialDocuments);
-  const [deleting, setDeleting]   = useState<string | null>(null);
-  const [deletePending, setDeletePending] = useState<string | null>(null);
-  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [sharingDoc, setSharingDoc] = useState<{ id: string; title: string } | null>(null);
-  const [toast, setToast]         = useState<{ message: string; type: "error" | "success" } | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [search, setSearch]       = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [acctConfirm, setAcctConfirm]   = useState(false);
-  const [acctDeleting, setAcctDeleting] = useState(false);
-  const router  = useRouter();
-  const supabase = useMemo(() => createClient(), []);
-
-  function showToast(message: string, type: "error" | "success" = "error") {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  }
-
-  async function deleteAccount() {
-    if (acctDeleting) return;
-    setAcctDeleting(true);
-    try {
-      const res = await fetch("/api/account/delete", { method: "POST" });
-      if (!res.ok) throw new Error();
-      router.push("/");
-    } catch {
-      showToast("Couldn't delete your account. Please try again.");
-      setAcctDeleting(false);
-      setAcctConfirm(false);
-    }
-  }
-
-  const [creating, setCreating] = useState(false);
-
-  async function createDocument() {
-    if (creating) return;
-    setCreating(true);
-    try {
-      // Ensure a profiles row exists first: documents.user_id has a foreign key
-      // to profiles(id), and the handle_new_user trigger may not have fired for
-      // pre-existing accounts or a freshly restored database. Best-effort — if
-      // this fails, the insert below surfaces the real reason.
-      await supabase
-        .from("profiles")
-        .upsert({ id: userId, email: userEmail }, { onConflict: "id", ignoreDuplicates: true });
-
-      const { data, error } = await supabase
-        .from("documents")
-        .insert({ user_id: userId, title: "Untitled", content: STARTER_TEX })
-        .select("id")
-        .single();
-
-      if (error || !data) {
-        console.error("createDocument failed:", error);
-        showToast(error ? `Couldn't create document: ${error.message}` : "Failed to create document");
+  const deleteEverything = async () => {
+    if (!window.confirm("Delete every document saved in this browser and sign out? This cannot be undone.")) return;
+    if (me?.user) {
+      const r = await fetch("/api/account/delete", { method: "POST" });
+      if (r.status === 409) {
+        const body = await r.json().catch(() => ({}));
+        setNotice(body.message ?? "Cancel your subscription first.");
         return;
       }
-      router.push(`/tools/preview?doc=${data.id}`);
-    } finally {
-      setCreating(false);
     }
-  }
-
-  function requestDelete(id: string) {
-    if (deletePending === id) {
-      if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
-      setDeletePending(null);
-      doDelete(id);
-    } else {
-      setDeletePending(id);
-      deleteTimerRef.current = setTimeout(() => setDeletePending(null), 2500);
-    }
-  }
-
-  async function doDelete(id: string) {
-    setDeleting(id);
-    const { error } = await supabase.from("documents").delete().eq("id", id);
-    if (error) {
-      showToast("Failed to delete document");
-    } else {
-      setDocs(prev => prev.filter(d => d.id !== id));
-      showToast("Document deleted", "success");
-    }
-    setDeleting(null);
-  }
-
-  async function renameDocument(id: string, title: string) {
-    const trimmed = title.trim() || "Untitled";
-    const { error } = await supabase.from("documents").update({ title: trimmed }).eq("id", id);
-    if (error) { showToast("Failed to rename document"); }
-    else { setDocs(prev => prev.map(d => d.id === id ? { ...d, title: trimmed } : d)); }
-    setEditingId(null);
-  }
-
-  async function togglePin(doc: DocRow) {
-    const { error } = await supabase
-      .from("documents")
-      .update({ is_pinned: !doc.is_pinned })
-      .eq("id", doc.id);
-
-    if (error) { showToast("Failed to update pin"); return; }
-
-    startTransition(() => {
-      setDocs(prev => {
-        const updated = prev.map(d => d.id === doc.id ? { ...d, is_pinned: !d.is_pinned } : d);
-        return [...updated].sort((a, b) => {
-          if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
-          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-        });
-      });
-    });
-  }
-
-  const btnStyle: React.CSSProperties = {
-    padding: "0.3rem 0.7rem", borderRadius: 6,
-    fontSize: "0.78rem", fontWeight: 600,
-    border: "1px solid var(--border)", cursor: "pointer",
+    clearAllDocs();
+    window.location.href = "/";
   };
+
+  const paid = me?.tier && me.tier !== "free";
 
   return (
     <>
-      {/* ── Toast ─────────────────────────────────────────────────────────── */}
-      {toast && <Toast message={toast.message} type={toast.type} />}
-
-      {/* ── My documents ─────────────────────────────────────────────────── */}
-      <section>
-        {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.85rem", flexWrap: "wrap" }}>
-          <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, flex: 1 }}>My documents</h2>
-
-          {/* Search */}
-          {docs.length > 2 && (
-            <div style={{ position: "relative" }}>
-              <svg style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)", opacity: 0.4, pointerEvents: "none" }}
-                width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="search"
-                placeholder="Filter…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={{
-                  paddingLeft: "1.8rem", paddingRight: "0.65rem",
-                  paddingTop: "0.3rem", paddingBottom: "0.3rem",
-                  borderRadius: 7, fontSize: "0.8rem",
-                  background: "var(--surface2)", color: "var(--fg)",
-                  border: "1px solid var(--border)", outline: "none", width: 140,
-                }}
-                onFocus={e => (e.currentTarget.style.borderColor = "var(--accent)")}
-                onBlur={e => (e.currentTarget.style.borderColor = "var(--border)")}
-              />
-            </div>
-          )}
-
-          <button
-            onClick={createDocument}
-            style={{
-              padding: "0.4rem 1rem", borderRadius: 8,
-              background: "var(--accent)", color: "#fff",
-              fontWeight: 700, fontSize: "0.82rem",
-              border: "none", cursor: "pointer", flexShrink: 0,
-            }}
-          >
-            + New
-          </button>
+      <section aria-labelledby="docs-h" style={{ marginBottom: "2.5rem" }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+          <h2 id="docs-h" style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>My documents</h2>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <label style={btn}>
+              Import .tex
+              <input type="file" accept=".tex,text/x-tex,text/plain" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importTex(f); e.target.value = ""; }} />
+            </label>
+            <Link href="/tools/preview" style={{ ...btn, background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}>New document</Link>
+          </div>
         </div>
-
-        {docs.length === 0 ? (
-          <div style={{
-            textAlign: "center", padding: "3rem 1.5rem",
-            border: "2px dashed var(--border)", borderRadius: 12,
-          }}>
-            <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📄</p>
-            <p style={{ fontWeight: 700, marginBottom: "0.4rem" }}>No documents yet</p>
-            <p style={{ fontSize: "0.84rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
-              Create a document to save and sync your LaTeX across devices.
-            </p>
-            <button
-              onClick={createDocument}
-              style={{
-                padding: "0.65rem 1.5rem", borderRadius: 8,
-                background: "var(--accent)", color: "#fff",
-                fontWeight: 700, fontSize: "0.9rem",
-                border: "none", cursor: "pointer",
-              }}
-            >
-              Create your first document
-            </button>
-          </div>
-        ) : (() => {
-          const filteredDocs = search
-            ? docs.filter(d => (d.title || "Untitled").toLowerCase().includes(search.toLowerCase()))
-            : docs;
-
-          if (filteredDocs.length === 0) {
-            return (
-              <div style={{ textAlign: "center", padding: "2rem", color: "var(--fg-muted)", fontSize: "0.85rem" }}>
-                No documents match <strong>&ldquo;{search}&rdquo;</strong>.
-                <button onClick={() => setSearch("")} style={{ marginLeft: 8, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}>
-                  Clear
-                </button>
-              </div>
-            );
-          }
-
-          return (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {filteredDocs.map(doc => (
-                <div
-                  key={doc.id}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "0.75rem",
-                    padding: "0.85rem 1rem",
-                    background: "var(--surface)", border: "1px solid var(--border)",
-                    borderRadius: 10, transition: "border-color 0.15s",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
-                >
-                  {/* Pin */}
-                  <button
-                    onClick={() => togglePin(doc)}
-                    title={doc.is_pinned ? "Unpin" : "Pin to top"}
-                    style={{
-                      background: "none", border: "none", cursor: "pointer",
-                      fontSize: "0.95rem", opacity: doc.is_pinned ? 1 : 0.3,
-                      flexShrink: 0, padding: "0.1rem", transition: "opacity 0.15s",
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = doc.is_pinned ? "1" : "0.3")}
-                  >
-                    📌
-                  </button>
-
-                  {/* Title + meta — click title to rename */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {editingId === doc.id ? (
-                      <input
-                        autoFocus
-                        value={editTitle}
-                        onChange={e => setEditTitle(e.target.value)}
-                        onBlur={() => renameDocument(doc.id, editTitle)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") renameDocument(doc.id, editTitle);
-                          if (e.key === "Escape") setEditingId(null);
-                        }}
-                        style={{
-                          width: "100%", padding: "0.18rem 0.45rem",
-                          fontSize: "0.9rem", fontWeight: 600,
-                          border: "1px solid var(--accent)", borderRadius: 5,
-                          background: "var(--surface2)", color: "var(--fg)", outline: "none",
-                        }}
-                      />
-                    ) : (
-                      <p
-                        title="Click to rename"
-                        onClick={() => { setEditingId(doc.id); setEditTitle(doc.title || "Untitled"); }}
-                        style={{
-                          fontWeight: 600, fontSize: "0.9rem", margin: 0,
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          cursor: "text",
-                        }}
-                      >
-                        {doc.title || <span style={{ color: "var(--fg-muted)", fontStyle: "italic" }}>Untitled</span>}
-                      </p>
-                    )}
-                    <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
-                      {relativeTime(doc.updated_at)}
-                      {doc.is_public && (
-                        <span style={{ marginLeft: 8, color: "#22c55e", fontWeight: 600 }}>🔗 Shared</span>
-                      )}
-                      {doc.tags?.length > 0 && (
-                        <> · {doc.tags.map(t => (
-                          <span key={t} style={{ marginLeft: 4, padding: "0.05rem 0.35rem", background: "var(--surface2)", borderRadius: 4, fontSize: "0.7rem" }}>{t}</span>
-                        ))}</>
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-                    <Link
-                      href={`/tools/preview?doc=${doc.id}`}
-                      style={{ ...btnStyle, background: "var(--accent)", color: "#fff", border: "none", textDecoration: "none" }}
-                    >
-                      Open
-                    </Link>
-                    <button
-                      onClick={() => setSharingDoc({ id: doc.id, title: doc.title || "Untitled" })}
-                      title="Share"
-                      style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg-muted)" }}
-                    >
-                      🔗
-                    </button>
-                    <button
-                      onClick={() => requestDelete(doc.id)}
-                      disabled={deleting === doc.id}
-                      title={deletePending === doc.id ? "Click again to confirm deletion" : "Delete document"}
-                      style={{
-                        ...btnStyle,
-                        background: deletePending === doc.id ? "#fef2f2" : "var(--surface2)",
-                        color: deletePending === doc.id ? "#dc2626" : "var(--fg-muted)",
-                        borderColor: deletePending === doc.id ? "#fca5a5" : "var(--border)",
-                        fontWeight: deletePending === doc.id ? 700 : undefined,
-                        cursor: deleting === doc.id ? "wait" : "pointer",
-                        transition: "all 0.15s",
-                      }}
-                    >
-                      {deleting === doc.id ? "…" : deletePending === doc.id ? "Sure?" : "🗑"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
-      </section>
-
-      {/* ── Shared with me ───────────────────────────────────────────────── */}
-      {sharedWithMe.length > 0 && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2 style={{ margin: "0 0 0.75rem", fontSize: "1rem", fontWeight: 700 }}>Shared with me</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {sharedWithMe.map(item => {
-              const d = item.documents;
-              if (!d) return null;
-              const ownerName = d.profiles?.display_name || d.profiles?.email?.split("@")[0] || "Unknown";
-              return (
-                <div
-                  key={item.document_id}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "0.75rem",
-                    padding: "0.85rem 1rem",
-                    background: "var(--surface)", border: "1px solid var(--border)",
-                    borderRadius: 10,
-                  }}
-                >
-                  <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>👥</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      fontWeight: 600, fontSize: "0.9rem", margin: 0,
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {d.title || "Untitled"}
-                    </p>
-                    <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)", margin: 0, marginTop: 2 }}>
-                      by {ownerName} · {relativeTime(d.updated_at)} ·{" "}
-                      <span style={{ color: item.permission === "edit" ? "#818cf8" : "var(--fg-muted)", fontWeight: 600 }}>
-                        {item.permission === "edit" ? "Can edit" : "Can view"}
-                      </span>
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-                    {item.permission === "edit" ? (
-                      <Link
-                        href={`/tools/preview?doc=${d.id}`}
-                        style={{ ...btnStyle, background: "var(--accent)", color: "#fff", border: "none", textDecoration: "none" }}
-                      >
-                        Edit
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/tools/preview?doc=${d.id}`}
-                        style={{ ...btnStyle, background: "var(--surface2)", color: "var(--fg)", textDecoration: "none" }}
-                      >
-                        View
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Suppress isPending lint warning */}
-      {isPending && <span style={{ display: "none" }} />}
-
-      {/* ── Danger zone: account deletion (GDPR right to erasure) ──────────── */}
-      <section style={{
-        marginTop: "3rem",
-        padding: "1.25rem 1.5rem",
-        border: "1px solid color-mix(in srgb, var(--red, #dc2626) 35%, var(--border))",
-        borderRadius: 10,
-        background: "color-mix(in srgb, var(--red, #dc2626) 5%, transparent)",
-      }}>
-        <h2 style={{ margin: "0 0 0.3rem", fontSize: "0.95rem", fontWeight: 700, color: "var(--fg)" }}>
-          Delete account
-        </h2>
-        <p style={{ margin: "0 0 0.9rem", fontSize: "0.8rem", color: "var(--fg-muted)", lineHeight: 1.6 }}>
-          Permanently deletes your account and <strong>all</strong> your saved documents.
-          This cannot be undone.
+        <p style={{ fontSize: "0.82rem", color: "var(--fg-muted)", margin: "0 0 1rem", lineHeight: 1.6 }}>
+          Documents are stored in this browser only. Download the .tex to keep a copy or move it to another device;
+          use Share in the editor to send a link.
         </p>
-        {!acctConfirm ? (
-          <button
-            onClick={() => setAcctConfirm(true)}
-            style={{
-              padding: "0.5rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 600,
-              background: "var(--surface2)", color: "var(--red, #dc2626)",
-              border: "1px solid color-mix(in srgb, var(--red, #dc2626) 45%, var(--border))",
-              cursor: "pointer",
-            }}
-          >
-            Delete my account…
-          </button>
+
+        {notice && <p role="alert" style={{ fontSize: "0.84rem", color: "#ef4444" }}>{notice}</p>}
+
+        {docs === null ? null : docs.length === 0 ? (
+          <p style={{ fontSize: "0.88rem", padding: "1.25rem", border: "1px solid var(--border)", margin: 0 }}>
+            No saved documents yet. Open the <Link href="/tools/preview" style={{ color: "var(--accent)" }}>editor</Link>,
+            write or paste LaTeX, then press Save.
+          </p>
         ) : (
-          <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.82rem", color: "var(--fg)", fontWeight: 600 }}>
-              Are you sure? This is permanent.
-            </span>
-            <button
-              onClick={deleteAccount}
-              disabled={acctDeleting}
-              style={{
-                padding: "0.5rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 700,
-                background: "var(--red, #dc2626)", color: "#fff", border: "none",
-                cursor: acctDeleting ? "wait" : "pointer", opacity: acctDeleting ? 0.7 : 1,
-              }}
-            >
-              {acctDeleting ? "Deleting…" : "Yes, delete everything"}
-            </button>
-            <button
-              onClick={() => setAcctConfirm(false)}
-              disabled={acctDeleting}
-              style={{
-                padding: "0.5rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 600,
-                background: "var(--surface2)", color: "var(--fg)", border: "1px solid var(--border)",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
+          <div style={{ overflowX: "auto", border: "1px solid var(--border)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
+              <thead>
+                <tr>
+                  <th style={head}>Title</th>
+                  <th style={head}>Last edited</th>
+                  <th style={{ ...head, textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {docs.map((d) => (
+                  <tr key={d.id}>
+                    <td style={cell}>
+                      {d.pinned && <span title="Pinned" style={{ color: "var(--fg-muted)", marginRight: "0.35rem" }}>&#x2605;</span>}
+                      <Link href={`/tools/preview?doc=${d.id}`} style={{ color: "var(--fg)", fontWeight: 600, textDecoration: "none" }}>{d.title}</Link>
+                    </td>
+                    <td style={{ ...cell, color: "var(--fg-muted)", whiteSpace: "nowrap" }}>{fmt(d.updatedAt)}</td>
+                    <td style={{ ...cell, textAlign: "right", whiteSpace: "nowrap" }}>
+                      <span style={{ display: "inline-flex", gap: "0.9rem" }}>
+                        <button style={linkBtn} onClick={() => { updateDoc(d.id, { pinned: !d.pinned }); refresh(); }}>{d.pinned ? "Unpin" : "Pin"}</button>
+                        <button style={linkBtn} onClick={() => download(d)}>.tex</button>
+                        {confirmId === d.id ? (
+                          <button style={{ ...linkBtn, color: "#ef4444" }} onClick={() => { deleteDoc(d.id); setConfirmId(null); refresh(); }}>Confirm delete</button>
+                        ) : (
+                          <button style={{ ...linkBtn, color: "var(--fg-muted)" }} onClick={() => setConfirmId(d.id)}>Delete</button>
+                        )}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
 
-      {/* ── Share modal ───────────────────────────────────────────────────── */}
-      {sharingDoc && (
-        <Suspense>
-          <ShareModal
-            docId={sharingDoc.id}
-            docTitle={sharingDoc.title}
-            onClose={() => setSharingDoc(null)}
-          />
-        </Suspense>
-      )}
+      <section aria-labelledby="acct-h" style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
+        <h2 id="acct-h" style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 0.75rem" }}>Account</h2>
+        {me?.user ? (
+          <>
+            <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
+              Signed in with Google as <strong>{me.user.email}</strong>. Plan: <strong style={{ textTransform: "capitalize" }}>{me.tier}</strong>.
+              {!paid && <> <Link href="/pricing" style={{ color: "var(--accent)" }}>Upgrade to Pro</Link> for PDF export and unlimited Word conversions.</>}
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button style={btn} onClick={signOut}>Sign out</button>
+              <button style={{ ...btn, color: "#ef4444" }} onClick={deleteEverything}>Delete my data</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
+              {me && !me.configured
+                ? "Sign-in is being set up. Your documents above work without an account."
+                : "You are not signed in. Documents above work without an account; sign in to use Pro features."}
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              {me?.configured && <Link href="/auth?next=/dashboard" style={btn}>Sign in</Link>}
+              <button style={{ ...btn, color: "#ef4444" }} onClick={deleteEverything}>Delete documents in this browser</button>
+            </div>
+          </>
+        )}
+      </section>
     </>
   );
 }

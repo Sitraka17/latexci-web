@@ -214,43 +214,71 @@ function EditorPane({
 // ── Side-by-side diff renderer ────────────────────────────────────────────────
 type DiffPart = { value: string; added?: boolean; removed?: boolean };
 
-function SideBySideDiff({ diff }: { diff: DiffPart[] }) {
-  type Row = { left: string | null; right: string | null; kind: "added" | "removed" | "unchanged" };
-  const rows: Row[] = [];
+export type SideBySideRow = {
+  left: string | null;
+  right: string | null;
+  kind: "changed" | "added" | "removed" | "unchanged";
+};
 
-  for (const part of diff) {
-    const lines = part.value.split("\n");
-    if (lines[lines.length - 1] === "") lines.pop();
-    for (const line of lines) {
-      if (part.removed) rows.push({ left: line, right: null, kind: "removed" });
-      else if (part.added) rows.push({ left: null, right: line, kind: "added" });
-      else rows.push({ left: line, right: line, kind: "unchanged" });
+const splitLines = (value: string) => {
+  const lines = value.split("\n");
+  if (lines[lines.length - 1] === "") lines.pop();
+  return lines;
+};
+
+/**
+ * Turn a line diff into side-by-side rows. Each replace block (a run of
+ * removed and added parts between unchanged parts) is paired line by line:
+ * removed[i] sits next to added[i], and the leftovers become pure removals
+ * or additions, so a 3-line edit stays on 3 rows instead of drifting.
+ */
+export function pairSideBySide(lineDiff: DiffPart[]): SideBySideRow[] {
+  const rows: SideBySideRow[] = [];
+  let removed: string[] = [];
+  let added: string[] = [];
+  const flush = () => {
+    const n = Math.max(removed.length, added.length);
+    for (let k = 0; k < n; k++) {
+      const l = removed[k] ?? null;
+      const r = added[k] ?? null;
+      rows.push({ left: l, right: r, kind: l !== null && r !== null ? "changed" : l !== null ? "removed" : "added" });
+    }
+    removed = [];
+    added = [];
+  };
+  for (const part of lineDiff) {
+    if (part.removed) removed.push(...splitLines(part.value));
+    else if (part.added) added.push(...splitLines(part.value));
+    else {
+      flush();
+      for (const line of splitLines(part.value)) rows.push({ left: line, right: line, kind: "unchanged" });
     }
   }
+  flush();
+  return rows;
+}
 
-  // Pair removed/added so they sit on the same row
-  const paired: { left: string | null; right: string | null; kind: "changed" | "added" | "removed" | "unchanged" }[] = [];
-  let i = 0;
-  while (i < rows.length) {
-    const r = rows[i];
-    if (r.kind === "removed") {
-      // Look ahead for an added row to pair with
-      const next = rows[i + 1];
-      if (next?.kind === "added") {
-        paired.push({ left: r.left, right: next.right, kind: "changed" });
-        i += 2;
-      } else {
-        paired.push({ left: r.left, right: null, kind: "removed" });
-        i++;
-      }
-    } else if (r.kind === "added") {
-      paired.push({ left: null, right: r.right, kind: "added" });
-      i++;
-    } else {
-      paired.push({ left: r.left, right: r.right, kind: "unchanged" });
-      i++;
-    }
-  }
+function SideBySideDiff({ original, revised, mode }: {
+  original: string; revised: string; mode: "lines" | "words";
+}) {
+  // Rows always come from a LINE diff so there is one row per source line; in
+  // word mode, changed rows additionally get word-level highlights below.
+  const paired = useMemo(
+    () => pairSideBySide(Diff.diffLines(original, revised)),
+    [original, revised],
+  );
+
+  const renderCell = (row: SideBySideRow, side: "left" | "right"): ReactNode => {
+    const text = side === "left" ? row.left : row.right;
+    if (mode === "lines" || row.kind !== "changed" || row.left === null || row.right === null) return text ?? "";
+    return Diff.diffWords(row.left, row.right)
+      .filter(p => (side === "left" ? !p.added : !p.removed))
+      .map((p, k) =>
+        p.added || p.removed
+          ? <mark key={k} style={{ background: p.removed ? "rgba(248,113,113,0.28)" : "rgba(52,211,153,0.28)", color: "inherit", borderRadius: 2 }}>{p.value}</mark>
+          : <span key={k}>{p.value}</span>
+      );
+  };
 
   const cellStyle = (side: "left" | "right", kind: string): React.CSSProperties => {
     const isLeft = side === "left";
@@ -294,7 +322,7 @@ function SideBySideDiff({ diff }: { diff: DiffPart[] }) {
         <div style={{ padding: "0.25rem 0" }}>
           {paired.map((row, idx) => (
             <span key={idx} style={cellStyle("left", row.kind)}>
-              {row.left ?? ""}
+              {renderCell(row, "left")}
             </span>
           ))}
         </div>
@@ -309,13 +337,23 @@ function SideBySideDiff({ diff }: { diff: DiffPart[] }) {
         <div style={{ padding: "0.25rem 0" }}>
           {paired.map((row, idx) => (
             <span key={idx} style={cellStyle("right", row.kind)}>
-              {row.right ?? ""}
+              {renderCell(row, "right")}
             </span>
           ))}
         </div>
       </div>
     </div>
   );
+}
+
+// ── Patch export ──────────────────────────────────────────────────────────────
+/**
+ * Real unified diff (correct hunk headers, blank lines kept) that applies
+ * cleanly with `patch -p0` / `git apply`. Always built from the line texts,
+ * whatever the on-screen diff mode.
+ */
+export function buildPatch(original: string, revised: string): string {
+  return Diff.createTwoFilesPatch("original.tex", "revised.tex", original, revised);
 }
 
 // ── Unified diff renderer ─────────────────────────────────────────────────────
@@ -497,11 +535,7 @@ export default function LatexDiff() {
   }, [diff]);
 
   const downloadPatch = useCallback(() => {
-    const patch = diff
-      .map(p => p.value.split("\n").filter(Boolean)
-        .map(l => (p.added ? "+" : p.removed ? "-" : " ") + l).join("\n"))
-      .join("\n");
-    const full = `--- original.tex\n+++ revised.tex\n@@ -1 +1 @@\n${patch}\n`;
+    const full = buildPatch(original, revised);
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([full], { type: "text/x-patch" })),
       download: "changes.patch",
@@ -509,7 +543,8 @@ export default function LatexDiff() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }, [diff]);
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+  }, [original, revised]);
 
   const isIdentical = stats.added === 0 && stats.removed === 0;
 
@@ -577,7 +612,7 @@ export default function LatexDiff() {
       minHeight: 0,
     }}>
       {viewMode === "sidebyside"
-        ? <SideBySideDiff diff={diff} />
+        ? <SideBySideDiff original={original} revised={revised} mode={diffMode} />
         : <UnifiedDiff diff={diff} mode={diffMode} />
       }
     </div>
@@ -746,7 +781,7 @@ export default function LatexDiff() {
               diff output
             </div>
             {viewMode === "sidebyside"
-              ? <SideBySideDiff diff={diff} />
+              ? <SideBySideDiff original={original} revised={revised} mode={diffMode} />
               : <UnifiedDiff diff={diff} mode={diffMode} />
             }
           </div>

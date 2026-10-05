@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["lib/**/*.ts"],
-      exclude: ["lib/__tests__/**", "lib/supabase/**"],
+      exclude: ["lib/__tests__/**"],
     },
   },
   resolve: {

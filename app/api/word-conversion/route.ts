@@ -1,192 +1,69 @@
 /**
  * POST /api/word-conversion
  *
- * Gate check + counter increment for Word → LaTeX conversions.
+ * Gate + counter for Word → LaTeX conversions. The conversion itself runs in
+ * the browser; this only meters it.
  *
- * Free tier: 3 conversions/month, tracked in profiles.word_conversions_this_month.
- * Monthly reset: checked against profiles.word_conversions_reset_at (ISO date string).
- *   → Requires a one-time DB migration to add the column (see below).
- *   → Without the column the counter never resets — run the migration!
- *
- * Migration SQL (run once in Supabase SQL editor):
- *   ALTER TABLE profiles
- *     ADD COLUMN IF NOT EXISTS word_conversions_reset_at timestamptz
- *       DEFAULT now() NOT NULL;
- *
- * Pro / Lab / Institution: unlimited — counter is incremented but not checked.
+ * Free tier: 3 conversions per calendar month for signed-in users, counted in
+ * a signed cookie (no database). Clearing cookies resets it; acceptable for a
+ * feature that costs us nothing to serve. Paid tiers: unlimited.
+ * Sign-in or Stripe not configured: everyone allowed, unmetered (nobody could pay).
  *
  * Returns:
- *   200 { allowed: true,  used: N, limit: 3, remaining: R }   — proceed
- *   200 { allowed: true,  used: N, limit: null, remaining: null } — paid user
- *   403 { allowed: false, used: N, limit: 3, remaining: 0,
- *          error: "upgrade_required", feature: "word_conversion" }
- *   403 { allowed: false, error: "sign_in_required", feature: "word_conversion" }
+ *   200 { allowed: true,  used: N, limit: 3, remaining: R }
+ *   200 { allowed: true,  used: null, limit: null, remaining: null }   paid / unmetered
+ *   403 { allowed: false, error: "sign_in_required" | "upgrade_required", feature }
  */
-
 import { NextResponse } from "next/server";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { getAdmin } from "@/lib/supabase/admin";
+import { cookies } from "next/headers";
+import { getSession, isAuthConfigured, sign, unsign } from "@/lib/session";
+import { getTier, isBillingConfigured, isPaid } from "@/lib/entitlement";
 
 export const runtime = "nodejs";
 
 const FREE_LIMIT = 3;
+const COUNTER_COOKIE = "lx_wc";
+
+type Counter = { sub: string; period: string; n: number };
 
 function currentPeriod(): string {
-  // "YYYY-MM" in UTC — avoids month-boundary drift across timezones
   const d = new Date();
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-// Is the Supabase auth service reachable? Without it nobody can sign in, so
-// the sign-in gate would block every visitor. The conversion itself runs in
-// the browser at no cost to us, so during an outage we let it through
-// (unmetered) instead of breaking the tool. Cached 60 s per instance.
-let authHealth: { up: boolean; at: number } | null = null;
-async function authServiceUp(): Promise<boolean> {
-  if (authHealth && Date.now() - authHealth.at < 60_000) return authHealth.up;
-  let up = false;
-  try {
-    const r = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health`, {
-      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "" },
-      signal: AbortSignal.timeout(3_000),
-    });
-    up = r.status < 500; // 200, or 401 without a key: reachable either way
-  } catch {
-    up = false; // DNS failure (paused project), timeout, network error
-  }
-  authHealth = { up, at: Date.now() };
-  return up;
-}
-
 export async function POST() {
-  // ── Dev / unconfigured → always allow ─────────────────────────────────────
-  if (!isSupabaseConfigured) {
-    return NextResponse.json({ allowed: true, used: 0, limit: null, remaining: null });
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // ── Auth backend down → allow, unmetered (see authServiceUp) ──────────────
-  if (!user && !(await authServiceUp())) {
+  if (!isAuthConfigured || !isBillingConfigured) {
     return NextResponse.json({ allowed: true, used: 0, limit: null, remaining: null, degraded: true });
   }
 
-  // ── Not signed in → block with sign-in prompt ──────────────────────────────
-  if (!user) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json(
       { allowed: false, error: "sign_in_required", feature: "word_conversion" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
-  // ── Fetch profile ──────────────────────────────────────────────────────────
-  const { data: profile, error: fetchErr } = await supabase
-    .from("profiles")
-    .select(
-      "subscription_tier, subscription_status, word_conversions_this_month, word_conversions_reset_at"
-    )
-    .eq("id", user.id)
-    .single();
-
-  if (fetchErr || !profile) {
-    // Profile missing — treat as free, allow (onboarding edge case)
-    return NextResponse.json({ allowed: true, used: 0, limit: FREE_LIMIT, remaining: FREE_LIMIT });
-  }
-
-  const tier = profile.subscription_tier;
-  const status = profile.subscription_status;
-  const paid =
-    (tier === "pro" || tier === "lab" || tier === "institution") &&
-    (status === "active" || status === "trialing");
-
-  // Counter writes MUST go through the service-role client: the profile
-  // sensitive-field trigger (2026-07-04-profile-write-restriction) reverts
-  // word_conversions_* for non-service_role callers, which would otherwise make
-  // every increment a silent no-op (free quota unenforceable).
-  const admin = getAdmin();
-  if (!admin) {
-    // In a configured production env this means SUPABASE_SERVICE_ROLE_KEY is
-    // missing/rotated — the anon fallback below would be reverted by the trigger,
-    // silently granting unlimited free conversions. Make it LOUD, not silent.
-    console.error(
-      "[word-conversion] SUPABASE_SERVICE_ROLE_KEY unavailable — the free quota " +
-      "CANNOT be enforced (counter writes are reverted by the profile trigger). " +
-      "Set the service-role key to restore metering."
-    );
-  }
-  const writer = admin ?? supabase;
-
-  // ── Paid users: increment and allow ───────────────────────────────────────
-  if (paid) {
-    await writer
-      .from("profiles")
-      .update({
-        word_conversions_this_month: profile.word_conversions_this_month + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-
+  if (isPaid(await getTier(session))) {
     return NextResponse.json({ allowed: true, used: null, limit: null, remaining: null });
   }
 
-  // ── Free users: check monthly counter ─────────────────────────────────────
-  // The DB trigger (trg_reset_word_conversions) auto-resets on the next UPDATE
-  // after a new month starts. Here we just check the column directly.
-  const resetAt = profile.word_conversions_reset_at ?? null;
-  const needsReset = resetAt
-    ? resetAt.slice(0, 7) !== currentPeriod()   // "YYYY-MM" comparison
-    : true;                                       // null → treat as needing reset
-
-  // If a new month has started, treat count as 0
-  const used = needsReset ? 0 : (profile.word_conversions_this_month ?? 0);
+  const jar = await cookies();
+  const period = currentPeriod();
+  const saved = await unsign<Counter>(jar.get(COUNTER_COOKIE)?.value);
+  const used = saved && saved.sub === session.sub && saved.period === period ? saved.n : 0;
 
   if (used >= FREE_LIMIT) {
     return NextResponse.json(
-      {
-        allowed: false,
-        used,
-        limit: FREE_LIMIT,
-        remaining: 0,
-        error: "upgrade_required",
-        feature: "word_conversion",
-      },
-      { status: 403 }
+      { allowed: false, used, limit: FREE_LIMIT, remaining: 0, error: "upgrade_required", feature: "word_conversion" },
+      { status: 403 },
     );
   }
 
-  // Increment counter with optimistic locking:
-  // Only update if the DB value still matches what we read (prevents TOCTOU race).
-  // If a concurrent request already incremented, count won't match and we return 0 rows.
-  const currentCount = profile.word_conversions_this_month ?? 0;
-  const { data: updatedRows } = await writer
-    .from("profiles")
-    .update({
-      word_conversions_this_month: needsReset ? 1 : used + 1,
-      word_conversions_reset_at: needsReset ? new Date().toISOString() : undefined,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id)
-    // Optimistic lock: only write if the row hasn't changed since we read it
-    .eq("word_conversions_this_month", currentCount)
-    .select("id");
-
-  if (!updatedRows || updatedRows.length === 0) {
-    // Optimistic lock failed — a concurrent request already incremented the counter.
-    // Return 429 (transient) instead of 403 (permanent) so the client can retry.
-    return NextResponse.json(
-      { allowed: false, error: "concurrent_request", feature: "word_conversion",
-        message: "Too many simultaneous requests. Please try again." },
-      { status: 429 }
-    );
-  }
-
-  return NextResponse.json({
-    allowed: true,
-    used: used + 1,
-    limit: FREE_LIMIT,
-    remaining: FREE_LIMIT - used - 1,
+  const res = NextResponse.json({ allowed: true, used: used + 1, limit: FREE_LIMIT, remaining: FREE_LIMIT - used - 1 });
+  res.cookies.set(COUNTER_COOKIE, await sign({ sub: session.sub, period, n: used + 1 } satisfies Counter), {
+    httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/word-conversion",
+    maxAge: 60 * 60 * 24 * 40,
   });
+  return res;
 }

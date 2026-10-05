@@ -5,9 +5,9 @@ import SiteFooter from "@/components/SiteFooter";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "After Overleaf — Free LaTeX Tools When Your University License Ends",
+  title: "After Overleaf: Free LaTeX Tools When Your License Ends",
   description:
-    "Graduated and lost your Overleaf Premium? latexci gives you free Word→LaTeX, BibTeX cleaning, live preview, and diff tools — no subscription, no signup, works forever.",
+    "Graduated and lost Overleaf Premium? latexci gives you free Word to LaTeX, BibTeX cleaning, live preview and diff tools. No subscription, no signup.",
   keywords: [
     "overleaf alternative after graduation",
     "lost overleaf university subscription",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "After Overleaf — Free LaTeX Tools When Your University License Ends",
+    title: "After Overleaf: Free LaTeX Tools When Your License Ends",
     description: "Lost your university Overleaf license? These tools are free, forever. No signup.",
   },
 };

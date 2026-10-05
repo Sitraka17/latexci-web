@@ -130,7 +130,17 @@ export function allSymbolSlugs(): string[] {
   return [..._symbolBySlug.keys()];
 }
 export function relatedSymbols(sym: SymbolEntry, n = 14): SymbolEntry[] {
-  return SYMBOLS.filter((s) => s.category === sym.category && s !== sym).slice(0, n);
+  // One entry per canonical page, never the page itself (duplicate commands
+  // share a canonical URL, so linking both would point twice at one page).
+  const self = canonicalSlug(sym);
+  const seen = new Set<string>([self]);
+  return SYMBOLS.filter((s) => {
+    if (s.category !== sym.category) return false;
+    const c = canonicalSlug(s);
+    if (seen.has(c)) return false;
+    seen.add(c);
+    return true;
+  }).slice(0, n);
 }
 export function symbolsByCategory(): { category: string; symbols: SymbolEntry[] }[] {
   const seen: string[] = [];

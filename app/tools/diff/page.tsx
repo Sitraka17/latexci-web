@@ -4,9 +4,9 @@ import LatexDiff from "@/components/LatexDiff";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Online LaTeX Diff Tool — Compare .tex Files Side by Side",
+  title: "Online LaTeX Diff: Compare .tex Files Side by Side",
   description:
-    "Compare two LaTeX files in your browser — additions in green, deletions in red. Drag and drop .tex files. Perfect for tracking advisor revisions. Free, no signup.",
+    "Compare two LaTeX files in your browser: additions in green, deletions in red. Drop in .tex files to track advisor revisions. Free, no signup.",
   keywords: [
     "latex diff tool online", "latexdiff web browser", "compare latex files",
     "track changes latex", "latex file comparison", "tex diff viewer",

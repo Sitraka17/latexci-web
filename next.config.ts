@@ -29,6 +29,11 @@ const SECURITY_HEADERS = [
 // that never existed.
 async function legacyRedirects() {
   return [
+      // Cloud documents and Supabase auth were retired (Google sign-in, local documents).
+      { source: "/shared/:token", destination: "/tools/preview", permanent: true },
+      { source: "/auth/callback", destination: "/auth", permanent: true },
+      // Browsers and crawlers request /favicon.ico blindly; the icon is app/icon.svg.
+      { source: "/favicon.ico", destination: "/icon.svg", permanent: true },
       { source: "/tools/symbols/gamma-2", destination: "/tools/symbols/capital-gamma", permanent: true },
       { source: "/tools/symbols/delta-2", destination: "/tools/symbols/capital-delta", permanent: true },
       { source: "/tools/symbols/theta-2", destination: "/tools/symbols/capital-theta", permanent: true },

@@ -9,6 +9,7 @@ import CopyButton from "@/components/CopyButton";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import type { SymbolEntry } from "@/lib/symbols";
 import { noteFor } from "@/lib/symbol-notes";
+import { clampDescription } from "@/lib/snippet";
 import {
   allSymbolSlugs,
   symbolBySlug,
@@ -83,10 +84,12 @@ function describe(sym: SymbolEntry): string {
   const alts = note ? note.variants.slice(1).map((v) => v.code).join(", ") : "";
   const other = caseCounterpart(sym);
   const g = glyphOf(sym);
-  return `Type ${sym.command} for ${displayName(sym).toLowerCase()}${g ? ` (${g})` : ""} in LaTeX, ${where}.` +
+  return clampDescription(
+    `Type ${sym.command} for ${displayName(sym).toLowerCase()}${g ? ` (${g})` : ""} in LaTeX, ${where}.` +
     (other ? ` ${other.category === "Greek Uppercase" ? "Capital" : "Lowercase"} form: ${other.command} (${other.unicode}).` : "") +
     (alts ? ` Alternatives that compile: ${alts}.` : "") +
-    ` Copy it, see it rendered and browse related ${sym.category} symbols. Free, no signup.`;
+    ` Copy it, see it rendered and browse related symbols. Free, no signup.`,
+  );
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -191,7 +194,7 @@ export default async function SymbolPage({ params }: Props) {
             {other && (
               <> {other.category === "Greek Uppercase" ? "The capital form" : "The lowercase form"}{" "}
                 {other.unicode} is{" "}
-                <Link href={`/tools/symbols/${symbolSlug(other)}`} style={{ color: "var(--accent)" }}>
+                <Link href={`/tools/symbols/${canonicalSlug(other)}`} style={{ color: "var(--accent)" }}>
                   <code style={codeStyle}>{other.command}</code>
                 </Link>.</>
             )}
@@ -297,7 +300,7 @@ export default async function SymbolPage({ params }: Props) {
                 {related.map((r) => (
                   <Link
                     key={symbolSlug(r)}
-                    href={`/tools/symbols/${symbolSlug(r)}`}
+                    href={`/tools/symbols/${canonicalSlug(r)}`}
                     title={`${displayName(r)}: ${r.command}`}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "0.4rem",

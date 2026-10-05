@@ -35,6 +35,90 @@ const KNOWN_ENVS = new Set([
 // Placeholder tokens — cannot appear in valid LaTeX
 const PH = (n: number) => `\x00B${n}\x00`;
 
+// ── Escaped characters (\% \$ \& \# \_ \{ \}) ─────────────────────────────
+// Escapes are swapped for private-use characters BEFORE any rule that reacts
+// to the bare character ($ math, % comments, & cell split, {} arguments), then
+// restored at the very end: as the plain character in HTML output, or as the
+// original "\X" sequence where LaTeX source must survive (math, verbatim).
+// Characters inside \url{} / \href{url} are protected the same way but are
+// literal in both modes (LaTeX does not treat % # & ~ as special there); the
+// same literal slots carry the output of \textbackslash, \~{} and \^{}.
+const ESC_CHARS = "%$&#_{}";
+const ESC_BASE = 0xe100;     // \X escapes
+const LIT_CHARS = "%&#~^\\";
+const LIT_BASE = 0xe110;     // literal characters (URL arguments, symbols)
+const lit = (c: string) => String.fromCharCode(LIT_BASE + LIT_CHARS.indexOf(c));
+const ESC_RANGE = /[\ue100-\ue11f]/g;
+
+function protectEscapes(src: string): string {
+  // Strip any stray private-use characters from the input so they cannot be
+  // mistaken for our own placeholders.
+  src = src.replace(ESC_RANGE, "");
+  const urlLit = (s: string) => s.replace(/[%&#~]/g, lit);
+  src = src.replace(/\\url\{([^}]*)\}/g, (_, u: string) => `\\url{${urlLit(u)}}`);
+  src = src.replace(/\\href\{([^}]*)\}/g, (_, u: string) => `\\href{${urlLit(u)}}`);
+  // "\\" (line break) is consumed first so "\\%" stays a break plus a comment.
+  return src.replace(/\\\\|\\([%$&#_{}])/g, (m, c: string | undefined) =>
+    c ? String.fromCharCode(ESC_BASE + ESC_CHARS.indexOf(c)) : m
+  );
+}
+
+/** Restore protected characters. "html" → display text, "raw" → LaTeX source. */
+function restoreEscapes(text: string, mode: "html" | "raw"): string {
+  return text.replace(ESC_RANGE, (ch) => {
+    const code = ch.charCodeAt(0);
+    if (code >= LIT_BASE) {
+      const c = LIT_CHARS[code - LIT_BASE] ?? "";
+      return mode === "html" && c === "&" ? "&amp;" : c;
+    }
+    const c = ESC_CHARS[code - ESC_BASE] ?? "";
+    if (mode === "raw") return `\\${c}`;
+    return c === "&" ? "&amp;" : c;
+  });
+}
+
+// ── Text-mode accents and special letters ─────────────────────────────────
+const ACCENT_MARKS: Record<string, string> = {
+  "'": "\u0301", "`": "\u0300", "^": "\u0302", '"': "\u0308", "~": "\u0303",
+  "=": "\u0304", ".": "\u0307", u: "\u0306", v: "\u030C", H: "\u030B",
+  c: "\u0327", k: "\u0328", r: "\u030A", d: "\u0323", b: "\u0331",
+};
+const SPECIAL_LETTERS: Record<string, string> = {
+  ss: "ß", ae: "æ", AE: "Æ", oe: "œ", OE: "Œ", aa: "å", AA: "Å",
+  o: "ø", O: "Ø", l: "ł", L: "Ł", i: "ı", j: "ȷ",
+};
+
+function accented(mark: string, base: string): string {
+  // Dotless i/j take the accent as plain i/j (NFC has no composed dotless form).
+  const b = base === "\\i" ? "i" : base === "\\j" ? "j" : base;
+  if (!b) return mark === "~" || mark === "^" ? lit(mark) : mark;
+  return (b + ACCENT_MARKS[mark]).normalize("NFC");
+}
+
+function renderAccents(text: string): string {
+  // Symbol accents: \'e \'{e} \"o \^o \`a \~n \=a \.z  (also \'\i, \'{\i}).
+  // "\\" is matched first so a line break followed by ' is left alone.
+  text = text.replace(
+    /\\\\|\\(['`^"~=.])(?:\{(\\[ij](?![a-zA-Z])|[a-zA-Z]?)\}|(\\[ij](?![a-zA-Z])|[a-zA-Z]))/g,
+    (m, mark: string | undefined, braced: string | undefined, bare: string | undefined) =>
+      mark ? accented(mark, braced ?? bare ?? "") : m
+  );
+  // Letter accents need braces: \c{c} \v{s} \u{g} \H{o} \k{a} \r{a} \d{o} \b{o}
+  text = text.replace(
+    /\\([cvuHkrdb])\{(\\[ij](?![a-zA-Z])|[a-zA-Z])\}/g,
+    (_, mark: string, base: string) => accented(mark, base)
+  );
+  // Special letters: \ss{} \ae \o \l \i ... (a control word eats trailing spaces)
+  text = text.replace(
+    /\\(ss|ae|AE|oe|OE|aa|AA|o|O|l|L|i|j)(?![a-zA-Z])(?:\{\}|[ \t]+)?/g,
+    (_, w: string) => SPECIAL_LETTERS[w]
+  );
+  return text
+    .replace(/\\textbackslash(?![a-zA-Z])(?:\{\})?/g, lit("\\"))
+    .replace(/\\textasciitilde(?![a-zA-Z])(?:\{\})?/g, lit("~"))
+    .replace(/\\textasciicircum(?![a-zA-Z])(?:\{\})?/g, lit("^"));
+}
+
 // ── Pass 1: prescan ────────────────────────────────────────────────────────
 
 interface PrescanResult {
@@ -323,7 +407,8 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   // Extract body
   const bodyMatch = src.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
-  let body = bodyMatch ? bodyMatch[1] : src;
+  // Protect \% \$ \& ... before any rule can react to the bare character.
+  let body = protectEscapes(bodyMatch ? bodyMatch[1] : src);
 
   // ── Prescan ──────────────────────────────────────────────────────────────
   const { labelMap, citeMap, citeAuthorMap, bibHtml } = prescanDocument(body);
@@ -389,7 +474,7 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
       `</div>` +
       (outline ? `<div class="beamer-outline-head">Deck outline · ${slideCount} slide${slideCount === 1 ? "" : "s"}</div>${outline}` : "");
 
-    return { html: notice, warnings };
+    return { html: restoreEscapes(notice, "html"), warnings };
   }
 
   // ── Preamble cleanup ─────────────────────────────────────────────────────
@@ -528,10 +613,10 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   // Verbatim / lstlisting
   body = body.replace(/\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/g, (_, c) =>
-    block(`<pre class="verbatim"><code>${escapeHtml(c)}</code></pre>`)
+    block(`<pre class="verbatim"><code>${escapeHtml(restoreEscapes(c, "raw"))}</code></pre>`)
   );
   body = body.replace(/\\begin\{lstlisting\}(\[.*?\])?([\s\S]*?)\\end\{lstlisting\}/g, (_, _opts, c) =>
-    block(`<pre class="verbatim"><code>${escapeHtml(c)}</code></pre>`)
+    block(`<pre class="verbatim"><code>${escapeHtml(restoreEscapes(c, "raw"))}</code></pre>`)
   );
 
   // Theorem-like environments (built-in + user-defined via \newtheorem)
@@ -873,7 +958,9 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
   );
 
   // ── Phase 2: inline on remaining plain text ──────────────────────────────
-  body = body.replace(/(?<!\\)%[^\n]*/gm, "");  // LaTeX comments
+  // LaTeX comments. Escaped \% was protected up front, so every bare % here
+  // starts a comment (including the one in "\\% note" after a line break).
+  body = body.replace(/%[^\n]*/gm, "");
   body = inline(body);
 
   // ── Phase 3: paragraph splitting ─────────────────────────────────────────
@@ -883,8 +970,18 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
       const t = chunk.trim();
       if (!t) return "";
       if (/^\x00B\d+\x00$/.test(t) || t.startsWith("<")) return t;
-      const inner = t.replace(/\n/g, " ").trim();
-      return inner ? `<p>${inner}</p>` : "";
+      // Block placeholders (headings, tables, lists, display math) never go
+      // inside a <p>: split the chunk around them and wrap only the text runs.
+      return t
+        .split(/(\x00B\d+\x00)/)
+        .map((part) => {
+          if (/^\x00B\d+\x00$/.test(part)) return part;
+          const inner = part.replace(/\n/g, " ").trim();
+          if (!inner) return "";
+          return inner.startsWith("<") ? inner : `<p>${inner}</p>`;
+        })
+        .filter(Boolean)
+        .join("\n");
     })
     .filter(Boolean)
     .join("\n");
@@ -908,7 +1005,7 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     body += `<div class="footnote-bar"><hr class="footnote-rule"/>${footHtml}</div>`;
   }
 
-  return { html: header + body, warnings };
+  return { html: restoreEscapes(header + body, "html"), warnings };
 }
 
 // ── Helper: numbered math block HTML ─────────────────────────────────────────
@@ -967,6 +1064,9 @@ function processInline(
   text = text.replace(/\$([^$\n]+?)\$/g, (_, m) =>
     `<span class="math-inline" data-math="${encodeMath(sanitizeMathForKaTeX(m))}"></span>`
   );
+
+  // Accents (\'e, \c{c}, \ss{} ...) before the typography rules eat ' and ~
+  text = renderAccents(text);
 
   // Text formatting
   text = text.replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>");
@@ -1185,7 +1285,7 @@ function encodeMath(math: string): string {
   // Math may have been HTML-escaped upstream (escape-first in processInline);
   // KaTeX needs the raw characters, so reverse the entity encoding here. This
   // is a no-op for block-phase math (which is never escaped).
-  const raw = math
+  const raw = restoreEscapes(math, "raw")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
@@ -1233,6 +1333,7 @@ function extractBracedContent(src: string, cmd: string): string {
 }
 
 function escapeForDisplay(text: string): string {
+  text = renderAccents(protectEscapes(text));
   text = text.replace(/\\thanks\{[^{}]*\}/g, "");
   text = text.replace(/\\\\(\[[^\]]*\])?/g, " ");
   let prev = "";
@@ -1246,5 +1347,5 @@ function escapeForDisplay(text: string): string {
   text = text.replace(/\s+/g, " ");
   // HTML-escape: \title / \author / \date land in element text via the header,
   // so literal markup in them must not survive to dangerouslySetInnerHTML.
-  return escapeHtml(text.trim());
+  return restoreEscapes(escapeHtml(text.trim()), "html");
 }
