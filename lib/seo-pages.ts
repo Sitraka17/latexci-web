@@ -17,6 +17,63 @@ export function titleCase(s: string): string {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+const SLUG_OVERRIDES: Record<string, string> = {
+  vDash: "double-turnstile",
+  Vdash: "forces-vdash",
+  "lVert rVert": "norm-lvert-rvert",
+};
+
+function collisionSlug(sym: SymbolEntry, slug: string): string {
+  if (SLUG_OVERRIDES[sym.name]) return SLUG_OVERRIDES[sym.name];
+  if (sym.category === "Greek Uppercase") return `capital-${slug}`;
+  if (sym.category === "Arrows" && /^[A-Z]/.test(sym.name)) return `double-${slug}`;
+  return slug;
+}
+
+// Human names for page titles. Data names are terse search keys ("hbar
+// Planck", "AND"); searchers and SERP snippets need the usual name.
+const DISPLAY_OVERRIDES: Record<string, string> = {
+  "hbar Planck": "H-bar",
+  iff: "If and only if",
+  AND: "Logical AND",
+  "dagger adjoint": "Dagger",
+  "little o": "Little-o",
+  lcm: "LCM",
+  forall: "For all",
+  "mathcal D": "Calligraphic D",
+  rightleftharpoons: "Equilibrium arrow",
+  "left right parentheses": "Big parentheses",
+  "left right braces": "Big braces",
+  section: "Section sign",
+  pounds: "Pound sign",
+  copyright: "Copyright symbol",
+  vDash: "Double turnstile",
+  Vdash: "Forces symbol",
+  "lVert rVert": "Norm bars",
+  "nabla gradient": "Nabla",
+  Rightarrow: "Implies arrow",
+  Leftarrow: "Double left arrow",
+  Leftrightarrow: "Double left-right arrow",
+  Longrightarrow: "Long implies arrow",
+};
+
+/** Name used in titles, H1 and links. */
+export function displayName(sym: SymbolEntry): string {
+  if (DISPLAY_OVERRIDES[sym.name]) return DISPLAY_OVERRIDES[sym.name];
+  if (sym.category === "Greek Uppercase") return `Capital ${titleCase(sym.name.toLowerCase())}`;
+  return titleCase(sym.name);
+}
+
+/** The other-case Greek letter (\delta <-> \Delta), if the data has it. */
+export function caseCounterpart(sym: SymbolEntry): SymbolEntry | undefined {
+  if (!sym.category.startsWith("Greek")) return undefined;
+  const m = sym.command.match(/^\\([a-zA-Z])([a-z]+)$/);
+  if (!m) return undefined;
+  const first = m[1] === m[1].toUpperCase() ? m[1].toLowerCase() : m[1].toUpperCase();
+  const target = `\\${first}${m[2]}`;
+  return SYMBOLS.find((x) => x.command === target && x.category.startsWith("Greek"));
+}
+
 // ── Symbol slugs ──────────────────────────────────────────────────────────
 // Deterministic + collision-free. SYMBOLS order is stable, so the first symbol
 // to claim a slug keeps it and later collisions get a numeric suffix — the URL
@@ -28,6 +85,10 @@ const _symbolBySlug = new Map<string, SymbolEntry>();
   for (const sym of SYMBOLS) {
     let slug =
       baseSlug(sym.name) || baseSlug(sym.command.replace(/\\/g, "")) || "symbol";
+    // Readable alternatives for the case-only collisions (\delta vs \Delta,
+    // \rightarrow vs \Rightarrow). These replaced numeric suffixes such as
+    // delta-2 on 2026-10-05; next.config.ts 308-redirects the old URLs.
+    if (used.has(slug)) slug = collisionSlug(sym, slug);
     if (used.has(slug)) {
       let n = 2;
       while (used.has(`${slug}-${n}`)) n++;

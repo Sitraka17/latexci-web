@@ -160,7 +160,7 @@ export const SYMBOLS: SymbolEntry[] = [
   { name: "Leftarrow",         command: "\\Leftarrow",         package: "base",    category: "Arrows", unicode: "⇐" },
   { name: "Rightarrow",        command: "\\Rightarrow",        package: "base",    category: "Arrows", unicode: "⇒", description: "implies" },
   { name: "Leftrightarrow",    command: "\\Leftrightarrow",    package: "base",    category: "Arrows", unicode: "⇔", description: "if and only if" },
-  { name: "iff",               command: "\\iff",               package: "amsmath", category: "Arrows", unicode: "⟺", description: "if and only if (wide)" },
+  { name: "iff",               command: "\\iff",               package: "base"   , category: "Arrows", unicode: "⟺", description: "if and only if (wide)" },
   { name: "implies",           command: "\\implies",           package: "amsmath", category: "Arrows", unicode: "⟹", description: "implies (wide)" },
   { name: "uparrow",           command: "\\uparrow",           package: "base",    category: "Arrows", unicode: "↑" },
   { name: "downarrow",         command: "\\downarrow",         package: "base",    category: "Arrows", unicode: "↓" },

@@ -22,7 +22,37 @@ const SECURITY_HEADERS = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
 ];
 
+
+// Symbol pages whose slug was a numeric collision suffix (delta-2 for \Delta)
+// were renamed on 2026-10-05 to readable slugs; Google had indexed some of the
+// old URLs, so they 308 to the new ones. Plus one URL seen in Search Console
+// that never existed.
+async function legacyRedirects() {
+  return [
+      { source: "/tools/symbols/gamma-2", destination: "/tools/symbols/capital-gamma", permanent: true },
+      { source: "/tools/symbols/delta-2", destination: "/tools/symbols/capital-delta", permanent: true },
+      { source: "/tools/symbols/theta-2", destination: "/tools/symbols/capital-theta", permanent: true },
+      { source: "/tools/symbols/lambda-2", destination: "/tools/symbols/capital-lambda", permanent: true },
+      { source: "/tools/symbols/xi-2", destination: "/tools/symbols/capital-xi", permanent: true },
+      { source: "/tools/symbols/pi-2", destination: "/tools/symbols/capital-pi", permanent: true },
+      { source: "/tools/symbols/sigma-2", destination: "/tools/symbols/capital-sigma", permanent: true },
+      { source: "/tools/symbols/upsilon-2", destination: "/tools/symbols/capital-upsilon", permanent: true },
+      { source: "/tools/symbols/phi-2", destination: "/tools/symbols/capital-phi", permanent: true },
+      { source: "/tools/symbols/psi-2", destination: "/tools/symbols/capital-psi", permanent: true },
+      { source: "/tools/symbols/omega-2", destination: "/tools/symbols/capital-omega", permanent: true },
+      { source: "/tools/symbols/leftarrow-2", destination: "/tools/symbols/double-leftarrow", permanent: true },
+      { source: "/tools/symbols/rightarrow-2", destination: "/tools/symbols/double-rightarrow", permanent: true },
+      { source: "/tools/symbols/leftrightarrow-2", destination: "/tools/symbols/double-leftrightarrow", permanent: true },
+      { source: "/tools/symbols/longrightarrow-2", destination: "/tools/symbols/double-longrightarrow", permanent: true },
+      { source: "/tools/symbols/vdash-2", destination: "/tools/symbols/double-turnstile", permanent: true },
+      { source: "/tools/symbols/vdash-3", destination: "/tools/symbols/forces-vdash", permanent: true },
+      { source: "/tools/symbols/lvert-rvert-2", destination: "/tools/symbols/norm-lvert-rvert", permanent: true },
+      { source: "/tools/arxiv-to-bibtex-converter", destination: "/tools/arxiv-to-bibtex", permanent: true },
+  ];
+}
+
 const nextConfig: NextConfig = {
+  redirects: legacyRedirects,
   // Vercel runs Next.js natively — no static export needed.
   // Images are optimized by Vercel's built-in image service.
   async headers() {

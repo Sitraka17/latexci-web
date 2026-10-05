@@ -15,7 +15,8 @@ import {
   symbolSlug,
   canonicalSlug,
   relatedSymbols,
-  titleCase,
+  displayName,
+  caseCounterpart,
 } from "@/lib/seo-pages";
 
 export const dynamicParams = false;
@@ -66,11 +67,24 @@ function pkgNote(pkg: string): string | null {
 
 type Props = { params: Promise<{ slug: string }> };
 
+function glyphOf(sym: SymbolEntry): string | null {
+  return sym.unicode && [...sym.unicode].length === 1 ? sym.unicode : null;
+}
+
+/** "Delta in LaTeX: \delta (δ)": answer first, glyph last so it reads cleanly. */
+function pageTitle(sym: SymbolEntry): string {
+  const g = glyphOf(sym);
+  return `${displayName(sym)} in LaTeX: ${sym.command}${g ? ` (${g})` : ""}`;
+}
+
 function describe(sym: SymbolEntry): string {
   const where = sym.package === "base" ? "no package needed" : `package ${sym.package}`;
   const note = noteFor(sym.name);
   const alts = note ? note.variants.slice(1).map((v) => v.code).join(", ") : "";
-  return `Type ${sym.command} for ${sym.name} (${sym.unicode}) in LaTeX, ${where}.` +
+  const other = caseCounterpart(sym);
+  const g = glyphOf(sym);
+  return `Type ${sym.command} for ${displayName(sym).toLowerCase()}${g ? ` (${g})` : ""} in LaTeX, ${where}.` +
+    (other ? ` ${other.category === "Greek Uppercase" ? "Capital" : "Lowercase"} form: ${other.command} (${other.unicode}).` : "") +
     (alts ? ` Alternatives that compile: ${alts}.` : "") +
     ` Copy it, see it rendered and browse related ${sym.category} symbols. Free, no signup.`;
 }
@@ -79,22 +93,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const sym = symbolBySlug(slug);
   if (!sym) return {};
-  const name = titleCase(sym.name);
   // Canonical points at the primary page for this command so duplicate-command
   // pages (e.g. \Omega as "Omega" and "ohm") consolidate instead of competing.
   const canonPath = `/tools/symbols/${canonicalSlug(sym)}`;
   return {
     // Answer first: searchers want the command, so it leads the title and description.
-    title: `${name} in LaTeX: ${sym.command}`,
+    title: pageTitle(sym),
     description: describe(sym),
     alternates: { canonical: canonPath },
     openGraph: {
-      title: `${name} in LaTeX: ${sym.command}`,
+      title: pageTitle(sym),
       description: `LaTeX code for ${sym.name} (${sym.unicode}): ${sym.command}.`,
       url: canonPath,
       type: "website",
     },
-    twitter: { card: "summary_large_image", title: `${name} in LaTeX: ${sym.command}` },
+    twitter: { card: "summary_large_image", title: pageTitle(sym) },
   };
 }
 
@@ -112,7 +125,8 @@ export default async function SymbolPage({ params }: Props) {
   const sym = symbolBySlug(slug);
   if (!sym) notFound();
 
-  const name = titleCase(sym.name);
+  const name = displayName(sym);
+  const other = caseCounterpart(sym);
   const hero = renderMath(displayTex(sym), true);
   const note = noteFor(sym.name);
   const isText = sym.category === "Text Symbols";
@@ -174,6 +188,13 @@ export default async function SymbolPage({ params }: Props) {
           <p style={{ ...para, marginBottom: "1.75rem" }}>
             The LaTeX command for {sym.name}{isGlyph ? ` (${sym.unicode})` : ""} is <code style={codeStyle}>{sym.command}</code>
             {sym.description ? ` (${sym.description}).` : "."}
+            {other && (
+              <> {other.category === "Greek Uppercase" ? "The capital form" : "The lowercase form"}{" "}
+                {other.unicode} is{" "}
+                <Link href={`/tools/symbols/${symbolSlug(other)}`} style={{ color: "var(--accent)" }}>
+                  <code style={codeStyle}>{other.command}</code>
+                </Link>.</>
+            )}
           </p>
 
           {/* Hero card: rendered glyph + command + copy */}
@@ -277,7 +298,7 @@ export default async function SymbolPage({ params }: Props) {
                   <Link
                     key={symbolSlug(r)}
                     href={`/tools/symbols/${symbolSlug(r)}`}
-                    title={`${titleCase(r.name)}: ${r.command}`}
+                    title={`${displayName(r)}: ${r.command}`}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "0.4rem",
                       padding: "0.35rem 0.7rem", borderRadius: 7,

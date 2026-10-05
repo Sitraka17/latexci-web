@@ -5,7 +5,7 @@ import Link from "next/link";
 import SymbolSearch from "@/components/SymbolSearch";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
-import { symbolsByCategory, symbolSlug, titleCase } from "@/lib/seo-pages";
+import { symbolsByCategory, symbolSlug, displayName } from "@/lib/seo-pages";
 
 export const metadata: Metadata = {
   title: "LaTeX Symbol Search — 380+ Symbols with Live Preview",
@@ -171,7 +171,7 @@ export default function SymbolsPage() {
                     <Link
                       key={symbolSlug(s)}
                       href={`/tools/symbols/${symbolSlug(s)}`}
-                      title={`${titleCase(s.name)} — ${s.command}`}
+                      title={`${displayName(s)}: ${s.command}`}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: "0.35rem",
                         padding: "0.25rem 0.55rem", borderRadius: 6,

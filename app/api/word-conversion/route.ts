@@ -37,6 +37,27 @@ function currentPeriod(): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+// Is the Supabase auth service reachable? Without it nobody can sign in, so
+// the sign-in gate would block every visitor. The conversion itself runs in
+// the browser at no cost to us, so during an outage we let it through
+// (unmetered) instead of breaking the tool. Cached 60 s per instance.
+let authHealth: { up: boolean; at: number } | null = null;
+async function authServiceUp(): Promise<boolean> {
+  if (authHealth && Date.now() - authHealth.at < 60_000) return authHealth.up;
+  let up = false;
+  try {
+    const r = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health`, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "" },
+      signal: AbortSignal.timeout(3_000),
+    });
+    up = r.status < 500; // 200, or 401 without a key: reachable either way
+  } catch {
+    up = false; // DNS failure (paused project), timeout, network error
+  }
+  authHealth = { up, at: Date.now() };
+  return up;
+}
+
 export async function POST() {
   // ── Dev / unconfigured → always allow ─────────────────────────────────────
   if (!isSupabaseConfigured) {
@@ -47,6 +68,11 @@ export async function POST() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // ── Auth backend down → allow, unmetered (see authServiceUp) ──────────────
+  if (!user && !(await authServiceUp())) {
+    return NextResponse.json({ allowed: true, used: 0, limit: null, remaining: null, degraded: true });
+  }
 
   // ── Not signed in → block with sign-in prompt ──────────────────────────────
   if (!user) {

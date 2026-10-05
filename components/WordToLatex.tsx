@@ -123,21 +123,40 @@ function ommlNodeToLatex(el: Element): string {
   }
 }
 
-/** Extract all OMML equations from a docx XML string → LaTeX strings */
-function extractOmmlEquations(xml: string): string[] {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, "application/xml");
-  const results: string[] = [];
+/**
+ * Replace every OMML equation in document.xml with a plain-text placeholder
+ * run, so mammoth (which drops OMML) keeps the equation's position. Returns
+ * the rewritten XML and the LaTeX for each placeholder, in order.
+ */
+const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+const M_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math";
+function eqToken(i: number) { return `LTXCIEQ${i}Z`; }
 
-  // Find both inline oMath and block oMathPara
-  doc.querySelectorAll("m\\:oMath, oMath").forEach(el => {
+function inlineOmmlEquations(xml: string): { xml: string; equations: { latex: string; display: boolean }[] } {
+  const doc = new DOMParser().parseFromString(xml, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) return { xml, equations: [] };
+  const equations: { latex: string; display: boolean }[] = [];
+  const swap = (el: Element, display: boolean) => {
+    // Convert the children, not the element: ommlNodeToLatex wraps oMath in $…$
+    // and oMathPara in \[…\]; the delimiters are chosen when swapping back.
+    const body = (m: Element) => Array.from(m.children).map(ommlNodeToLatex).join("");
+    let latex = "";
     try {
-      const latex = ommlNodeToLatex(el).trim();
-      if (latex) results.push(latex);
-    } catch { /* skip */ }
-  });
-
-  return results;
+      latex = (display
+        ? Array.from(el.getElementsByTagNameNS(M_NS, "oMath")).map(body).join(" \\\\ ")
+        : body(el)).trim();
+    } catch { /* keep empty */ }
+    const run = doc.createElementNS(W_NS, "w:r");
+    const t = doc.createElementNS(W_NS, "w:t");
+    t.textContent = latex ? eqToken(equations.length) : "";
+    run.appendChild(t);
+    el.parentNode?.replaceChild(run, el);
+    if (latex) equations.push({ latex, display });
+  };
+  // Display equations first, so their inner oMath is not handled twice.
+  Array.from(doc.getElementsByTagNameNS(M_NS, "oMathPara")).forEach(el => swap(el, true));
+  Array.from(doc.getElementsByTagNameNS(M_NS, "oMath")).forEach(el => swap(el, false));
+  return { xml: new XMLSerializer().serializeToString(doc), equations };
 }
 
 // ── HTML → LaTeX converter ────────────────────────────────────────────────────
@@ -213,7 +232,7 @@ function htmlToLatex(html: string): { latex: string; stats: Partial<QualityRepor
         // Count max columns from first row
         const firstRow = el.querySelector("tr");
         const cols = firstRow ? firstRow.querySelectorAll("td, th").length : 1;
-        const spec = Array(cols).fill("l").join(" | ");
+        const spec = Array(cols).fill("l").join(""); // booktabs: no vertical rules
         // Use booktabs style
         return (
           `\n\\begin{table}[htbp]\n  \\centering\n` +
@@ -358,18 +377,23 @@ export default function WordToLatex() {
     try {
       const arrayBuffer = await file.arrayBuffer();
 
-      // ── 1. Extract OMML equations from raw docx XML ─────────────────────
-      let equationCount = 0;
-      let convertedEquations: string[] = [];
+      // ── 1. Put OMML equations in place as placeholders (mammoth drops them)
+      let equations: { latex: string; display: boolean }[] = [];
+      let docBuffer: ArrayBuffer = arrayBuffer;
       try {
         const JSZip = (await import("jszip")).default;
         const zip = await JSZip.loadAsync(arrayBuffer);
         const docXml = await zip.file("word/document.xml")?.async("text");
         if (docXml) {
-          convertedEquations = extractOmmlEquations(docXml);
-          equationCount = convertedEquations.length;
+          const res = inlineOmmlEquations(docXml);
+          if (res.equations.length) {
+            equations = res.equations;
+            zip.file("word/document.xml", res.xml);
+            docBuffer = await zip.generateAsync({ type: "arraybuffer" });
+          }
         }
       } catch { /* JSZip or XML parsing failed — continue without equations */ }
+      const equationCount = equations.length;
 
       // ── 2. Convert via mammoth ──────────────────────────────────────────
       const mammoth = await import("mammoth");
@@ -377,7 +401,7 @@ export default function WordToLatex() {
       const imageMap: Record<string, string> = {};
 
       const { value: html, messages } = await mammoth.convertToHtml(
-        { arrayBuffer },
+        { arrayBuffer: docBuffer },
         {
           convertImage: mammoth.images.imgElement(async (image) => {
             imageIdx++;
@@ -411,19 +435,16 @@ export default function WordToLatex() {
       };
       fullReport.score = calcScore(fullReport);
 
-      // ── 5. Append equation stubs if detected ───────────────────────────
-      let finalLatex = latex;
-      if (equationCount > 0 && convertedEquations.length > 0) {
-        const eqBlock = [
-          "",
-          "% ─── EQUATIONS DETECTED ────────────────────────────────────────────",
-          "% The following equations were found in your document.",
-          "% They have been converted from OMML — please review and adjust:",
-          ...convertedEquations.map((eq, i) => `% Eq ${i + 1}: ${eq}`),
-          "% ────────────────────────────────────────────────────────────────────",
-        ].join("\n");
-        finalLatex = finalLatex.replace("\\end{document}", eqBlock + "\n\n\\end{document}");
-      }
+      // ── 5. Swap placeholders back for the converted equations ──────────
+      const finalLatex = latex.replace(/LTXCIEQ(\d+)Z/g, (_, i) => {
+        const eq = equations[Number(i)];
+        if (!eq) return "";
+        if (!eq.display) return `$${eq.latex}$`;
+        // A multi-line oMathPara cannot live in \[ \]: use gather* (amsmath).
+        return eq.latex.includes(" \\\\ ")
+          ? `\n\\begin{gather*}\n  ${eq.latex}\n\\end{gather*}\n`
+          : `\n\\[\n  ${eq.latex}\n\\]\n`;
+      });
 
       setResult(finalLatex);
       setWarnings(warns);
@@ -565,7 +586,7 @@ export default function WordToLatex() {
           </div>
           {report.equations > 0 && (
             <p style={{ margin: "0.6rem 0 0", fontSize: "0.8rem", color: "#ca8a04" }}>
-              ⚠ <strong>{report.equations} equation{report.equations > 1 ? "s" : ""}</strong> detected and converted (OMML→LaTeX, best-effort). Review the stubs at the bottom of the file.
+              ⚠ <strong>{report.equations} equation{report.equations > 1 ? "s" : ""}</strong> converted in place (OMML to LaTeX, best-effort). Check complex ones before compiling.
             </p>
           )}
           {report.images > 0 && (
@@ -622,7 +643,7 @@ export default function WordToLatex() {
               ["✓", "Lists → itemize / enumerate"],
               ["✓", "Images → \\includegraphics stubs"],
               ["✓", "Links → \\href"],
-              ["✓", "Equations (OMML) → LaTeX math stubs"],
+              ["✓", "Equations (OMML) → inline and display LaTeX math"],
               ["✗", "Complex layouts (columns, text boxes)"],
             ].map(([icon, text], i) => (
               <div key={i} style={{ display: "flex", gap: "0.4rem" }}>
