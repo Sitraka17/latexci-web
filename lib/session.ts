@@ -5,7 +5,8 @@
  * Nothing about the user is stored server-side; the plan (free / pro / lab) is
  * read from Stripe on demand (lib/entitlement.ts).
  *
- * Required env: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_SECRET.
+ * Required env: GOOGLE_CLIENT_ID (public) and AUTH_SECRET. No Google client
+ * secret: sign-in uses the ID-token flow (lib/google-id-token.ts).
  * Without them sign-in is switched off and every gate fails open.
  */
 import { cookies } from "next/headers";
@@ -23,7 +24,7 @@ export type Session = {
 };
 
 export const isAuthConfigured =
-  !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET && !!process.env.AUTH_SECRET;
+  !!process.env.GOOGLE_CLIENT_ID && !!process.env.AUTH_SECRET;
 
 const enc = new TextEncoder();
 

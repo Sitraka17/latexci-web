@@ -1,6 +1,7 @@
 # Turning on Google sign-in
 
-latexci signs users in with Google (OAuth 2.0, code flow with PKCE) and keeps
+latexci signs users in with Google (OpenID Connect ID-token flow with
+form_post, state and nonce; no client secret is used or stored) and keeps
 no database: the session is a signed cookie (`lib/session.ts`) and the plan is
 read from Stripe (`lib/entitlement.ts`). Until the variables below exist, the
 sign-in page says "being set up" and every tool, PDF export included, is open.
@@ -16,13 +17,12 @@ sign-in page says "being set up" and every tool, PDF export included, is open.
    - Authorised redirect URIs:
      - `https://latexci.com/api/auth/callback/google`
      - `http://localhost:3000/api/auth/callback/google` (local dev)
-4. Copy the client ID and the client secret.
+4. Copy the client ID. The client secret is not used: leave it in Google.
 
 ## 2. Add them to Vercel (Production)
 
 ```bash
 vercel env add GOOGLE_CLIENT_ID production
-vercel env add GOOGLE_CLIENT_SECRET production
 ```
 
 `AUTH_SECRET` is already set (random, 2026-10-05). Changing it signs everyone out.

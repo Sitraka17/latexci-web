@@ -1,6 +1,8 @@
 /**
  * GET /api/auth/google?next=/path
- * Starts the Google OAuth 2.0 authorization-code flow (with PKCE + state).
+ * Starts OpenID Connect sign-in with Google. No client secret: Google posts a
+ * signed ID token back (response_mode=form_post) and the callback verifies it
+ * against Google's public keys, with state and nonce bound to this browser.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { b64url, isAuthConfigured, safeNext, sign } from "@/lib/session";
@@ -14,24 +16,24 @@ export async function GET(req: NextRequest) {
   }
 
   const state = b64url(crypto.getRandomValues(new Uint8Array(24)));
-  const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
-  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  const nonce = b64url(crypto.getRandomValues(new Uint8Array(24)));
 
   const auth = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   auth.search = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
     redirect_uri: `${req.nextUrl.origin}/api/auth/callback/google`,
-    response_type: "code",
+    response_type: "id_token",
+    response_mode: "form_post",
     scope: "openid email profile",
     state,
-    code_challenge: challenge,
-    code_challenge_method: "S256",
+    nonce,
     prompt: "select_account",
   }).toString();
 
   const res = NextResponse.redirect(auth);
-  res.cookies.set("lx_oauth", await sign({ state, verifier, next }), {
-    httpOnly: true, secure: req.nextUrl.protocol === "https:", sameSite: "lax", path: "/api/auth", maxAge: 600,
+  // SameSite=None: Google's form_post is a cross-site POST, which drops Lax cookies.
+  res.cookies.set("lx_oauth", await sign({ state, nonce, next }), {
+    httpOnly: true, secure: true, sameSite: "none", path: "/api/auth", maxAge: 600,
   });
   return res;
 }
