@@ -84,7 +84,7 @@ const FAQS = [
   { q: "Does the preview support math equations?",
     a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, with automatic equation numbering, \\ref cross-references, and bibliography rendering." },
   { q: "What file types does Word → LaTeX accept?",
-    a: ".docx (Word 2007+) converts directly in your browser — the file is never uploaded. Word equations (OMML) are converted to LaTeX math in place, inline or displayed. .odt and .rtf need local pandoc; the tool shows you the exact command." },
+    a: ".docx (Word 2007+) converts directly in your browser: the file is never uploaded. Word equations (OMML) are converted to LaTeX math in place, inline or displayed. .odt and .rtf need local pandoc; the tool shows you the exact command." },
   { q: "Is my LaTeX source stored anywhere?",
     a: "No. Preview, diff, table, symbol search, and Word → LaTeX all run entirely in your browser. Nothing is uploaded. PDF export sends only your LaTeX source to YToTech's compile server and downloads the result directly." },
   { q: "I have Overleaf through my university. Why use this?",

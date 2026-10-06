@@ -44,7 +44,7 @@ type Entry = {
 };
 
 // Only public, canonical, indexable, final-200 pages. Deliberately excluded:
-// /auth, /dashboard, /shared/[token] — all noindex.
+// /auth, /dashboard, /shared/[token]: all noindex.
 const PAGES: Entry[] = [
   { path: "/",                  changeFrequency: "weekly",  priority: 1.0 },
   { path: "/academics",         changeFrequency: "monthly", priority: 0.95 },
