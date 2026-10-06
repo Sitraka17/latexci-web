@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { clearAllDocs, createDoc, deleteDoc, listDocs, updateDoc, type LocalDoc } from "@/lib/local-docs";
 
-type Me = { configured: boolean; user: { email: string; name: string | null } | null; tier: string };
+type Me = { configured: boolean; user: { email: string; name: string | null } | null };
 
 const cell: CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid var(--border)", fontSize: "0.86rem", verticalAlign: "middle" };
 const head: CSSProperties = { ...cell, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)", textAlign: "left" };
@@ -54,19 +54,10 @@ export default function DashboardClient() {
 
   const deleteEverything = async () => {
     if (!window.confirm("Delete every document saved in this browser and sign out? This cannot be undone.")) return;
-    if (me?.user) {
-      const r = await fetch("/api/account/delete", { method: "POST" });
-      if (r.status === 409) {
-        const body = await r.json().catch(() => ({}));
-        setNotice(body.message ?? "Cancel your subscription first.");
-        return;
-      }
-    }
+    if (me?.user) await fetch("/api/account/delete", { method: "POST" });
     clearAllDocs();
     window.location.href = "/";
   };
-
-  const paid = me?.tier && me.tier !== "free";
 
   return (
     <>
@@ -135,8 +126,7 @@ export default function DashboardClient() {
         {me?.user ? (
           <>
             <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
-              Signed in with Google as <strong>{me.user.email}</strong>. Plan: <strong style={{ textTransform: "capitalize" }}>{me.tier}</strong>.
-              {!paid && <> <Link href="/pricing" style={{ color: "var(--accent)" }}>Upgrade to Pro</Link> for PDF export and unlimited Word conversions.</>}
+              Signed in with Google as <strong>{me.user.email}</strong>. Everything on latexci is free.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <button style={btn} onClick={signOut}>Sign out</button>
@@ -148,7 +138,7 @@ export default function DashboardClient() {
             <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
               {me && !me.configured
                 ? "Sign-in is being set up. Your documents above work without an account."
-                : "You are not signed in. Documents above work without an account; sign in to use Pro features."}
+                : "You are not signed in. Everything works without an account; signing in is optional."}
             </p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               {me?.configured && <Link href="/auth?next=/dashboard" style={btn}>Sign in</Link>}

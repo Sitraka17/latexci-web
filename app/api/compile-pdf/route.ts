@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, isAuthConfigured } from "@/lib/session";
-import { getTier, isBillingConfigured, isPaid } from "@/lib/entitlement";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -15,29 +13,10 @@ function isPdf(buf: ArrayBuffer): boolean {
   return b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46 && b[4] === 0x2d;
 }
 
-/** Returns true when this user's tier allows PDF export. */
-async function checkPdfAccess(): Promise<{ allowed: boolean; reason?: string }> {
-  // Sign-in or billing not set up: nobody could unlock Pro, so stay open.
-  if (!isAuthConfigured || !isBillingConfigured) return { allowed: true };
-  const session = await getSession();
-  if (!session) return { allowed: false, reason: "sign_in_required" };
-  if (!isPaid(await getTier(session))) return { allowed: false, reason: "upgrade_required" };
-  return { allowed: true };
-}
-
 export async function POST(req: NextRequest) {
-  // ── Rate limit: 5 compilations/min per IP (pro feature but still protect YToTech) ──
+  // ── Rate limit: 5 compilations/min per IP (free for everyone, but protect YToTech) ──
   const rl = rateLimit(req, { limit: 5, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ error: rl.message, feature: "pdf_export" }, { status: 429, headers: rl.headers });
-
-  // ── Auth gate ──────────────────────────────────────────────────────────────
-  const access = await checkPdfAccess();
-  if (!access.allowed) {
-    return NextResponse.json(
-      { error: "upgrade_required", reason: access.reason, feature: "pdf_export" },
-      { status: 403 }
-    );
-  }
 
   // ── Validate body ──────────────────────────────────────────────────────────
   let source: string;

@@ -32,6 +32,8 @@ async function legacyRedirects() {
       // Cloud documents and Supabase auth were retired (Google sign-in, local documents).
       { source: "/shared/:token", destination: "/tools/preview", permanent: true },
       { source: "/auth/callback", destination: "/auth", permanent: true },
+      // Paid plans were retired (2026-10-06): everything is free.
+      { source: "/pricing/:rest+", destination: "/pricing", permanent: true },
       // Browsers and crawlers request /favicon.ico blindly; the icon is app/icon.svg.
       { source: "/favicon.ico", destination: "/icon.svg", permanent: true },
       { source: "/tools/symbols/gamma-2", destination: "/tools/symbols/capital-gamma", permanent: true },

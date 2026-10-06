@@ -40,8 +40,8 @@ export default function AuthForm({ configured }: { configured: boolean }) {
     <div style={{ maxWidth: 420, width: "100%", border: "1px solid var(--border)", background: "var(--surface)", padding: "2rem 1.75rem" }}>
       <h1 style={{ fontSize: "1.45rem", fontWeight: 800, margin: "0 0 0.5rem" }}>Sign in to latexci</h1>
       <p style={{ color: "var(--fg-muted)", fontSize: "0.88rem", lineHeight: 1.65, margin: "0 0 1.5rem" }}>
-        Sign in to use Pro features (PDF export, unlimited Word conversions) and manage your plan. Every
-        other tool works without an account.
+        Every latexci tool is free and works without an account, PDF export included. Signing in is
+        optional: it shows your Google name on the dashboard.
       </p>
 
       {error && (
@@ -63,7 +63,7 @@ export default function AuthForm({ configured }: { configured: boolean }) {
         </a>
       ) : (
         <p style={{ fontSize: "0.86rem", lineHeight: 1.6, margin: 0, padding: "0.75rem 0.9rem", border: "1px solid var(--border)", background: "var(--surface2)" }}>
-          Sign-in is being set up. In the meantime every tool is open to everyone, including PDF export.
+          Sign-in is being set up. Every tool already works without an account.
         </p>
       )}
 

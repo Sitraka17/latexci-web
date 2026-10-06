@@ -39,7 +39,7 @@ export default function Navbar() {
         <div className="desktop-nav nav-actions">
           <ThemeToggle />
           <AuthButton />
-          <Link href="/pricing" className="nav-pricing">✦ Pricing</Link>
+          <Link href="/pricing" className="nav-pricing">Pricing</Link>
           <a
             href="https://discord.gg/latexci"
             target="_blank"

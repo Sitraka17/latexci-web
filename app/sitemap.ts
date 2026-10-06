@@ -17,9 +17,9 @@ const BASE_URL =
 // trains crawlers to ignore our lastmod. These are honest, stable dates — bump the
 // relevant entry when you materially edit a page (templates also covers lib/templates.ts).
 const LAST_MODIFIED: Record<string, string> = {
-  "/": "2026-07-10",
+  "/": "2026-10-06",
   "/academics": "2026-07-05",
-  "/tools/preview": "2026-08-02",
+  "/tools/preview": "2026-10-06",
   "/tools/table": "2026-07-06",
   "/tools/diff": "2026-07-05",
   "/tools/word-to-latex": "2026-10-05",
@@ -32,9 +32,9 @@ const LAST_MODIFIED: Record<string, string> = {
   "/tools/templates": "2026-07-06",
   "/tools/cv-builder": "2026-10-03",
   "/after-overleaf": "2026-07-05",
-  "/pricing": "2026-07-10",
-  "/privacy": "2026-07-06",
-  "/terms": "2026-07-05",
+  "/pricing": "2026-10-06",
+  "/privacy": "2026-10-06",
+  "/terms": "2026-10-06",
 };
 
 type Entry = {
@@ -44,7 +44,7 @@ type Entry = {
 };
 
 // Only public, canonical, indexable, final-200 pages. Deliberately excluded:
-// /auth, /dashboard, /pricing/success, /pricing/cancel, /shared/[token] — all noindex.
+// /auth, /dashboard, /shared/[token] — all noindex.
 const PAGES: Entry[] = [
   { path: "/",                  changeFrequency: "weekly",  priority: 1.0 },
   { path: "/academics",         changeFrequency: "monthly", priority: 0.95 },

@@ -6,7 +6,6 @@ import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
 import { createDoc, getDoc, updateDoc } from "@/lib/local-docs";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
-import UpgradeModal from "@/components/UpgradeModal";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
@@ -112,10 +111,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [loadError, setLoadError]     = useState(false);
   const [isLight, setIsLight]         = useState(false);
   const [splitPct, setSplitPct]       = useState(50); // editor width %
-  const [upgradeModal, setUpgradeModal] = useState<{
-    feature: "pdf_export";
-    reason: "sign_in_required" | "upgrade_required";
-  } | null>(null);
   const [clearPending, setClearPending] = useState(false);
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -496,17 +491,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source }),
       });
-
-      // ── Gate response ─────────────────────────────────────────────────────
-      if (res.status === 403) {
-        const body = await res.json().catch(() => ({}));
-        setPdfStatus("idle");
-        setUpgradeModal({
-          feature: "pdf_export",
-          reason: body.reason === "sign_in_required" ? "sign_in_required" : "upgrade_required",
-        });
-        return;
-      }
 
       if (!res.ok) {
         const { error } = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
@@ -1041,14 +1025,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       </div>
     </div>
 
-    {/* ── Upgrade modal (PDF gate) ──────────────────────────────────────── */}
-    {upgradeModal && (
-      <UpgradeModal
-        feature={upgradeModal.feature}
-        reason={upgradeModal.reason}
-        onClose={() => setUpgradeModal(null)}
-      />
-    )}
     </>
   );
 }

@@ -79,20 +79,18 @@ const SCENARIOS = [
 ];
 
 const FAQS = [
-  { q: "What's free and what requires Pro?",
-    a: "Preview, diff, symbol search, table generator, and all templates are free forever — no account needed. Word → LaTeX is free for 3 conversions/month (sign in required). PDF export and unlimited Word → LaTeX require Pro ($49/year or $9/month)." },
+  { q: "What does latexci cost?",
+    a: "Nothing. Every tool is free with no account: preview, PDF export, Word to LaTeX, BibTeX tools, diff, table and CV generators, symbols and all templates. There is no paid plan." },
   { q: "Does the preview support math equations?",
     a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, with automatic equation numbering, \\ref cross-references, and bibliography rendering." },
   { q: "What file types does Word → LaTeX accept?",
-    a: ".docx (Word 2007+) converts directly in your browser — the file is never uploaded. Equations are detected via OMML and converted to LaTeX math stubs. .odt and .rtf need local pandoc; the tool shows you the exact command." },
+    a: ".docx (Word 2007+) converts directly in your browser — the file is never uploaded. Word equations (OMML) are converted to LaTeX math in place, inline or displayed. .odt and .rtf need local pandoc; the tool shows you the exact command." },
   { q: "Is my LaTeX source stored anywhere?",
     a: "No. Preview, diff, table, symbol search, and Word → LaTeX all run entirely in your browser. Nothing is uploaded. PDF export sends only your LaTeX source to YToTech's compile server and downloads the result directly." },
   { q: "I have Overleaf through my university. Why use this?",
     a: "latexci does things Overleaf doesn't: convert Word files with equation detection, clean and deduplicate .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files side by side. Use Overleaf as your editor — latexci for the rest. When you graduate and lose institutional access, latexci is still here." },
-  { q: "Is Pro grant-fundable?",
-    a: "Yes. Pro at $49/year fits in most lab software budgets and comes with an invoice you can submit. Lab plan ($199/year, 5 seats) works for a whole research group and includes budget justification language for NSF, NIH, or ERC applications." },
-  { q: "Can I try Pro before paying?",
-    a: "Everything except PDF export is free with no credit card — including the live preview, so you can see your fully-rendered document before deciding anything. Word → LaTeX includes 3 free conversions a month to test the quality on your own files. If the output isn't right for your documents, don't upgrade." },
+  { q: "Do I need an account?",
+    a: "No. Documents you save stay in your browser, and share links carry the source in the URL. Signing in with Google is optional." },
 ];
 
 // ── Structured data ────────────────────────────────────────────────────────

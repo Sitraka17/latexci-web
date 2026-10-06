@@ -15,13 +15,12 @@ export const metadata: Metadata = {
   },
 };
 
-const YEAR = new Date().getFullYear();
 
 const SECTIONS = [
   {
     title: "1. Acceptance",
     body: [
-      `By accessing latexci (latexci.com), you agree to these Terms of Service. If you do not agree, please do not use the service. These terms were last updated in ${YEAR}.`,
+      `By accessing latexci (latexci.com), you agree to these Terms of Service. If you do not agree, please do not use the service. These terms were last updated on 6 October 2026.`,
     ],
   },
   {
@@ -56,11 +55,9 @@ const SECTIONS = [
     ],
   },
   {
-    title: "6. Paid plans",
+    title: "6. Price",
     body: [
-      "Pro and Lab plans are billed via Stripe. By purchasing a plan, you agree to Stripe's Terms of Service.",
-      "Annual plans are billed once per year. Monthly plans are billed each month. Prices are in USD and exclude applicable taxes.",
-      "You may cancel at any time. Your plan remains active until the end of the current billing period. We do not offer pro-rated refunds on annual plans unless required by law.",
+      "latexci is free. There is no paid plan and no payment is ever requested. Voluntary donations through Buy Me a Coffee are gifts and give no additional rights.",
     ],
   },
   {

@@ -2,12 +2,12 @@
  * Google sign-in session, with no database.
  *
  * The session is a signed cookie: base64url(JSON payload) + "." + HMAC-SHA256.
- * Nothing about the user is stored server-side; the plan (free / pro / lab) is
- * read from Stripe on demand (lib/entitlement.ts).
+ * Nothing about the user is stored server-side. Every tool is free; signing
+ * in is optional.
  *
  * Required env: GOOGLE_CLIENT_ID (public) and AUTH_SECRET. No Google client
  * secret: sign-in uses the ID-token flow (lib/google-id-token.ts).
- * Without them sign-in is switched off and every gate fails open.
+ * Without them sign-in is switched off.
  */
 import { cookies } from "next/headers";
 

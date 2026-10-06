@@ -50,7 +50,7 @@ const FAQS = [
   },
   {
     q: "Do I need an account?",
-    a: "No. The live preview is free and needs no signup. PDF export is part of the optional Pro plan, but previewing your document is always free.",
+    a: "No. The live preview and the PDF export are free and need no signup.",
   },
 ];
 
@@ -120,7 +120,7 @@ export default function PreviewPage() {
             everyday math, and macros you define with <Code>{"\\newcommand"}</Code> are expanded. It is not a
             full TeX engine, though — package-specific layout, custom document classes, bibliographies, and
             references that need multiple compile passes won&rsquo;t match a real build. When you need a final,
-            publication-ready PDF, export it from here (a Pro feature) or compile with a full TeX distribution
+            publication-ready PDF, export it from here or compile with a full TeX distribution
             such as TeX&nbsp;Live with <Code>latexmk</Code>, or Overleaf.
           </p>
 
@@ -128,7 +128,7 @@ export default function PreviewPage() {
           <ol style={{ ...para, paddingLeft: "1.25rem" }}>
             <li style={{ marginBottom: "0.5rem" }}>Paste or type your LaTeX in the left-hand editor.</li>
             <li style={{ marginBottom: "0.5rem" }}>Watch the preview render as you type — a mistake in a formula shows up right where it happens, so you can fix it without a compile cycle.</li>
-            <li>Copy the source back into your main editor, or export to PDF (Pro) when the document looks right.</li>
+            <li>Copy the source back into your main editor, or export to PDF when the document looks right.</li>
           </ol>
 
           <h2 style={{ ...h2, marginTop: "2.75rem" }}>Frequently asked questions</h2>

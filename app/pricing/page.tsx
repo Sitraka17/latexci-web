@@ -1,211 +1,114 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
-import PricingCards from "@/components/PricingCards";
+import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Pricing: latexci Pro at $49/year",
+  title: "Pricing: latexci Is Free",
   description:
-    "latexci Pro costs $49 a year or $9 a month: PDF export and unlimited Word to LaTeX. Lab plan $199 a year for 5 seats. All 28 templates stay free.",
-  keywords: [
-    "latex tools pricing", "latex pro plan", "cheap overleaf alternative",
-    "academic software grant fundable", "research lab latex tools", "latex pdf export",
-  ],
+    "Every latexci tool is free: live preview, PDF export, Word to LaTeX, BibTeX tools, diff, CV generator and 28 templates. No account, no plan, no limits.",
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: "latexci Pricing — Pro at $49/year",
-    description: "Unlimited Word→LaTeX, PDF export, priority support. $49/year. Grant-reimbursable.",
+    title: "latexci is free",
+    description: "Every tool, PDF export included. No account, no plan, no limits.",
     url: "/pricing",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "latexci Pricing — Pro at $49/year",
-    description: "Unlimited Word→LaTeX, PDF export, priority support. $49/year. Grant-reimbursable.",
-  },
+  twitter: { card: "summary_large_image", title: "latexci is free" },
 };
 
-const faqSchema = {
+const TOOLS: { name: string; href: string; note: string }[] = [
+  { name: "Live LaTeX preview", href: "/tools/preview", note: "with PDF export" },
+  { name: "Word to LaTeX", href: "/tools/word-to-latex", note: "unlimited .docx conversions" },
+  { name: "BibTeX cleaner", href: "/tools/bibtex", note: "plus DOI, arXiv, PubMed and ISBN lookups" },
+  { name: "LaTeX diff", href: "/tools/diff", note: "with downloadable patch" },
+  { name: "Table generator", href: "/tools/table", note: "booktabs output" },
+  { name: "CV generator", href: "/tools/cv-builder", note: "with ORCID import" },
+  { name: "Templates", href: "/tools/templates", note: "28 papers, theses, CVs and slides" },
+  { name: "Symbol search", href: "/tools/symbols", note: "380+ symbols with live preview" },
+];
+
+const FAQS = [
+  {
+    q: "Is everything really free?",
+    a: "Yes. Every tool, PDF export and Word conversion included, with no account, no trial and no usage limit beyond a basic anti-abuse rate limit.",
+  },
+  {
+    q: "Do I need an account?",
+    a: "No. Documents you save stay in your browser. Signing in with Google is optional and only shows your name on the dashboard.",
+  },
+  {
+    q: "How is latexci funded?",
+    a: "It is a side project with low running costs: most tools run entirely in your browser. If it saves you time, you can buy the author a coffee.",
+  },
+  {
+    q: "Was there a paid plan before?",
+    a: "A Pro plan was announced but never sold. PDF export and unlimited Word conversion, the features it would have covered, are now free for everyone.",
+  },
+];
+
+const schema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "How is latexci different from Overleaf?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "latexci is a browser-based toolset (preview, diff, Word conversion, table generator) that works without a LaTeX installation. It's not a full IDE, so it's faster to open and ideal for quick checks, sharing previews, and converting documents.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Is the Pro plan grant-fundable?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Lab and Institution plans come with an official invoice and a sample budget justification you can include in NSF, NIH, or ERC grant applications under 'software tools' or 'publication costs'.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Can I cancel at any time?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Cancel any time from your account settings. Your plan stays active until the end of the billing period — no pro-rated refunds on annual plans.",
-      },
-    },
-  ],
+  mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 };
+
+const cell: CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid var(--border)", fontSize: "0.9rem", textAlign: "left" };
 
 export default function PricingPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Pricing", path: "/pricing" })) }} />
       <Navbar />
+      <main style={{ flex: 1, maxWidth: 760, width: "100%", margin: "0 auto", padding: "3rem 1.5rem 4rem", boxSizing: "border-box" }}>
+        <h1 style={{ fontSize: "clamp(1.7rem, 4vw, 2.3rem)", fontWeight: 800, margin: "0 0 0.75rem" }}>latexci is free</h1>
+        <p style={{ fontSize: "1rem", lineHeight: 1.7, color: "var(--fg-muted)", margin: "0 0 2rem" }}>
+          Every tool on this site costs nothing and needs no account, PDF export included.
+          There is no plan to choose and no limit to watch.
+        </p>
 
-      <main style={{ flex: 1 }}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-
-        {/* Hero */}
-        <div
-          className="has-grid"
-          style={{
-            textAlign: "center",
-            padding: "5rem 1.5rem 3.5rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--accent)",
-              marginBottom: "1rem",
-            }}
-          >
-            Simple, transparent pricing
-          </p>
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3rem)",
-              fontWeight: 900,
-              letterSpacing: "-0.04em",
-              lineHeight: 1.1,
-              marginBottom: "1rem",
-              color: "var(--fg)",
-            }}
-          >
-            Simple pricing for researchers.
-            <br />
-            <span
-              style={{
-                background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              $49/year. No timeouts.
-            </span>
-          </h1>
-          <p
-            style={{
-              fontSize: "1.05rem",
-              color: "var(--fg-muted)",
-              maxWidth: 520,
-              margin: "0 auto",
-              lineHeight: 1.65,
-            }}
-          >
-            Free to start. Upgrade when you need unlimited Word conversions,
-            PDF export, or seats for your whole lab.
-          </p>
+        <div style={{ border: "1px solid var(--border)", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <caption style={{ captionSide: "bottom", textAlign: "left", fontSize: "0.78rem", color: "var(--fg-muted)", padding: "0.5rem 0.75rem" }}>
+              Table 1. What you get, at no cost.
+            </caption>
+            <thead>
+              <tr>
+                <th style={{ ...cell, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)" }}>Tool</th>
+                <th style={{ ...cell, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)" }}>Included</th>
+              </tr>
+            </thead>
+            <tbody>
+              {TOOLS.map((t) => (
+                <tr key={t.href}>
+                  <td style={cell}><Link href={t.href} style={{ color: "var(--fg)", fontWeight: 600 }}>{t.name}</Link></td>
+                  <td style={{ ...cell, color: "var(--fg-muted)" }}>{t.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Pricing cards */}
-        <div
-          style={{
-            maxWidth: 1060,
-            margin: "0 auto",
-            padding: "0 1.5rem 5rem",
-          }}
+        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "2.5rem 0 0.75rem" }}>Supporting the project</h2>
+        <p style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "var(--fg-muted)", margin: "0 0 1rem" }}>
+          latexci is maintained on spare time. If it saved you an evening of fighting with LaTeX, a coffee helps keep it running.
+        </p>
+        <a
+          href="https://buymeacoffee.com/sitraka"
+          target="_blank"
+          rel="noopener"
+          style={{ display: "inline-block", padding: "0.6rem 1.1rem", background: "#ffdd00", color: "#000", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none", border: "1px solid #e6c700" }}
         >
-          <PricingCards />
-        </div>
+          Buy me a coffee
+        </a>
 
-        {/* Trust strip */}
-        <div
-          style={{
-            borderTop: "1px solid var(--border)",
-            padding: "3rem 1.5rem",
-            background: "var(--surface)",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 860,
-              margin: "0 auto",
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "2rem",
-              textAlign: "center",
-            }}
-          >
-            {[
-              { icon: "🔒", title: "Stripe-secured", body: "Payments handled by Stripe. We never see your card number." },
-              { icon: "📄", title: "Instant invoice", body: "PDF receipt on purchase. Lab & Institution plans include VAT invoices." },
-              { icon: "🎓", title: "Academic focus", body: "Built for researchers, by researchers. Free tier will always exist." },
-              { icon: "⚡", title: "Cancel anytime", body: "No lock-in. Cancel from settings, active until period ends." },
-            ].map((item) => (
-              <div key={item.title}>
-                <div style={{ fontSize: "1.6rem", marginBottom: "0.5rem" }}>{item.icon}</div>
-                <p style={{ fontWeight: 700, fontSize: "0.88rem", marginBottom: "0.3rem" }}>{item.title}</p>
-                <p style={{ fontSize: "0.8rem", color: "var(--fg-muted)", lineHeight: 1.55, margin: 0 }}>{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* FAQ */}
-        <div
-          style={{
-            maxWidth: 680,
-            margin: "0 auto",
-            padding: "4rem 1.5rem 5rem",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "1.3rem",
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              marginBottom: "2rem",
-              textAlign: "center",
-            }}
-          >
-            Questions
-          </h2>
-          {faqSchema.mainEntity.map((q) => (
-            <div
-              key={q.name}
-              style={{
-                marginBottom: "1.5rem",
-                paddingBottom: "1.5rem",
-                borderBottom: "1px solid var(--border)",
-              }}
-            >
-              <p style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "0.5rem" }}>{q.name}</p>
-              <p style={{ fontSize: "0.86rem", color: "var(--fg-muted)", lineHeight: 1.7, margin: 0 }}>
-                {q.acceptedAnswer.text}
-              </p>
-            </div>
-          ))}
-        </div>
+        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "2.5rem 0 1rem" }}>Frequently asked questions</h2>
+        <Faq items={FAQS} name="pricing-faq" />
       </main>
-
       <SiteFooter />
     </div>
   );
