@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: "How do I apply the downloaded .patch file?",
-    a: "The .patch file is a standard unified diff. Apply it to your own copy with patch thesis.tex < changes.patch (replace thesis.tex with your file name). Check it first with patch --dry-run thesis.tex < changes.patch. The patch is always built line by line, whichever mode is shown on screen.",
+    a: "The .patch file is a Git-style unified diff for the file named next to the download button (main.tex by default, or the last .tex you dropped in). From the folder that holds that file, run git apply --check changes.patch, then git apply changes.patch, or patch -p1 < changes.patch without Git. The patch is always built line by line, whichever mode is shown on screen.",
   },
   {
     q: "Is this the same as latexdiff?",
@@ -121,19 +121,20 @@ export default function DiffPage() {
           <p style={para}>
             The <Code>.patch</Code> button downloads <Code>changes.patch</Code>, a standard unified diff built
             line by line whatever mode is on screen (&ldquo;copy diff&rdquo; instead copies a simple +/- listing, handy for an email).
-            To apply the changes to your own copy, name the file explicitly:
+            It is a Git-style patch for the file named next to the button (the last <Code>.tex</Code> you
+            dropped in, <Code>main.tex</Code> by default; edit it if your file has another name or lives in a
+            subfolder, e.g. <Code>chapters/intro.tex</Code>). From the folder that holds the file:
           </p>
           <pre style={{
             ...para, fontFamily: "var(--font-mono), monospace", fontSize: "0.85rem",
             background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6,
             padding: "0.75rem 1rem", overflowX: "auto", color: "var(--fg)",
-          }}>{`patch --dry-run thesis.tex < changes.patch   # check first
-patch thesis.tex < changes.patch             # apply`}</pre>
+          }}>{`git apply --check changes.patch   # check first
+git apply changes.patch           # apply
+patch -p1 < changes.patch         # same thing without Git`}</pre>
           <p style={para}>
-            The patch headers use the pane names (<Code>original.tex</Code>, <Code>revised.tex</Code>) without
-            directory prefixes, so <Code>git apply</Code> and <Code>patch -p1</Code> will not find your file;
-            passing the file name to <Code>patch</Code> as above avoids that. Keep the result under Git and
-            you get a proper history of every round of revisions.
+            Keep the project under Git and every round of advisor revisions becomes one commit, with a
+            proper history you can compare or roll back.
           </p>
 
           <h3 style={h3}>Compare two arXiv versions</h3>

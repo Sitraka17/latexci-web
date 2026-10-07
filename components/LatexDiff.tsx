@@ -145,15 +145,20 @@ function DragHandle({
 
 // ── Drop-zone editor pane ─────────────────────────────────────────────────────
 function EditorPane({
-  value, onChange, label, color, onClear,
+  value, onChange, label, color, onClear, onFileName,
 }: {
   value: string; onChange: (v: string) => void;
   label: string; color: string; onClear: () => void;
+  onFileName?: (name: string) => void;
 }) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "text/plain": [".tex", ".txt"], "application/x-tex": [".tex"] },
     maxFiles: 1, noClick: true,
-    onDrop: async (files) => { if (files[0]) onChange(await files[0].text()); },
+    onDrop: async (files) => {
+      if (!files[0]) return;
+      onChange(await files[0].text());
+      onFileName?.(files[0].name);
+    },
   });
 
   return (
@@ -349,12 +354,16 @@ function SideBySideDiff({ original, revised, mode }: {
 
 // ── Patch export ──────────────────────────────────────────────────────────────
 /**
- * Real unified diff (correct hunk headers, blank lines kept) that applies
- * cleanly with `patch -p0` / `git apply`. Always built from the line texts,
- * whatever the on-screen diff mode.
+ * Git-style unified diff (a/ b/ prefixes, `diff --git` header, blank lines
+ * kept), so `git apply changes.patch` and `patch -p1 < changes.patch` work in
+ * the folder that holds `fileName`. Built from the line texts, whatever the
+ * on-screen diff mode.
  */
-export function buildPatch(original: string, revised: string): string {
-  return Diff.createTwoFilesPatch("original.tex", "revised.tex", original, revised);
+export function buildPatch(original: string, revised: string, fileName = "main.tex"): string {
+  const f = fileName.replace(/^[/\\]+/, "").replace(/\\/g, "/").trim() || "main.tex";
+  const body = Diff.createTwoFilesPatch(`a/${f}`, `b/${f}`, original, revised)
+    .replace(/^=+\n/m, ""); // jsdiff's "=====" separator is not part of the format
+  return `diff --git a/${f} b/${f}\n${body}`;
 }
 
 // ── Unified diff renderer ─────────────────────────────────────────────────────
@@ -475,6 +484,8 @@ type MobileTab = "original" | "revised" | "diff";
 export default function LatexDiff() {
   const [original, setOriginal] = useState(ORIGINAL);
   const [revised,  setRevised]  = useState(REVISED);
+  // File the patch targets (a/<name> b/<name>): the last dropped .tex, editable.
+  const [patchFile, setPatchFile] = useState("main.tex");
   const [diffMode, setDiffMode] = useState<DiffMode>("lines");
   const [viewMode, setViewMode] = useState<ViewMode>("unified");
   const [layout,   setLayout]   = useState<Layout>("stacked");
@@ -536,7 +547,7 @@ export default function LatexDiff() {
   }, [diff]);
 
   const downloadPatch = useCallback(() => {
-    const full = buildPatch(original, revised);
+    const full = buildPatch(original, revised, patchFile);
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([full], { type: "text/x-patch" })),
       download: "changes.patch",
@@ -545,7 +556,7 @@ export default function LatexDiff() {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 0);
-  }, [original, revised]);
+  }, [original, revised, patchFile]);
 
   const isIdentical = stats.added === 0 && stats.removed === 0;
 
@@ -599,7 +610,18 @@ export default function LatexDiff() {
       <TBtn active={copied} onClick={copyDiff} title="Copy unified diff to clipboard">
         {copied ? "✓ copied" : "copy diff"}
       </TBtn>
-      <TBtn onClick={downloadPatch} title="Download as .patch file">↓ .patch</TBtn>
+      <input
+        value={patchFile}
+        onChange={(e) => setPatchFile(e.target.value)}
+        aria-label="File name the patch applies to"
+        title="File name the patch applies to (git apply / patch -p1)"
+        spellCheck={false}
+        style={{
+          width: 110, padding: "0.2rem 0.4rem", fontSize: "0.72rem", fontFamily: "var(--font-mono), monospace",
+          background: "var(--surface)", color: "var(--fg)", border: "1px solid var(--border)", borderRadius: 4,
+        }}
+      />
+      <TBtn onClick={downloadPatch} title={`Download a patch for ${patchFile} (git apply)`}>↓ .patch</TBtn>
     </div>
   );
 
@@ -671,14 +693,14 @@ export default function LatexDiff() {
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {mobileTab === "original" && (
             <EditorPane
-              value={original} onChange={setOriginal}
+              value={original} onChange={setOriginal} onFileName={setPatchFile}
               label="original.tex" color="#f87171"
               onClear={() => setOriginal("")}
             />
           )}
           {mobileTab === "revised" && (
             <EditorPane
-              value={revised} onChange={setRevised}
+              value={revised} onChange={setRevised} onFileName={setPatchFile}
               label="revised.tex" color="#34d399"
               onClear={() => setRevised("")}
             />
@@ -717,13 +739,13 @@ export default function LatexDiff() {
           }}
         >
           <EditorPane
-            value={original} onChange={setOriginal}
+            value={original} onChange={setOriginal} onFileName={setPatchFile}
             label="original.tex" color="#f87171"
             onClear={() => setOriginal("")}
           />
           <DragHandle axis="x" onMouseDown={hSplitDrag.onMouseDown} onDoubleClick={hSplitDrag.reset} />
           <EditorPane
-            value={revised} onChange={setRevised}
+            value={revised} onChange={setRevised} onFileName={setPatchFile}
             label="revised.tex" color="#34d399"
             onClear={() => setRevised("")}
           />
@@ -749,14 +771,14 @@ export default function LatexDiff() {
       >
         {/* Left: original editor (hSplitDrag.pct% of total) */}
         <EditorPane
-          value={original} onChange={setOriginal}
+          value={original} onChange={setOriginal} onFileName={setPatchFile}
           label="original.tex" color="#f87171"
           onClear={() => setOriginal("")}
         />
         <DragHandle axis="x" onMouseDown={hSplitDrag.onMouseDown} onDoubleClick={hSplitDrag.reset} />
         {/* Middle: revised editor */}
         <EditorPane
-          value={revised} onChange={setRevised}
+          value={revised} onChange={setRevised} onFileName={setPatchFile}
           label="revised.tex" color="#34d399"
           onClear={() => setRevised("")}
         />
