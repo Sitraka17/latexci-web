@@ -95,12 +95,12 @@ export default async function Image() {
         {/* Subtext */}
         <div style={{ display: "flex", flexDirection: "column", fontSize: 24, color: "#8a88a4", maxWidth: 520, lineHeight: 1.5 }}>
           <div>Preview · Diff · Word → LaTeX · Templates</div>
-          <div>All free, in your browser. No signup.</div>
+          <div>All free, in your browser. No paid plan.</div>
         </div>
 
         {/* Pill badges */}
         <div style={{ display: "flex", gap: 10, marginTop: 36 }}>
-          {["Free", "No signup", "KaTeX math", "Open source"].map((tag) => (
+          {["Free", "No paid plan", "KaTeX math", "28 templates"].map((tag) => (
             <div
               key={tag}
               style={{

@@ -100,7 +100,7 @@ export default function GlobalError({
             lineHeight: 1.75,
           }}
         >
-          An unexpected error occurred. The tools still work — this is likely a
+          An unexpected error occurred. The tools still work; this is likely a
           temporary blip.
         </p>
 

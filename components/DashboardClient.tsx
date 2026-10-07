@@ -70,7 +70,7 @@ export default function DashboardClient() {
               Import .tex
               <input type="file" accept=".tex,text/x-tex,text/plain" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importTex(f); e.target.value = ""; }} />
             </label>
-            <Link href="/tools/preview" style={{ ...btn, background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}>New document</Link>
+            <Link href="/tools/preview?new=1" style={{ ...btn, background: "var(--accent-solid)", color: "#fff", borderColor: "var(--accent)" }}>New document</Link>
           </div>
         </div>
         <p style={{ fontSize: "0.82rem", color: "var(--fg-muted)", margin: "0 0 1rem", lineHeight: 1.6 }}>

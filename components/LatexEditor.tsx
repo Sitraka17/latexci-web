@@ -4,13 +4,28 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
-import { createDoc, getDoc, updateDoc } from "@/lib/local-docs";
+import { createDoc, getDoc, titleFrom, updateDoc } from "@/lib/local-docs";
 import SignInPrompt from "@/components/SignInPrompt";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
 const STORAGE_KEY = "latexci_source";
+
+const BLANK = `\\documentclass{article}
+\\usepackage{amsmath}
+
+\\title{Untitled}
+\\author{}
+
+\\begin{document}
+\\maketitle
+
+\\section{Introduction}
+
+
+\\end{document}
+`;
 
 const SAMPLE = `\\documentclass{article}
 \\usepackage{amsmath}
@@ -96,12 +111,15 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const router = useRouter();
   const searchParams = useSearchParams();
   const docId = searchParams.get("doc");
+  const wantsNew = searchParams.get("new") === "1";
 
   const [source, setSource]           = useState(initialValue ?? SAMPLE);
   const [html, setHtml]               = useState("");
   const [warnings, setWarnings]       = useState<ParseWarning[]>([]);
   const [copied, setCopied]           = useState(false);
-  const [shared, setShared]           = useState(false);
+  const [shared, setShared]           = useState<"idle" | "copied" | "manual">("idle");
+  const [notice, setNotice]           = useState<string | null>(null);
+  const [resetPending, setResetPending] = useState(false);
   const [showSnippets, setShowSnippets] = useState(false);
   const [isMobile, setIsMobile]       = useState(false);
   const [activePane, setActivePane]   = useState<"editor" | "preview">("editor");
@@ -115,6 +133,18 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [splitPct, setSplitPct]       = useState(50); // editor width %
   const [clearPending, setClearPending] = useState(false);
   const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset replaces everything with the demo: ask for a second click, like Clear
+  // (on a saved document, autosave would otherwise overwrite it with the demo).
+  const handleReset = useCallback(() => {
+    if (resetPending) {
+      setResetPending(false);
+      setSource(SAMPLE);
+    } else {
+      setResetPending(true);
+      setTimeout(() => setResetPending(false), 2500);
+    }
+  }, [resetPending]);
 
   const handleClear = useCallback(() => {
     if (clearPending) {
@@ -136,6 +166,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   // gated on this so a FAILED load never lets autosave overwrite the real
   // (unread) document with the sample/placeholder content.
   const docLoadedOk   = useRef(false);
+  // Draft being loaded into the editor; scratch persistence waits for it.
+  const pendingScratch = useRef<string | null>(null);
   const splitRef      = useRef<HTMLDivElement>(null);
   const isDragging    = useRef(false);
   // Track theme (dark/light toggle)
@@ -195,7 +227,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       const [{ createTheme }, { tags }, lang, { keymap }, { Prec }] = await Promise.all([
         import("@uiw/codemirror-themes"),
         import("@lezer/highlight"),
-        import("@codemirror/lang-markdown").then(m => m.markdown()),
+        Promise.all([import("@codemirror/language"), import("@codemirror/legacy-modes/mode/stex")])
+          .then(([{ StreamLanguage }, { stex }]) => StreamLanguage.define(stex)),
         import("@codemirror/view"),
         import("@codemirror/state"),
       ]);
@@ -347,20 +380,42 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       return;
     }
 
-    const hash = window.location.hash.slice(1);
-    if (hash.startsWith("s=")) {
-      const dec = LZString.decompressFromEncodedURIComponent(hash.slice(2));
-      if (dec) { setSource(dec); return; }
-    }
     let saved: string | null = null;
     try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* storage blocked */ }
-    if (saved) setSource(saved);
-  }, [initialValue, docId]);
+
+    // A shared link / template (#s=...) or "New document" (?new=1) replaces
+    // the scratch draft: keep that draft in My documents first, never lose it.
+    let incoming: string | null = null;
+    const hash = window.location.hash.slice(1);
+    if (hash.startsWith("s=")) incoming = LZString.decompressFromEncodedURIComponent(hash.slice(2)) || null;
+    else if (wantsNew) incoming = BLANK;
+
+    if (incoming !== null) {
+      if (saved && saved.trim() && saved !== SAMPLE && saved !== BLANK && saved !== incoming && createDoc(saved)) {
+        setNotice("Your previous draft was saved in My documents.");
+      }
+      pendingScratch.current = incoming;
+      setSource(incoming);
+      // Drop the #s= / ?new=1 from the URL so a reload keeps the user's edits.
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
+    if (saved) {
+      pendingScratch.current = saved;
+      setSource(saved);
+    }
+  }, [initialValue, docId, wantsNew]);
 
   // Persist scratch work, but never overwrite it with a saved document's
   // content (opening a saved paper must not clobber the scratch draft).
   useEffect(() => {
     if (docId) return;
+    // Until the loaded draft has reached the editor, `source` still holds the
+    // initial demo: writing it would overwrite the real draft.
+    if (pendingScratch.current !== null) {
+      if (source !== pendingScratch.current) return;
+      pendingScratch.current = null;
+    }
     try { localStorage.setItem(STORAGE_KEY, source); } catch { /* storage blocked */ }
   }, [source, docId]);
 
@@ -369,12 +424,21 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     if (!docId || !docLoadedOk.current) return;
     if (saveRef.current) clearTimeout(saveRef.current);
     saveRef.current = setTimeout(() => {
-      const ok = updateDoc(docId, { content: source });
+      const title = titleFrom(source);
+      const ok = updateDoc(docId, { content: source, title });
+      setDocTitle(title);
       setSaveStatus(ok ? "saved" : "error");
       setTimeout(() => setSaveStatus("idle"), 1500);
     }, 800);
     return () => { if (saveRef.current) clearTimeout(saveRef.current); };
   }, [source, docId]);
+
+  // The "draft kept in My documents" notice goes away on its own.
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 8000);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   // Stable object: a fresh { __html } on every render made React rewrite the
   // preview on ANY state change (PDF, Share, Copy HTML...), wiping the KaTeX
@@ -465,11 +529,12 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     window.history.replaceState(null, "", `#s=${compressed}`);
     try {
       await navigator.clipboard.writeText(url);
-      setShared(true);
-      setTimeout(() => setShared(false), 2500);
+      setShared("copied");
     } catch {
-      // clipboard blocked — URL fragment is already set
+      // Clipboard blocked: the link is already in the address bar, say so.
+      setShared("manual");
     }
+    setTimeout(() => setShared("idle"), 3000);
   }, [source]);
 
   const insertSnippet = useCallback((text: string) => {
@@ -517,7 +582,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         download: (docId && docTitle !== "Untitled" ? docTitle : "document") + ".pdf",
       });
       a.click();
-      URL.revokeObjectURL(url);
+      // Revoking right after click() can cancel the download in Safari/Firefox.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
       setPdfStatus("idle");
     } catch (err) {
       console.error("PDF export failed:", err);
@@ -720,7 +786,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               {(["editor", "preview"] as const).map(pane => (
                 <button key={pane} onClick={() => setActivePane(pane)} style={{
                   padding: "0.28rem 0.9rem", border: "none", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600,
-                  background: activePane === pane ? "var(--accent)" : "transparent",
+                  background: activePane === pane ? "var(--accent-solid)" : "transparent",
                   color: activePane === pane ? "#fff" : "var(--fg-muted)",
                 }}>
                   {pane === "editor" ? "Edit" : "Preview"}
@@ -731,7 +797,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           {/* Row 2: action buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0 0.75rem 0.5rem" }}>
             <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨</Btn>
-            <Btn onClick={() => setSource(SAMPLE)} title="Restore demo">Reset</Btn>
+            <Btn active={resetPending} activeColor="#ef4444" onClick={handleReset} title={resetPending ? "Click again to replace with the demo" : "Restore demo"}>{resetPending ? "Sure?" : "Reset"}</Btn>
             <Btn active={clearPending} activeColor="#ef4444" onClick={handleClear} title={clearPending ? "Click again to confirm" : "Clear editor"}>
               {clearPending ? "Sure?" : "Clear"}
             </Btn>
@@ -739,14 +805,14 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             {!docId && (
               <Btn onClick={saveDoc} title="Save to My documents (kept in this browser)">Save</Btn>
             )}
-            <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
-              {shared ? "✓" : "🔗"}
+            <Btn active={shared !== "idle"} activeColor="#10b981" onClick={shareLink} title={shared === "manual" ? "Link is in the address bar" : "Copy shareable URL"}>
+              {shared === "copied" ? "✓" : shared === "manual" ? "URL bar" : "🔗"}
             </Btn>
             {/* PDF export — also available on mobile */}
             <button
               onClick={exportPdf}
               disabled={pdfStatus === "compiling"}
-              title={pdfStatus === "error" ? "Compilation failed — check LaTeX syntax" : "Compile & download PDF"}
+              title={pdfStatus === "error" ? "Compilation failed: check LaTeX syntax" : "Compile & download PDF"}
               style={{
                 background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
                 border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
@@ -799,7 +865,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           )}
           <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
           <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
-          <Btn onClick={() => setSource(SAMPLE)} title="Restore demo document">Reset</Btn>
+          <Btn active={resetPending} activeColor="#ef4444" onClick={handleReset} title={resetPending ? "Click again to replace with the demo" : "Restore demo document"}>{resetPending ? "Sure?" : "Reset"}</Btn>
           <Btn active={clearPending} activeColor="#ef4444" onClick={handleClear} title={clearPending ? "Click again to confirm" : "Clear editor"}>
             {clearPending ? "Sure?" : "Clear"}
           </Btn>
@@ -807,8 +873,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           {!docId && (
             <Btn onClick={saveDoc} title="Save to My documents (kept in this browser)">Save</Btn>
           )}
-          <Btn active={shared} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
-            {shared ? "✓ Copied!" : "🔗 Share"}
+          <Btn active={shared !== "idle"} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
+            {shared === "copied" ? "✓ Copied!" : shared === "manual" ? "Link in address bar" : "🔗 Share"}
           </Btn>
           <Btn active={copied} activeColor="#6c63ff" onClick={copyHtml} title="Copy HTML output">
             {copied ? "✓ HTML!" : "Copy HTML"}
@@ -819,7 +885,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <button
             onClick={exportPdf}
             disabled={pdfStatus === "compiling"}
-            title={pdfStatus === "error" ? "Compilation failed — check your LaTeX syntax" : "Compile & download PDF via YToTech"}
+            title={pdfStatus === "error" ? "Compilation failed: check your LaTeX syntax" : "Compile & download PDF via YToTech"}
             style={{
               background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
               border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
@@ -971,7 +1037,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               transition: "background 0.15s",
               zIndex: 10,
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "var(--accent)")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--accent-solid)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--border)")}
           />
         )}
@@ -1039,6 +1105,17 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     </div>
 
     {signInFor && <SignInPrompt feature={signInFor} onClose={() => setSignInFor(null)} />}
+    {notice && (
+      <div role="status" style={{
+        position: "fixed", left: 16, bottom: 16, zIndex: 900, maxWidth: "calc(100vw - 32px)",
+        padding: "0.6rem 0.9rem", background: "var(--surface)", border: "1px solid var(--border)",
+        color: "var(--fg)", fontSize: "0.82rem", display: "flex", gap: "0.75rem", alignItems: "center",
+      }}>
+        <span>{notice}</span>
+        <a href="/dashboard" style={{ color: "var(--accent)", fontWeight: 600 }}>Open</a>
+        <button onClick={() => setNotice(null)} aria-label="Dismiss" style={{ background: "none", border: "none", color: "var(--fg-muted)", cursor: "pointer", fontSize: "1rem" }}>×</button>
+      </div>
+    )}
     </>
   );
 }

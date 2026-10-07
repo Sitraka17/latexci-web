@@ -9,7 +9,7 @@ import { breadcrumbSchema } from "@/lib/breadcrumbs";
 export const metadata: Metadata = {
   title: "Online LaTeX Preview with KaTeX Math Rendering",
   description:
-    "Paste LaTeX source and see a live preview instantly — equations rendered by KaTeX, sections, tables, figures, theorem environments. No install, no signup, no compiler wait.",
+    "Paste LaTeX and see a live preview instantly: KaTeX equations, sections, tables, figures, theorems. No install, no signup, no compiler wait.",
   keywords: [
     "online latex preview", "latex previewer", "katex online renderer",
     "latex to html converter", "check latex equation online",
@@ -17,17 +17,17 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/preview" },
   openGraph: {
-    title: "Online LaTeX Preview — latexci",
-    description: "Live LaTeX preview with KaTeX math rendering. Free, no signup.",
+    title: "Online LaTeX Preview | latexci",
+    description: "Live LaTeX preview with KaTeX math rendering. Free, no signup; PDF export with a one-click Google sign-in.",
     url: "/tools/preview", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "Online LaTeX Preview — latexci" },
+  twitter: { card: "summary_large_image", title: "Online LaTeX Preview | latexci" },
 };
 
 const appSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "LaTeX Preview — latexci",
+  name: "LaTeX Preview | latexci",
   description: "Browser-based LaTeX preview with live KaTeX math rendering.",
   url: "https://latexci.com/tools/preview",
   applicationCategory: "DeveloperApplication",
@@ -38,15 +38,15 @@ const appSchema = {
 const FAQS = [
   {
     q: "Is this a real LaTeX compiler?",
-    a: "No — it's a fast, browser-based preview. Math is rendered with KaTeX and document structure with an HTML renderer, which is what makes it instant. For byte-exact output with full packages, bibliographies, and cross-references, export to PDF or use a full TeX distribution.",
+    a: "No. It's a fast, browser-based preview. Math is rendered with KaTeX and document structure with an HTML renderer, which is what makes it instant. For byte-exact output with full packages, bibliographies, and cross-references, export to PDF or use a full TeX distribution.",
   },
   {
     q: "Are my files uploaded anywhere?",
-    a: "No. Rendering happens entirely in your browser. Your LaTeX source never leaves your device, so the preview works even with sensitive or unpublished drafts.",
+    a: "No. Rendering happens entirely in your browser. Your LaTeX source never leaves your device, so the preview works even with sensitive or unpublished drafts. Only PDF export, when you click it, sends the source to the compile service.",
   },
   {
     q: "Which math commands are supported?",
-    a: "Everything KaTeX supports — fractions, matrices, aligned environments, big operators, Greek letters, and most AMS-math — plus any macros you define with \\newcommand. Commands that need a full TeX engine or extra packages may not render.",
+    a: "Everything KaTeX supports (fractions, matrices, aligned environments, big operators, Greek letters, and most AMS-math), plus any macros you define with \\newcommand. Commands that need a full TeX engine or extra packages may not render.",
   },
   {
     q: "Do I need an account?",
@@ -103,22 +103,22 @@ export default function PreviewPage() {
           full-screen editor alone can't provide (fixes a thin, "crawled – not indexed" page). */}
       <section aria-label="About the LaTeX preview tool" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
         <div style={{ maxWidth: 820, margin: "0 auto", padding: "3.5rem 1.5rem" }}>
-          <h2 style={h2}>Preview LaTeX in your browser — no install, no compiler wait</h2>
+          <h2 style={h2}>Preview LaTeX in your browser: no install, no compiler wait</h2>
           <p style={para}>
             Paste your LaTeX source into the editor and see it rendered beside it, instantly. Math is
             typeset with KaTeX, so equations, fractions, matrices, aligned blocks, Greek letters, and the
-            common AMS-math commands update in real time as you type. Document structure is rendered too —
+            common AMS-math commands update in real time as you type. Document structure is rendered too:
             sections and subsections, <Code>itemize</Code> and <Code>enumerate</Code> lists, tables, figures
             with captions, and theorem-style environments. Everything runs locally in your browser: your{" "}
-            <Code>.tex</Code> is never uploaded to a server.
+            <Code>.tex</Code> is never uploaded to a server unless you choose PDF export.
           </p>
 
-          <h3 style={h3}>What it&rsquo;s for &mdash; and what it isn&rsquo;t</h3>
+          <h3 style={h3}>What it&rsquo;s for, and what it isn&rsquo;t</h3>
           <p style={para}>
             This preview is built for quick checks while you write: does that equation compile, is the table
             shaped right, did the section numbering come out as expected. KaTeX covers the large majority of
             everyday math, and macros you define with <Code>{"\\newcommand"}</Code> are expanded. It is not a
-            full TeX engine, though — package-specific layout, custom document classes, bibliographies, and
+            full TeX engine, though: package-specific layout, custom document classes, bibliographies, and
             references that need multiple compile passes won&rsquo;t match a real build. When you need a final,
             publication-ready PDF, export it from here or compile with a full TeX distribution
             such as TeX&nbsp;Live with <Code>latexmk</Code>, or Overleaf.
@@ -127,7 +127,7 @@ export default function PreviewPage() {
           <h3 style={h3}>How to use it</h3>
           <ol style={{ ...para, paddingLeft: "1.25rem" }}>
             <li style={{ marginBottom: "0.5rem" }}>Paste or type your LaTeX in the left-hand editor.</li>
-            <li style={{ marginBottom: "0.5rem" }}>Watch the preview render as you type — a mistake in a formula shows up right where it happens, so you can fix it without a compile cycle.</li>
+            <li style={{ marginBottom: "0.5rem" }}>Watch the preview render as you type: a mistake in a formula shows up right where it happens, so you can fix it without a compile cycle.</li>
             <li>Copy the source back into your main editor, or export to PDF when the document looks right.</li>
           </ol>
 

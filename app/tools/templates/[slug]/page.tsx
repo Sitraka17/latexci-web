@@ -68,7 +68,7 @@ export default async function TemplatePage({ params }: Props) {
   const faqs = [
     {
       q: `Is the ${t.title} template free?`,
-      a: "Yes — every latexci template is free, open-source, and needs no signup. Open it in the browser editor or copy the full source.",
+      a: "Yes. Every latexci template is free and needs no signup: the full source is on this page, free to copy and use in your own documents, including academic and commercial work. Open it in the browser editor or paste it into any TeX editor.",
     },
     {
       q: "How do I use this template?",
@@ -86,8 +86,6 @@ export default async function TemplatePage({ params }: Props) {
     name: `${t.title} LaTeX template`,
     description: t.desc,
     programmingLanguage: "LaTeX",
-    codeRepository: "https://github.com/Sitraka17/latexci-web",
-    license: "https://opensource.org/licenses/MIT",
     url: `https://latexci.com/tools/templates/${slug}`,
   };
   const breadcrumb = breadcrumbSchema(
@@ -124,7 +122,7 @@ export default async function TemplatePage({ params }: Props) {
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.4rem",
                 padding: "0.55rem 1.1rem", borderRadius: 8,
-                background: "var(--accent)", color: "#fff", fontWeight: 700,
+                background: "var(--accent-solid)", color: "#fff", fontWeight: 700,
                 fontSize: "0.9rem", textDecoration: "none",
               }}
             >

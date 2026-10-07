@@ -516,7 +516,7 @@ export default function WordToLatex() {
         </h1>
         <p style={{ color: "var(--fg-muted)", fontSize: "1rem", lineHeight: 1.65, maxWidth: 600, margin: "0 auto" }}>
           Upload a <code style={{ background: "var(--surface2)", padding: "0.1em 0.4em", borderRadius: 4 }}>.docx</code> and
-          get clean LaTeX — with <strong>equation detection</strong>, image stubs, booktabs tables, and a quality report.
+          get clean LaTeX with <strong>equation detection</strong>, image stubs, booktabs tables, and a quality report.
           Everything runs in your browser. Zero upload.
         </p>
       </div>
@@ -628,7 +628,7 @@ export default function WordToLatex() {
             <button onClick={copyLatex} style={{ background: copied ? "rgba(16,185,129,0.12)" : "var(--surface2)", border: `1px solid ${copied ? "var(--green)" : "var(--border)"}`, borderRadius: 6, color: copied ? "var(--green)" : "var(--fg-muted)", fontSize: "0.8rem", padding: "0.3rem 0.8rem", cursor: "pointer" }}>
               {copied ? "✓ Copied!" : "Copy LaTeX"}
             </button>
-            <button onClick={downloadLatex} style={{ background: "var(--accent)", border: "none", borderRadius: 6, color: "#fff", fontSize: "0.8rem", padding: "0.3rem 0.8rem", cursor: "pointer", fontWeight: 600 }}>↓ Download .tex</button>
+            <button onClick={downloadLatex} style={{ background: "var(--accent-solid)", border: "none", borderRadius: 6, color: "#fff", fontSize: "0.8rem", padding: "0.3rem 0.8rem", cursor: "pointer", fontWeight: 600 }}>↓ Download .tex</button>
           </div>
           <div style={{ border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
             {cmExtensions.length > 0 ? (
@@ -650,7 +650,7 @@ export default function WordToLatex() {
 
       {status === "idle" && (
         <div style={{ marginTop: "1.5rem", padding: "1.25rem 1.5rem", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10 }}>
-          <h3 style={{ margin: "0 0 0.75rem", fontSize: "0.92rem", fontWeight: 600 }}>What gets converted</h3>
+          <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.92rem", fontWeight: 600 }}>What gets converted</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 2rem", fontSize: "0.84rem", color: "var(--fg-muted)" }}>
             {[
               ["✓", "Headings → \\section, \\subsection"],

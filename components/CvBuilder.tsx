@@ -26,7 +26,7 @@ const btn: CSSProperties = {
   background: "var(--surface2)", color: "var(--fg)", border: "1px solid var(--border)", borderRadius: 6,
   padding: "0.4rem 0.8rem", fontSize: "0.82rem", cursor: "pointer", fontFamily: "inherit",
 };
-const btnPrimary: CSSProperties = { ...btn, background: "var(--accent)", color: "#fff", border: "1px solid transparent", fontWeight: 600 };
+const btnPrimary: CSSProperties = { ...btn, background: "var(--accent-solid)", color: "#fff", border: "1px solid transparent", fontWeight: 600 };
 
 function Field({ label, value, onChange, placeholder, multiline, rows = 3 }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean; rows?: number;

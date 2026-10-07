@@ -122,7 +122,9 @@ export default function TableGenerator() {
     const lines: string[] = [];
 
     if (borders === "booktabs") {
-      lines.push("\\usepackage{booktabs} % put in preamble\n");
+      // A comment, not \usepackage: this snippet is pasted into the document
+      // body, where \usepackage is an error ("Can be used only in preamble").
+      lines.push("% Requires \\usepackage{booktabs} in the preamble");
     }
 
     lines.push(`\\begin{table}[h]`);
@@ -257,6 +259,7 @@ export default function TableGenerator() {
 
         {/* Border style */}
         <select
+          aria-label="Border style"
           value={borders}
           onChange={(e) => setBorders(e.target.value as typeof borders)}
           style={{
@@ -389,6 +392,8 @@ export default function TableGenerator() {
                     <button
                       key={opt}
                       onClick={() => setAlign(c, opt)}
+                      aria-label={`Column ${c + 1}: ${opt === "l" ? "left align" : opt === "c" ? "center" : "right align"}`}
+                      aria-pressed={a === opt}
                       title={
                         opt === "l" ? "Left align" : opt === "c" ? "Center" : "Right align"
                       }
@@ -397,7 +402,7 @@ export default function TableGenerator() {
                         height: 22,
                         borderRadius: 4,
                         border: "1px solid var(--border)",
-                        background: a === opt ? "var(--accent)" : "var(--surface2)",
+                        background: a === opt ? "var(--accent-solid)" : "var(--surface2)",
                         color: a === opt ? "#fff" : "var(--fg-muted)",
                         fontSize: "0.62rem",
                         fontWeight: 700,
@@ -428,6 +433,7 @@ export default function TableGenerator() {
                   <input
                     key={`${r}-${c}`}
                     value={cell}
+                    aria-label={`Row ${r + 1}, column ${c + 1}${r === 0 && headerRow ? " (header)" : ""}`}
                     placeholder={r === 0 && headerRow ? `Col ${c + 1}` : ""}
                     onChange={(e) => setCell(r, c, e.target.value)}
                     onKeyDown={(e) => {
@@ -467,7 +473,7 @@ export default function TableGenerator() {
             }}
           >
             <strong style={{ color: "var(--fg)" }}>Tips:</strong>
-            {" "}Use <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>booktabs</code> for journal submissions — it produces cleaner, publication-ready tables.
+            {" "}Use <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>booktabs</code> for journal submissions: it produces cleaner, publication-ready tables.
             {" "}<code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>\toprule</code>,{" "}
             <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>\midrule</code>,{" "}
             <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>\bottomrule</code> replace vertical lines.

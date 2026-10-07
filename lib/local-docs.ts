@@ -18,7 +18,10 @@ export function listDocs(): LocalDoc[] {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "[]");
     if (!Array.isArray(raw)) return [];
     return (raw as LocalDoc[])
-      .filter((d) => d && typeof d.id === "string" && typeof d.content === "string")
+      // A malformed entry must not make the sort throw (which would empty the list
+      // and let the next save overwrite every document).
+      .filter((d) => d && typeof d.id === "string" && typeof d.content === "string" && typeof d.updatedAt === "string")
+      .map((d) => ({ ...d, title: typeof d.title === "string" ? d.title : "Untitled" }))
       .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.updatedAt.localeCompare(a.updatedAt));
   } catch {
     return [];

@@ -3233,6 +3233,7 @@ export const TEMPLATES: Template[] = [
 \usepackage{lmodern}
 \usepackage[margin=2cm]{geometry}
 \usepackage{xcolor}
+\usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{enumitem}

@@ -5,12 +5,13 @@ import Link from "next/link";
 import SymbolSearch from "@/components/SymbolSearch";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
+import "./symbols.css";
 import { symbolsByCategory, symbolSlug, canonicalSlug, displayName } from "@/lib/seo-pages";
 
 export const metadata: Metadata = {
-  title: "LaTeX Symbol Search — 380+ Symbols with Live Preview",
+  title: "LaTeX Symbol Search: 350+ Symbols with Live Preview",
   description:
-    "Search 380+ LaTeX symbols by name, command, or Unicode — Greek, operators, arrows, logic, physics, stats. One-click copy with live KaTeX preview. Faster than Detexify.",
+    "Search 350+ LaTeX symbols by name, command, or Unicode: Greek, operators, arrows, logic, physics, stats. One-click copy with live KaTeX preview. Faster than Detexify.",
   keywords: [
     "latex symbols",
     "latex symbol search",
@@ -31,14 +32,14 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/symbols" },
   openGraph: {
-    title: "LaTeX Symbol Search — latexci",
+    title: "LaTeX Symbol Search | latexci",
     description: "Find any LaTeX symbol instantly. Search by name, command, or Unicode. Live KaTeX preview.",
     url: "/tools/symbols",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LaTeX Symbol Search — 380+ Symbols with Live Preview — latexci",
+    title: "LaTeX Symbol Search: 350+ Symbols with Live Preview | latexci",
     description: "Find any LaTeX symbol instantly. Search by name, command, or Unicode. Live KaTeX preview.",
   },
 };
@@ -68,7 +69,7 @@ export default function SymbolsPage() {
               padding: "0.3rem 0.9rem", borderRadius: 20, marginBottom: "1.25rem",
               textTransform: "uppercase",
             }}>
-              {totalSymbols}+ symbols · {CATEGORIES.length} categories
+              {totalSymbols} symbols · {CATEGORIES.length} categories
             </div>
             <h1 style={{
               fontSize: "clamp(1.8rem, 4.5vw, 2.6rem)",
@@ -92,7 +93,7 @@ export default function SymbolsPage() {
               }}>
                 KaTeX
               </span>{" "}
-              preview — no compile needed.
+              preview, no compile needed.
             </p>
           </div>
         </section>
@@ -134,7 +135,7 @@ export default function SymbolsPage() {
                 },
                 {
                   title: "\\text{} inside math",
-                  body: "For words inside equations — like conditions — use \\text{for all } x, not plain text. Requires amsmath.",
+                  body: "For words inside equations, like conditions, use \\text{for all } x, not plain text. Requires amsmath.",
                 },
               ].map((tip) => (
                 <div key={tip.title} style={{
@@ -162,25 +163,18 @@ export default function SymbolsPage() {
               and related symbols. Handy when you land here from a search like “argmax latex”.
             </p>
             {symbolsByCategory().map(({ category, symbols }) => (
-              <div key={category} style={{ marginBottom: "1.75rem" }}>
-                <h3 style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.6rem" }}>
-                  {category}
-                </h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+              <div key={category} className="sym-dir-cat">
+                <h3 className="sym-dir-cat-title">{category}</h3>
+                <div className="sym-dir-list">
                   {symbols.map((s) => (
                     <Link
                       key={symbolSlug(s)}
                       href={`/tools/symbols/${canonicalSlug(s)}`}
                       title={`${displayName(s)}: ${s.command}`}
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: "0.35rem",
-                        padding: "0.25rem 0.55rem", borderRadius: 6,
-                        border: "1px solid var(--border)", background: "var(--surface2)",
-                        fontSize: "0.75rem", color: "var(--fg-muted)", textDecoration: "none",
-                      }}
+                      className="sym-dir-link"
                     >
-                      <span aria-hidden="true" style={{ color: "var(--fg)" }}>{s.unicode}</span>
-                      <code style={{ fontFamily: "var(--font-mono), monospace" }}>{s.command}</code>
+                      <span aria-hidden="true">{s.unicode}</span>
+                      <code>{s.command}</code>
                     </Link>
                   ))}
                 </div>

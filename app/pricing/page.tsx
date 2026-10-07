@@ -28,7 +28,7 @@ const TOOLS: { name: string; href: string; note: string }[] = [
   { name: "Table generator", href: "/tools/table", note: "booktabs output" },
   { name: "CV generator", href: "/tools/cv-builder", note: "with ORCID import" },
   { name: "Templates", href: "/tools/templates", note: "28 papers, theses, CVs and slides" },
-  { name: "Symbol search", href: "/tools/symbols", note: "380+ symbols with live preview" },
+  { name: "Symbol search", href: "/tools/symbols", note: "350+ symbols with live preview" },
 ];
 
 const FAQS = [

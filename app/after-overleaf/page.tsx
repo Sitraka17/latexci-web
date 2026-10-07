@@ -7,7 +7,7 @@ import { breadcrumbSchema } from "@/lib/breadcrumbs";
 export const metadata: Metadata = {
   title: "After Overleaf: Free LaTeX Tools When Your License Ends",
   description:
-    "Graduated and lost Overleaf Premium? latexci gives you free Word to LaTeX, BibTeX cleaning, live preview and diff tools. No subscription, no signup.",
+    "Graduated and lost Overleaf Premium? latexci gives you free Word to LaTeX, BibTeX cleaning, live preview and diff tools. No subscription, no paid plan.",
   keywords: [
     "overleaf alternative after graduation",
     "lost overleaf university subscription",
@@ -19,14 +19,14 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/after-overleaf" },
   openGraph: {
-    title: "After Overleaf — latexci",
+    title: "After Overleaf | latexci",
     description: "Lost your university Overleaf license? These tools are free, forever.",
     url: "/after-overleaf", type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "After Overleaf: Free LaTeX Tools When Your License Ends",
-    description: "Lost your university Overleaf license? These tools are free, forever. No signup.",
+    description: "Lost your university Overleaf license? These tools are free, forever. No subscription.",
   },
 };
 
@@ -36,7 +36,7 @@ const WHAT_YOU_LOSE = [
   { feature: "Full project history", workaround: "git log gives you infinite history. Free, offline, faster." },
   { feature: "Dropbox / GitHub sync", workaround: "Work locally in VS Code + LaTeX Workshop. Full power, no limits." },
   { feature: "Extended compile timeout", workaround: "YToTech (free API, what latexci uses) handles most documents." },
-  { feature: "Mendeley / Zotero sync", workaround: "latexci BibTeX tools — clean, format, and look up citations free." },
+  { feature: "Mendeley / Zotero sync", workaround: "latexci BibTeX tools: clean, format, and look up citations free." },
 ];
 
 const TOOLS = [
@@ -72,7 +72,7 @@ const TOOLS = [
     href: "/tools/templates",
     icon: "▤",
     title: "Templates",
-    desc: "PhD thesis, IEEE paper, academic CV, beamer slides, and more — download .tex and open in any editor.",
+    desc: "PhD thesis, IEEE paper, academic CV, beamer slides, and more: download .tex and open in any editor.",
     badge: "Works offline",
   },
 ];
@@ -111,8 +111,8 @@ export default function AfterOverleafPage() {
             </h1>
             <p style={{ fontSize: "1.1rem", color: "var(--fg-muted)", lineHeight: 1.75, marginBottom: "2rem" }}>
               When you graduate, your institution&rsquo;s Overleaf Premium license disappears.
-              latexci gives you the tools that Overleaf never had — free, browser-based,
-              no signup, no subscription. Forever.
+              latexci gives you the tools that Overleaf never had: free, browser-based,
+              no subscription. Forever.
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/tools/bibtex" style={{
@@ -141,7 +141,7 @@ export default function AfterOverleafPage() {
               What you lose when your license ends
             </h2>
             <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", marginBottom: "2rem" }}>
-              And what to do instead — all free.
+              And what to do instead, all free.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 0, border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
               {WHAT_YOU_LOSE.map((item, i) => (
@@ -172,7 +172,7 @@ export default function AfterOverleafPage() {
               The tools Overleaf never had
             </h2>
             <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", marginBottom: "2rem" }}>
-              These work alongside any editor — Overleaf, VS Code, TeXstudio, whatever you use next.
+              These work alongside any editor: Overleaf, VS Code, TeXstudio, whatever you use next.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
               {TOOLS.map(tool => (
@@ -235,11 +235,11 @@ export default function AfterOverleafPage() {
             }}>
               <h3 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>Ready to keep writing?</h3>
               <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "1.25rem", lineHeight: 1.65 }}>
-                latexci&rsquo;s tools are free, require no signup, and work in any browser.
+                latexci&rsquo;s tools are free and work in any browser; only PDF export and Word to LaTeX ask for a one-click Google sign-in.
                 Use them alongside whatever editor you choose next.
               </p>
               <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/tools/bibtex" style={{ padding: "0.6rem 1.5rem", borderRadius: 7, background: "var(--accent)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>BibTeX Tools</Link>
+                <Link href="/tools/bibtex" style={{ padding: "0.6rem 1.5rem", borderRadius: 7, background: "var(--accent-solid)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>BibTeX Tools</Link>
                 <Link href="/tools/word-to-latex" style={{ padding: "0.6rem 1.5rem", borderRadius: 7, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--fg)", fontWeight: 600, fontSize: "0.9rem", textDecoration: "none" }}>Word → LaTeX</Link>
                 <Link href="/tools/templates" style={{ padding: "0.6rem 1.5rem", borderRadius: 7, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--fg)", fontWeight: 600, fontSize: "0.9rem", textDecoration: "none" }}>Templates</Link>
               </div>

@@ -24,7 +24,7 @@ export default function ToolLoading() {
               width: 7,
               height: 7,
               borderRadius: "50%",
-              background: "var(--accent)",
+              background: "var(--accent-solid)",
               display: "inline-block",
               opacity: 0.3,
               animation: `dot-pulse 1.2s ${i * 0.2}s ease-in-out infinite`,

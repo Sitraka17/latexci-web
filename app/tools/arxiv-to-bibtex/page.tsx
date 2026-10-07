@@ -7,7 +7,7 @@ import BibTexTool from "@/components/BibTexTool";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "arXiv to BibTeX Converter — Instant Citations",
+  title: "arXiv to BibTeX Converter: Instant Citations",
   description:
     "Turn any arXiv ID (2301.07041, arxiv:2301.07041, or the abstract URL) into a ready-to-paste BibTeX entry, with metadata straight from the arXiv API. Free, no signup.",
   keywords: [
@@ -17,11 +17,11 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/arxiv-to-bibtex" },
   openGraph: {
-    title: "arXiv to BibTeX Converter — latexci",
+    title: "arXiv to BibTeX Converter | latexci",
     description: "Paste an arXiv ID, get a clean BibTeX entry straight from the arXiv API. Free, no signup.",
     url: "/tools/arxiv-to-bibtex", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "arXiv to BibTeX Converter — latexci" },
+  twitter: { card: "summary_large_image", title: "arXiv to BibTeX Converter | latexci" },
 };
 
 const FAQS = [
@@ -31,11 +31,11 @@ const FAQS = [
   },
   {
     q: "Where does the metadata come from?",
-    a: "From the arXiv API — the same data shown on the paper's abstract page: authors, title, year, and identifier. Nothing is guessed or generated.",
+    a: "From the arXiv API: the same data shown on the paper's abstract page: authors, title, year, and identifier. Nothing is guessed or generated.",
   },
   {
     q: "Should I cite the preprint or the published version?",
-    a: "If the paper has since appeared in a journal or conference, most venues prefer you cite the published version — check the arXiv abstract page for a journal reference or DOI, and use the DOI converter for it. Cite the arXiv version when it is the only one, or when you specifically discuss the preprint.",
+    a: "If the paper has since appeared in a journal or conference, most venues prefer you cite the published version. Check the arXiv abstract page for a journal reference or DOI, and use the DOI converter for it. Cite the arXiv version when it is the only one, or when you specifically discuss the preprint.",
   },
   {
     q: "Does it handle paper versions (v1, v2…)?",
@@ -46,7 +46,7 @@ const FAQS = [
 const appSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "arXiv to BibTeX Converter — latexci",
+  name: "arXiv to BibTeX Converter | latexci",
   description: "Convert an arXiv ID into a formatted BibTeX entry using the arXiv API.",
   url: "https://latexci.com/tools/arxiv-to-bibtex",
   applicationCategory: "DeveloperApplication",
@@ -85,14 +85,14 @@ export default function ArxivToBibtexPage() {
         <BibTexTool
           initialTab="arxiv"
           heading="arXiv to BibTeX Converter"
-          tagline="Paste an arXiv ID or abstract URL, get a clean BibTeX entry — straight from the arXiv API."
+          tagline="Paste an arXiv ID or abstract URL, get a clean BibTeX entry straight from the arXiv API."
         />
 
         <section aria-label="About the arXiv to BibTeX converter" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
           <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
             <h2 style={h2}>Cite preprints without the copy-paste dance</h2>
             <p style={para}>
-              Machine learning, physics, math, and increasingly economics move on arXiv first — which
+              Machine learning, physics, math, and increasingly economics move on arXiv first, which
               means half the references in a modern paper are preprints. Paste the arXiv ID (from the
               abstract page or the PDF header) above, and the converter fetches the authors, title, and
               year from the arXiv API, formatted as a BibTeX entry ready for your <code>.bib</code> file.
@@ -100,7 +100,7 @@ export default function ArxivToBibtexPage() {
             <h3 style={h3}>Preprint hygiene</h3>
             <p style={para}>
               Two habits keep arXiv citations clean. First, when a preprint has been published, cite the
-              journal or conference version — the abstract page lists the DOI when one exists (the{" "}
+              journal or conference version: the abstract page lists the DOI when one exists (the{" "}
               <Link href="/tools/doi-to-bibtex" style={{ color: "var(--accent)" }}>DOI converter</Link>{" "}
               handles it from there). Second, keep the arXiv ID in the entry so readers can always find
               the open-access copy.

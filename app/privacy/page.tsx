@@ -5,10 +5,10 @@ import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "latexci privacy policy. We run everything in your browser — your LaTeX source never leaves your machine.",
+  description: "latexci privacy policy: most tools run in your browser, what PDF export and sign-in send, and how to delete your data.",
   alternates: { canonical: "/privacy" },
   openGraph: {
-    title: "Privacy Policy — latexci",
+    title: "Privacy Policy | latexci",
     description: "latexci privacy policy. Your LaTeX source never leaves your browser.",
     url: "/privacy",
     type: "website",
@@ -22,8 +22,8 @@ const SECTIONS = [
     body: [
       "latexci is designed to collect as little data as possible.",
       "**Tools that run entirely in your browser** (LaTeX Preview, LaTeX Diff, Table Generator, Word → LaTeX .docx conversion): your LaTeX source, uploaded files, and generated output never leave your device. Nothing is sent to our servers.",
-      "**PDF export**: your LaTeX source is sent to YToTech (latex.ytotech.com), a third-party compile service, to generate a PDF. No account information or personal data is transmitted — only the raw LaTeX text.",
-      "**Citation lookups (BibTeX tools)**: when you look up a DOI, arXiv ID, PubMed ID, or ISBN, that identifier is sent to the corresponding public service (CrossRef with a DataCite fallback for dataset and software DOIs, arXiv, NCBI PubMed, and Open Library respectively) to fetch the citation. NCBI is operated in the United States, so this is an international data transfer under Art. 44 GDPR. Only the identifier you enter is sent — no account data.",
+      "**PDF export**: your LaTeX source is sent to YToTech (latex.ytotech.com), a third-party compile service, to generate a PDF. No account information or personal data is transmitted, only the raw LaTeX text.",
+      "**Citation lookups (BibTeX tools)**: when you look up a DOI, arXiv ID, PubMed ID, or ISBN, that identifier is sent to the corresponding public service (CrossRef with a DataCite fallback for dataset and software DOIs, arXiv, NCBI PubMed, and Open Library respectively) to fetch the citation. NCBI is operated in the United States, so this is an international data transfer under Art. 44 GDPR. Only the identifier you enter is sent, no account data.",
       "**CV generator**: your CV draft stays in your browser (local storage) and is never sent to latexci. If you use the optional ORCID import, only the ORCID iD you enter is sent to ORCID (orcid.org) to list your public works. ORCID is operated in the United States, so this is an international data transfer under Art. 44 GDPR.",
       "**Sign-in**: PDF export and Word to LaTeX need a sign-in with your Google account. Google tells us your name, your email address and a stable account id. We keep them in a signed cookie in your browser and in a short account record: first and last sign-in dates and how many times you signed in, exported a PDF and converted a Word file. The record is stored privately in Vercel Blob (Paris region, EU). Documents you save in the editor stay in your browser (local storage) and are never sent to latexci.",
       "**Analytics**: we may collect anonymised page-view counts and referrer data via Vercel Analytics. No cookies are set for this purpose.",
@@ -50,9 +50,9 @@ const SECTIONS = [
     body: [
       "**Google** (sign-in only): authenticates you when you click \"Sign in with Google\" and returns your name and email. See policies.google.com/privacy.",
       "**Vercel**: hosting, and storage of the account record (Vercel Blob, Paris region). See vercel.com/legal/privacy-policy.",
-      "**YToTech (latex.ytotech.com)** — PDF compilation (only when you click the PDF export button). Receives your raw LaTeX source.",
+      "**YToTech (latex.ytotech.com)**: PDF compilation (only when you click the PDF export button). Receives your raw LaTeX source.",
       "**ORCID** (orcid.org): receives only the ORCID iD you enter, when you click \"Import from ORCID\" in the CV generator. United States service (international transfer).",
-      "**CrossRef, DataCite, arXiv, NCBI PubMed, and Open Library** — citation metadata lookups in the BibTeX tools. Each receives only the identifier you enter (DOI / arXiv ID / PubMed ID / ISBN); DataCite (a German service) is queried only when a DOI is not found at CrossRef. NCBI is a United States service (international transfer).",
+      "**CrossRef, DataCite, arXiv, NCBI PubMed, and Open Library**: citation metadata lookups in the BibTeX tools. Each receives only the identifier you enter (DOI / arXiv ID / PubMed ID / ISBN); DataCite (a German service) is queried only when a DOI is not found at CrossRef. NCBI is a United States service (international transfer).",
     ],
   },
   {
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
             border: "1px solid rgba(124,108,248,0.2)",
             borderRadius: 8,
           }}>
-            <strong>Short version:</strong> most tools run entirely in your browser — your LaTeX source never leaves your machine.
+            <strong>Short version:</strong> most tools run entirely in your browser, so your LaTeX source never leaves your machine (PDF export is the exception).
             If you sign in, we keep your name, email and a few usage counts, privately, in the EU.
             We don&apos;t sell data. Ever.
           </p>

@@ -7,9 +7,9 @@ import BibTexTool from "@/components/BibTexTool";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "ISBN to BibTeX — @book Entry Generator",
+  title: "ISBN to BibTeX: @book Entry Generator",
   description:
-    "Turn an ISBN into a formatted BibTeX @book entry — title, authors, publisher, and year from Open Library. Cite textbooks and monographs in seconds. Free, no signup.",
+    "Turn an ISBN into a formatted BibTeX @book entry: title, authors, publisher, and year from Open Library. Cite textbooks and monographs in seconds. Free, no signup.",
   keywords: [
     "isbn to bibtex", "isbn bibtex generator", "book bibtex entry",
     "cite book latex", "bibtex book citation", "isbn citation generator",
@@ -17,36 +17,36 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/isbn-to-bibtex" },
   openGraph: {
-    title: "ISBN to BibTeX Converter — latexci",
+    title: "ISBN to BibTeX Converter | latexci",
     description: "Paste an ISBN, get a formatted @book BibTeX entry from Open Library data. Free, no signup.",
     url: "/tools/isbn-to-bibtex", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "ISBN to BibTeX Converter — latexci" },
+  twitter: { card: "summary_large_image", title: "ISBN to BibTeX Converter | latexci" },
 };
 
 const FAQS = [
   {
-    q: "ISBN-10 or ISBN-13 — which one works?",
-    a: "Both. Use the ISBN printed on the book's copyright page or back cover — modern books carry an ISBN-13 starting with 978 or 979; older ones an ISBN-10.",
+    q: "ISBN-10 or ISBN-13: which one works?",
+    a: "Both. Use the ISBN printed on the book's copyright page or back cover: modern books carry an ISBN-13 starting with 978 or 979; older ones an ISBN-10.",
   },
   {
     q: "Where does the book data come from?",
     a: "From Open Library, the Internet Archive's open catalog of published books. The entry includes the title, authors, publisher, and year as recorded there.",
   },
   {
-    q: "The year doesn't match my copy — why?",
-    a: "An ISBN identifies a specific edition. If you're citing a different edition than the one the ISBN belongs to, look up the ISBN of your actual copy — page numbers and even chapter structure can differ between editions.",
+    q: "The year doesn't match my copy: why?",
+    a: "An ISBN identifies a specific edition. If you're citing a different edition than the one the ISBN belongs to, look up the ISBN of your actual copy: page numbers and even chapter structure can differ between editions.",
   },
   {
     q: "What about book chapters or edited volumes?",
-    a: "The converter produces a @book entry. For a chapter in an edited volume, start from the @book entry and adapt it to @incollection or @inbook, adding the chapter title, editors, and page range — or use the DOI converter if the chapter has its own DOI.",
+    a: "The converter produces a @book entry. For a chapter in an edited volume, start from the @book entry and adapt it to @incollection or @inbook, adding the chapter title, editors, and page range, or use the DOI converter if the chapter has its own DOI.",
   },
 ];
 
 const appSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "ISBN to BibTeX Converter — latexci",
+  name: "ISBN to BibTeX Converter | latexci",
   description: "Convert an ISBN into a formatted BibTeX @book entry using Open Library data.",
   url: "https://latexci.com/tools/isbn-to-bibtex",
   applicationCategory: "DeveloperApplication",
@@ -93,15 +93,15 @@ export default function IsbnToBibtexPage() {
             <h2 style={h2}>Books deserve better than hand-typed citations</h2>
             <p style={para}>
               Articles have DOIs; books have ISBNs. Paste the one from the copyright page above and the
-              converter looks it up in Open Library and returns a BibTeX <code>@book</code> entry — title,
-              authors, publisher, and year — ready to paste into your <code>.bib</code> file. Handy for
+              converter looks it up in Open Library and returns a BibTeX <code>@book</code> entry (title,
+              authors, publisher, and year), ready to paste into your <code>.bib</code> file. Handy for
               textbooks in course notes, monographs in a thesis&rsquo; literature review, or methods
               handbooks in a paper.
             </p>
             <h3 style={h3}>Mind the edition</h3>
             <p style={para}>
               An ISBN identifies one specific edition of a book. If your citation includes page numbers,
-              make sure the ISBN you convert matches the copy on your desk — editions can differ in
+              make sure the ISBN you convert matches the copy on your desk: editions can differ in
               pagination and content. When in doubt, the copyright page of your copy has the right ISBN.
             </p>
 

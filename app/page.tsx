@@ -12,9 +12,9 @@ const HERO_FORMULA = katex.renderToString(
 );
 
 export const metadata: Metadata = {
-  title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
+  title: "The Tools Overleaf Forgot: Free LaTeX Utilities",
   description:
-    "Free LaTeX tools for researchers: BibTeX cleaner, Word to LaTeX converter, live preview, diff and 28 templates. No signup, no install, any browser.",
+    "Free LaTeX tools for researchers: BibTeX cleaner, Word to LaTeX, live preview, diff, 28 templates. PDF export and Word import with a one-click Google sign-in.",
   keywords: [
     "bibtex cleaner online", "word to latex converter", "latex diff tool",
     "doi to bibtex", "arxiv to bibtex", "latex preview online",
@@ -24,17 +24,17 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/" },
   openGraph: {
-    title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
+    title: "The Tools Overleaf Forgot: Free LaTeX Utilities",
     description:
-      "latexci: BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. No signup, no install, works in any browser.",
+      "latexci: BibTeX cleaner, Word to LaTeX, instant preview, diff, and templates. All free, no install; PDF export and Word import with a Google sign-in.",
     url: "/",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Tools Overleaf Forgot — Free LaTeX Utilities for Researchers",
+    title: "The Tools Overleaf Forgot: Free LaTeX Utilities",
     description:
-      "BibTeX cleaner, Word→LaTeX converter, instant preview, diff, and templates. Free, no signup.",
+      "BibTeX cleaner, Word to LaTeX converter, instant preview, diff, and templates. Every tool free, no paid plan.",
   },
 };
 
@@ -49,8 +49,8 @@ const TOOLS = [
     desc: "Paste .tex → equations render instantly via KaTeX. Export to PDF. Zero compile wait." },
   { href: "/tools/diff",          icon: "↕",  label: "LaTeX Diff",     tag: "Compare", color: "#6366f1",
     desc: "Two .tex files, side by side. Additions green, deletions red. Replaces Overleaf track changes." },
-  { href: "/tools/symbols",        icon: "∑",  label: "Symbol Search",   tag: "380+",    color: "#14b8a6",
-    desc: "Search 380+ symbols by name, command, or Unicode — Greek, operators, physics, stats, CS. Live KaTeX preview." },
+  { href: "/tools/symbols",        icon: "∑",  label: "Symbol Search",   tag: "350+",    color: "#14b8a6",
+    desc: "Search 350+ symbols by name, command, or Unicode: Greek, operators, physics, stats, CS. Live KaTeX preview." },
   { href: "/tools/table",         icon: "▦",  label: "Table Generator", tag: "Build",   color: "#06b6d4",
     desc: "Visual grid editor → booktabs or simple tabular. Copy LaTeX in one click." },
   { href: "/tools/templates",     icon: "▤",  label: "Templates",       tag: "Library", color: "#ec4899",
@@ -82,13 +82,13 @@ const FAQS = [
   { q: "What does latexci cost?",
     a: "Nothing. Every tool is free: preview, PDF export, Word to LaTeX, BibTeX tools, diff, table and CV generators, symbols and all templates. There is no paid plan." },
   { q: "Does the preview support math equations?",
-    a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, with automatic equation numbering, \\ref cross-references, and bibliography rendering." },
+    a: "Yes: inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, with automatic equation numbering, \\ref cross-references, and bibliography rendering." },
   { q: "What file types does Word → LaTeX accept?",
     a: ".docx (Word 2007+) converts directly in your browser: the file is never uploaded. Word equations (OMML) are converted to LaTeX math in place, inline or displayed. .odt and .rtf need local pandoc; the tool shows you the exact command." },
   { q: "Is my LaTeX source stored anywhere?",
     a: "No. Preview, diff, table, symbol search, and Word → LaTeX all run entirely in your browser. Nothing is uploaded. PDF export sends only your LaTeX source to YToTech's compile server and downloads the result directly." },
   { q: "I have Overleaf through my university. Why use this?",
-    a: "latexci does things Overleaf doesn't: convert Word files with equation detection, clean and deduplicate .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files side by side. Use Overleaf as your editor — latexci for the rest. When you graduate and lose institutional access, latexci is still here." },
+    a: "latexci does things Overleaf doesn't: convert Word files with equation detection, clean and deduplicate .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files side by side. Use Overleaf as your editor, and latexci for the rest. When you graduate and lose institutional access, latexci is still here." },
   { q: "Do I need an account?",
     a: "Only for PDF export and Word to LaTeX: one click with Google, free. Everything else works without an account, and documents you save stay in your browser." },
 ];
@@ -140,8 +140,8 @@ export default function HomePage() {
       }}>
         <span style={{ marginRight: "0.4rem" }}>✨</span>
         <strong style={{ color: "var(--accent2)" }}>New:</strong>
-        <span className="announce-long">{" "}ISBN → BibTeX — cite any of 20M+ books in one click, plus 380+ searchable symbols —{" "}</span>
-        <span className="announce-short">{" "}ISBN → BibTeX + 380 symbols —{" "}</span>
+        <span className="announce-long">{" "}ISBN → BibTeX: cite any of 20M+ books in one click, plus 350+ searchable symbols.{" "}</span>
+        <span className="announce-short">{" "}ISBN → BibTeX + 350 symbols:{" "}</span>
         <a href="/tools/bibtex" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
           try BibTeX Tools →
         </a>
@@ -205,9 +205,10 @@ export default function HomePage() {
                 marginBottom: "2rem",
               }}
             >
-              BibTeX cleaner, Word→LaTeX converter, instant preview, and diff —
+              BibTeX cleaner, Word→LaTeX converter, instant preview, and diff:
               the tools every researcher needs <em>alongside</em> Overleaf.
-              Free, no signup, nothing leaves your browser.
+              All free. Most tools need no account; PDF export and Word to LaTeX
+              ask for a one-click Google sign-in.
             </p>
 
             <div className="hero-cta-row" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
@@ -552,7 +553,7 @@ export default function HomePage() {
               </p>
               <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--fg-muted)" }}>
                 <span lang="fr">Rapport de projet, rapport de stage, AMSE working paper</span>
-                {" "}— with the official institutional layout.
+                {" "}with the official institutional layout.
               </p>
             </div>
             <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#003BA0", flexShrink: 0 }}>
@@ -670,7 +671,7 @@ export default function HomePage() {
             </div>
             <p style={{ fontSize: "0.88rem", color: "var(--fg-muted)", lineHeight: 1.7, margin: 0 }}>
               Ask LaTeX questions, share templates, get help with compilation errors,
-              and suggest features — all in one place. Other researchers are already there.
+              and suggest features, all in one place. Other researchers are already there.
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", flexShrink: 0 }}>
@@ -686,7 +687,7 @@ export default function HomePage() {
               Join Discord →
             </a>
             <p style={{ margin: 0, fontSize: "0.73rem", color: "var(--fg-muted)", textAlign: "center" }}>
-              Free · no account required
+              Free to join
             </p>
           </div>
         </div>

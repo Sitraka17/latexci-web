@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Page not found — latexci",
+  title: { absolute: "Page not found | latexci" },
   robots: { index: false, follow: false },
 };
 
@@ -95,7 +95,7 @@ export default function NotFound() {
           }}
         >
           The URL might be wrong, or this page was removed.
-          Try one of the tools below — they definitely exist.
+          Try one of the tools below: they definitely exist.
         </p>
 
         {/* Tool quick-links */}

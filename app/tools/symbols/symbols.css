@@ -1,0 +1,16 @@
+/* Crawlable symbol directory on /tools/symbols.
+   Moved out of ~380 repeated inline style attributes (HTML + RSC payload size). */
+.sym-dir-cat { margin-bottom: 1.75rem; }
+.sym-dir-cat-title {
+  font-size: 0.82rem; font-weight: 700; color: var(--fg-muted);
+  text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.6rem;
+}
+.sym-dir-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.sym-dir-link {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.25rem 0.55rem; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface2);
+  font-size: 0.75rem; color: var(--fg-muted); text-decoration: none;
+}
+.sym-dir-link > span { color: var(--fg); }
+.sym-dir-link > code { font-family: var(--font-mono), monospace; }

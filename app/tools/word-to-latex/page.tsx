@@ -10,7 +10,7 @@ import { breadcrumbSchema } from "@/lib/breadcrumbs";
 export const metadata: Metadata = {
   title: "Word to LaTeX Converter: .docx to .tex in Your Browser",
   description:
-    "Convert a Word .docx file to LaTeX in your browser: headings, lists, booktabs tables, links, figures and Word equations become clean LaTeX, with a quality report. Your file is never uploaded.",
+    "Convert Word .docx to LaTeX in your browser: headings, lists, booktabs tables, figures and Word equations, with a quality report. Free with a Google sign-in.",
   keywords: [
     "word to latex converter", "docx to latex", "convert word to latex", "word to tex",
     "docx to tex converter", "word equations to latex", "omml to latex",
@@ -29,6 +29,10 @@ const FAQS = [
   {
     q: "Is my Word file uploaded anywhere?",
     a: "No. The .docx is read and converted inside your browser; its content never reaches a server.",
+  },
+  {
+    q: "Do I need an account?",
+    a: "A free Google sign-in, one click, is needed to convert. There is no paid plan and no usage quota. Signing in only records that you used the converter; the document itself stays in your browser.",
   },
   {
     q: "Are Word equations converted?",

@@ -45,7 +45,7 @@ export default function AuthButton() {
       >
         <span style={{
           width: 20, height: 20, borderRadius: "50%",
-          background: "var(--accent)",
+          background: "var(--accent-solid)",
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           fontSize: "0.65rem", color: "#fff", fontWeight: 800, flexShrink: 0,
         }}>

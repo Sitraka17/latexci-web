@@ -5,11 +5,11 @@ import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms of service for latexci — free, open-source LaTeX tools for researchers and students.",
+  description: "Terms of service for latexci: free online LaTeX tools for researchers and students. No paid plan, optional Google sign-in for PDF export and Word to LaTeX.",
   alternates: { canonical: "/terms" },
   openGraph: {
-    title: "Terms of Service — latexci",
-    description: "Terms of service for latexci — free online LaTeX tools for researchers.",
+    title: "Terms of Service | latexci",
+    description: "Terms of service for latexci: free online LaTeX tools for researchers.",
     url: "/terms",
     type: "website",
   },
@@ -20,7 +20,7 @@ const SECTIONS = [
   {
     title: "1. Acceptance",
     body: [
-      `By accessing latexci (latexci.com), you agree to these Terms of Service. If you do not agree, please do not use the service. These terms were last updated on 6 October 2026.`,
+      `By accessing latexci (latexci.com), you agree to these Terms of Service. If you do not agree, please do not use the service. These terms were last updated on 7 October 2026.`,
     ],
   },
   {
@@ -35,23 +35,23 @@ const SECTIONS = [
     body: [
       "You may use latexci for any lawful purpose, including personal projects, academic research, and commercial work.",
       "You may not: (a) attempt to disrupt or overload our servers; (b) use automated scripts to abuse the PDF export service; (c) reverse-engineer or attempt to extract private API keys; (d) use the service to distribute illegal or harmful content.",
-      "The PDF export feature calls an external LaTeX compile service (latexonline.cc). Misuse of this feature — including sending excessively large documents repeatedly — may result in rate limiting.",
+      "The PDF export feature sends your LaTeX source to an external compile service (YToTech LaTeX-on-HTTP). Misuse of this feature, including sending excessively large documents repeatedly, may result in rate limiting.",
     ],
   },
   {
-    title: "4. User accounts",
+    title: "4. Google sign-in",
     body: [
-      "Creating an account is optional. You are responsible for maintaining the security of your account credentials.",
-      "You may delete your account at any time. We will permanently delete your data within 30 days of account deletion.",
-      "We reserve the right to suspend accounts that violate these terms.",
+      "Most tools work without an account. PDF export and Word to LaTeX require a free sign-in with your Google account. latexci never sees or stores a password: Google confirms your identity and we keep a signed session cookie.",
+      "When you sign in, we keep a private record of your email address, name, first and last visit, and the number of sign-ins, PDF exports and Word conversions, stored in Vercel Blob (Paris, EU). Documents you save stay in your own browser (localStorage) and are never uploaded to an account.",
+      "You can erase that record at any time with \"Delete my data\" in the dashboard: it is deleted immediately, you are signed out, and the documents saved in that browser are wiped too. We may block sign-in for accounts that violate these terms.",
     ],
   },
   {
     title: "5. Intellectual property",
     body: [
       "**Your content**: any LaTeX documents, templates, or text you create remain your property. We claim no ownership over content you create or upload.",
-      "**Our software**: latexci's source code is released under the MIT License, available on GitHub. You are free to fork, modify, and redistribute it under the same license.",
-      "**Templates**: the built-in LaTeX templates are provided under the MIT License. You may use them as the basis for your own documents without restriction.",
+      "**Our software**: the latexci website and its code remain the property of their author. No licence to the code is granted beyond using the service.",
+      "**Templates**: the built-in LaTeX templates are free to copy and use as the basis for your own documents, including commercial and academic work, without attribution.",
     ],
   },
   {
@@ -70,14 +70,14 @@ const SECTIONS = [
   {
     title: "8. Limitation of liability",
     body: [
-      "To the maximum extent permitted by law, latexci's liability for any claim arising out of use of the service is limited to the amount you paid in the 12 months preceding the claim (or $0 if you used only the free plan).",
-      "We are not liable for loss of data, loss of profits, or indirect damages.",
+      "latexci is provided free of charge and no payment is ever collected. To the maximum extent permitted by law, latexci accepts no liability for any claim arising out of use of the service.",
+      "We are not liable for loss of data, loss of profits, or indirect damages. Documents saved in your browser can be lost if you clear its storage: keep your own copies.",
     ],
   },
   {
     title: "9. Changes",
     body: [
-      "We may update these terms from time to time. Material changes will be announced in the GitHub repository changelog. Continued use of the service after a change constitutes acceptance of the new terms.",
+      "We may update these terms from time to time. The date in section 1 shows the latest version. Continued use of the service after a change constitutes acceptance of the new terms.",
     ],
   },
   {
@@ -124,7 +124,7 @@ export default function TermsPage() {
             borderRadius: 8,
           }}>
             <strong>Short version:</strong> use latexci for lawful purposes, don&apos;t abuse the compile service,
-            your content is yours. The software is MIT-licensed open source.
+            your content is yours. Everything is free; PDF export and Word to LaTeX need a one-click Google sign-in.
           </p>
         </div>
 

@@ -9,7 +9,7 @@ import { TEMPLATES } from "@/lib/templates";
 export const metadata: Metadata = {
   title: "Free LaTeX Templates: NeurIPS, ICML, CV, PhD Thesis",
   description:
-    "28 free LaTeX templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer, and more. Open any template instantly in the browser. No download, no signup.",
+    "28 free LaTeX templates: NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer, and more. Open any template instantly in the browser. No download, no signup.",
   keywords: [
     "free latex templates",
     "neurips latex template 2024",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/templates" },
   openGraph: {
-    title: "Free LaTeX Templates — NeurIPS, ICML, ACL, CV, PhD Thesis",
+    title: "Free LaTeX Templates: NeurIPS, ICML, ACL, CV, PhD Thesis",
     description:
       "28 free LaTeX templates: NeurIPS, ICML, ACL, Nature, thesis, CV, Beamer. Click to open in the live editor instantly.",
     url: "/tools/templates",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free LaTeX Templates — latexci",
+    title: "Free LaTeX Templates | latexci",
     description:
       "NeurIPS 2024, ICML, ACL, Nature style, PhD thesis, CV with photo, Beamer. All free, open in browser.",
   },
@@ -73,7 +73,7 @@ export default function TemplatesPage() {
             LaTeX Templates
           </h1>
           <p style={{ color: "var(--fg-muted)", fontSize: "0.92rem", maxWidth: 540, margin: 0 }}>
-            28 free templates — NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer.
+            28 free templates: NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer.
             Click any template to open it in the live editor. No download, no signup.
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function TemplatesPage() {
             PhD and Master&apos;s thesis, CVs for researchers and PhD students (French &amp; English),
             Beamer presentations, math homework with theorem environments, cover letters,
             and Centrale Marseille / AMSE institutional reports.
-            Each template opens directly in the latexci live preview editor — see the rendered
+            Each template opens directly in the latexci live preview editor: see the rendered
             output immediately and edit the source, no local LaTeX installation required.
           </p>
         </section>

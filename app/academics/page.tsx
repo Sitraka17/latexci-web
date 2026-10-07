@@ -10,7 +10,7 @@ import LZString from "lz-string";
 export const metadata: Metadata = {
   title: "LaTeX for PhD Students: Thesis Templates, Diff and Tools",
   description:
-    "Free LaTeX tools for academic writing: thesis templates, live preview, advisor diff, Word to LaTeX and a 12-package reference guide. No signup.",
+    "Free LaTeX tools for academic writing: thesis templates, live preview, advisor diff, Word to LaTeX (free Google sign-in) and a 12-package reference guide.",
   alternates: { canonical: "/academics" },
   keywords: [
     "phd thesis latex template",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "track changes latex thesis",
   ],
   openGraph: {
-    title: "LaTeX for PhD Students & Researchers — latexci",
+    title: "LaTeX for PhD Students & Researchers | latexci",
     description:
       "PhD thesis templates, advisor diff workflow, Word to LaTeX, and a 12-package guide. All free, in your browser.",
     url: "/academics",
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LaTeX for PhD Students — latexci",
-    description: "Thesis templates, diff tool, and Word → LaTeX. Free, no signup.",
+    title: "LaTeX for PhD Students | latexci",
+    description: "Thesis templates, diff tool, and Word → LaTeX. Every tool free, no paid plan.",
   },
 };
 
@@ -46,8 +46,8 @@ const GRANDE_ECOLE_TEMPLATES = TEMPLATES.filter(t => t.category === "Grande Éco
 const ML_CONFERENCE_TEMPLATE  = TEMPLATES.find(t => t.id === "ml-conference");
 
 const ESSENTIAL_PACKAGES = [
-  { pkg: "amsmath, amssymb, amsthm", use: "All math — equations, symbols, theorem environments" },
-  { pkg: "geometry", use: "Page margins — universities have strict margin requirements" },
+  { pkg: "amsmath, amssymb, amsthm", use: "All math: equations, symbols, theorem environments" },
+  { pkg: "geometry", use: "Page margins (universities have strict margin requirements)" },
   { pkg: "hyperref", use: "Clickable cross-references, URLs, and PDF bookmarks" },
   { pkg: "biblatex + biber", use: "Modern bibliography management (replaces BibTeX)" },
   { pkg: "graphicx", use: "Insert figures, logos, plots" },
@@ -64,7 +64,7 @@ const WORKFLOW_STEPS = [
   {
     step: "01",
     title: "Pick a thesis template",
-    desc: "Start from our PhD or Master's template — title page, chapters, appendices, and bibliography already wired up.",
+    desc: "Start from our PhD or Master's template: title page, chapters, appendices, and bibliography already wired up.",
     cta: "Browse thesis templates →",
     href: "/tools/templates",
     accent: "#6c63ff",
@@ -72,7 +72,7 @@ const WORKFLOW_STEPS = [
   {
     step: "02",
     title: "Preview while you write",
-    desc: "Paste your LaTeX source into the live preview. See math, sections, and tables render instantly — no compile cycle.",
+    desc: "Paste your LaTeX source into the live preview. See math, sections, and tables render instantly, with no compile cycle.",
     cta: "Open Live Preview →",
     href: "/tools/preview",
     accent: "#10b981",
@@ -80,7 +80,7 @@ const WORKFLOW_STEPS = [
   {
     step: "03",
     title: "Diff revisions with your advisor",
-    desc: "Your advisor sent back a revised version? Drag both .tex files into the diff tool — see every change highlighted.",
+    desc: "Your advisor sent back a revised version? Drag both .tex files into the diff tool and see every change highlighted.",
     cta: "Try LaTeX Diff →",
     href: "/tools/diff",
     accent: "#f59e0b",
@@ -98,7 +98,7 @@ const WORKFLOW_STEPS = [
 const FAQS = [
   {
     q: "Which document class should I use for my thesis?",
-    a: "Use \\documentclass[12pt,a4paper]{report} for most theses. The report class gives you \\chapter commands and produces professional multi-chapter documents. Some universities provide their own class file — check your institution's guidelines first.",
+    a: "Use \\documentclass[12pt,a4paper]{report} for most theses. The report class gives you \\chapter commands and produces professional multi-chapter documents. Some universities provide their own class file: check your institution's guidelines first.",
   },
   {
     q: "How do I manage my bibliography for hundreds of references?",
@@ -106,7 +106,7 @@ const FAQS = [
   },
   {
     q: "My thesis is 200+ pages. Will LaTeX handle it?",
-    a: "Yes — LaTeX is specifically designed for long documents. Use \\include{chapters/intro} to split chapters into separate files and \\includeonly{} to compile just one chapter at a time for faster iteration.",
+    a: "Yes. LaTeX is specifically designed for long documents. Use \\include{chapters/intro} to split chapters into separate files and \\includeonly{} to compile just one chapter at a time for faster iteration.",
   },
   {
     q: "How do I number equations, figures, and tables per chapter?",
@@ -114,7 +114,7 @@ const FAQS = [
   },
   {
     q: "Can I use latexci to check my thesis formatting?",
-    a: "Yes — paste sections into the Live Preview to check math rendering and structure. Use the Diff tool to compare thesis drafts with your advisor's changes. Both tools work with any length of LaTeX.",
+    a: "Yes. Paste sections into the Live Preview to check math rendering and structure. Use the Diff tool to compare thesis drafts with your advisor's changes. Both tools work with any length of LaTeX.",
   },
   {
     q: "Does the preview support theorem, lemma, and proof environments?",
@@ -175,7 +175,7 @@ export default function AcademicsPage() {
             maxWidth: 600, margin: "0 auto 2rem",
           }}>
             Thesis is 200 pages. Your advisor sends changes in Word. The defense is in 3 months.
-            latexci helps you move faster — preview, diff, convert, and start from pro templates.
+            latexci helps you move faster: preview, diff, convert, and start from pro templates.
           </p>
 
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
@@ -221,10 +221,10 @@ export default function AcademicsPage() {
       {/* ── Workflow ────────────────────────────────── */}
       <section style={{ padding: "4rem 1.5rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
         <h2 style={{ fontSize: "1.5rem", fontWeight: 700, textAlign: "center", marginBottom: "0.5rem" }}>
-          Your thesis workflow — step by step
+          Your thesis workflow, step by step
         </h2>
         <p style={{ textAlign: "center", color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "3rem" }}>
-          Every tool is free. No account. Works in your browser.
+          Every tool is free and works in your browser. Only PDF export and Word to LaTeX ask for a one-click Google sign-in.
         </p>
         <div style={{
           display: "grid",
@@ -265,7 +265,7 @@ export default function AcademicsPage() {
             Thesis & research templates
           </h2>
           <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2rem" }}>
-            One click loads the template into the live editor — ready to edit.
+            One click loads the template into the live editor, ready to edit.
           </p>
           <div style={{
             display: "grid",
@@ -423,7 +423,7 @@ export default function AcademicsPage() {
             }}>NEW</span>
           </div>
           <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "1.5rem", maxWidth: 680 }}>
-            NeurIPS / ICML / ICLR / CVPR — all share the same article-class skeleton.
+            NeurIPS / ICML / ICLR / CVPR all share the same article-class skeleton.
             This template wires up the anonymous review header, contributions paragraph,
             algorithm environment, theorem/proof, ablation table, and appendix.
             Swap in the official <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.8em" }}>neurips_2025.sty</code> once you&apos;re ready to submit.
@@ -469,8 +469,9 @@ export default function AcademicsPage() {
               Your unpublished research stays in your browser
             </h2>
             <p style={{ fontSize: "0.88rem", color: "var(--fg-muted)", lineHeight: 1.75, margin: 0 }}>
-              Every latexci tool — preview, diff, Word→LaTeX — runs <strong>entirely client-side</strong>.
-              Your .tex source, Word documents, and research content are <em>never uploaded to any server</em>.
+              Preview, diff, and Word→LaTeX run <strong>entirely client-side</strong>.
+              Your .tex source, Word documents, and research content are <em>never uploaded to any server</em>;
+              only PDF export, when you ask for it, sends the LaTeX source to the compile service.
               For EU institutions with GDPR obligations around unpublished research,
               this is a meaningful difference from US-hosted cloud compilers.
             </p>
@@ -478,8 +479,8 @@ export default function AcademicsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
             {[
               { icon: "🔒", title: "Zero upload", desc: "Preview, diff, and Word conversion run in WebAssembly and browser JS. Nothing leaves your machine." },
-              { icon: "🇪🇺", title: "GDPR-compatible by design", desc: "No server-side processing of document content means no data transfer, no consent friction." },
-              { icon: "🏛️", title: "Institutional confidence", desc: "Share the link to this page with your IT/legal team — the architecture speaks for itself." },
+              { icon: "🇪🇺", title: "GDPR-compatible by design", desc: "Preview, diff, and Word conversion never send document content to a server: no data transfer, no consent friction." },
+              { icon: "🏛️", title: "Institutional confidence", desc: "Share the link to this page with your IT/legal team: the architecture speaks for itself." },
             ].map(f => (
               <div key={f.title} style={{
                 display: "flex", gap: "0.75rem", alignItems: "flex-start",
@@ -510,7 +511,7 @@ export default function AcademicsPage() {
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
             {[
-              { icon: "🧮", title: "Math that looks right", desc: "LaTeX renders equations — fractions, integrals, matrices — with professional typesetting that Word cannot match." },
+              { icon: "🧮", title: "Math that looks right", desc: "LaTeX renders equations (fractions, integrals, matrices) with professional typesetting that Word cannot match." },
               { icon: "🔗", title: "Cross-references never break", desc: "\\label + \\ref means Figure 3.2 stays Figure 3.2 even when you add a figure before it. Word breaks these constantly." },
               { icon: "📚", title: "BibTeX + bibliography", desc: "Manage 300 references in a .bib file. Cite with \\cite{}. The bibliography formats itself in APA, IEEE, or any style." },
               { icon: "🌿", title: "Git-friendly", desc: "Plain text files diff cleanly in Git. Track every change across months of writing. Collaborate without merge conflicts on a binary .docx." },
@@ -536,7 +537,7 @@ export default function AcademicsPage() {
       {/* ── FAQ ─────────────────────────────────────── */}
       <section style={{ padding: "4rem 1.5rem 5rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
         <h2 style={{ fontSize: "1.4rem", fontWeight: 700, textAlign: "center", marginBottom: "2rem" }}>
-          Thesis LaTeX — frequently asked
+          Thesis LaTeX: frequently asked
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {FAQS.map(({ q, a }) => (
@@ -564,7 +565,7 @@ export default function AcademicsPage() {
           Ready to write your thesis in LaTeX?
         </h2>
         <p style={{ color: "var(--fg-muted)", marginBottom: "2rem" }}>
-          Start from a professional template. It&apos;s free — no account required.
+          Start from a professional template. It&apos;s free, and templates need no account.
         </p>
         <Link href="/tools/templates" style={{
           display: "inline-flex", alignItems: "center", gap: "0.5rem",
@@ -573,7 +574,7 @@ export default function AcademicsPage() {
           color: "#fff", fontWeight: 700, fontSize: "1rem", textDecoration: "none",
           boxShadow: "0 0 40px rgba(108,99,255,0.4)",
         }}>
-          🎓 Browse thesis templates — free
+          🎓 Browse thesis templates (free)
         </Link>
       </section>
 

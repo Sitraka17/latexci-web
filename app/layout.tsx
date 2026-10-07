@@ -45,11 +45,11 @@ const BASE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "latexci — Free Online LaTeX Preview, Diff & Word-to-LaTeX Converter",
+    default: "latexci: Free Online LaTeX Preview, Diff & Word to LaTeX",
     template: "%s | latexci",
   },
   description:
-    "Free browser-based LaTeX tools: live preview with KaTeX math rendering, side-by-side diff, and Word (.docx) to LaTeX conversion. No account, no install.",
+    "Free LaTeX tools in your browser: live KaTeX preview, side-by-side diff, Word (.docx) to LaTeX. PDF export and Word import need a one-click Google sign-in.",
   keywords: [
     "latex preview online",
     "latex diff tool",
@@ -72,16 +72,16 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE_URL,
     siteName: "latexci",
-    title: "latexci — Free Online LaTeX Tools",
+    title: "latexci: Free Online LaTeX Tools",
     description:
-      "Live LaTeX preview, side-by-side diff, and Word-to-LaTeX conversion. All free, no signup required.",
+      "Live LaTeX preview, side-by-side diff, and Word to LaTeX conversion. All free; PDF export and Word to LaTeX with a one-click Google sign-in.",
     // og:image comes from app/opengraph-image.tsx (file convention) —
     // do NOT list a static image here or it overrides the generated one.
   },
   twitter: {
     card: "summary_large_image",
-    title: "latexci — Free Online LaTeX Tools",
-    description: "Live LaTeX preview, diff, and Word-to-LaTeX. Free, no signup.",
+    title: "latexci: Free Online LaTeX Tools",
+    description: "Live LaTeX preview, diff, and Word to LaTeX. Every tool free, no paid plan.",
     creator: "@Sitraka17",
   },
   robots: {

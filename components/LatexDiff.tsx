@@ -123,7 +123,7 @@ function DragHandle({
         transition: "background 0.15s",
         zIndex: 10,
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = "var(--accent)")}
+      onMouseEnter={e => (e.currentTarget.style.background = "var(--accent-solid)")}
       onMouseLeave={e => (e.currentTarget.style.background = "var(--border)")}
     >
       {/* Grip dots */}
@@ -197,6 +197,7 @@ function EditorPane({
         value={value}
         onChange={e => onChange(e.target.value)}
         spellCheck={false}
+        aria-label={label.startsWith("revised") ? "Revised LaTeX" : "Original LaTeX"}
         placeholder={`Paste ${label} LaTeX here…`}
         style={{
           flex: 1, background: isDragActive
@@ -623,7 +624,7 @@ export default function LatexDiff() {
     const tabBtn = (tab: MobileTab): CSSProperties => ({
       flex: 1, padding: "0.5rem 0.25rem", border: "none", cursor: "pointer",
       fontSize: "0.78rem", fontWeight: 600,
-      background: mobileTab === tab ? "var(--accent)" : "transparent",
+      background: mobileTab === tab ? "var(--accent-solid)" : "transparent",
       color: mobileTab === tab ? "#fff" : "var(--fg-muted)",
       borderRadius: 0, transition: "background 0.15s",
     });

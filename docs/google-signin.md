@@ -1,45 +1,59 @@
-# Turning on Google sign-in
+# Google sign-in and user records
 
-latexci signs users in with Google (OpenID Connect ID-token flow with
-form_post, state and nonce; no client secret is used or stored) and keeps
-no database: the session is a signed cookie (`lib/session.ts`) and the plan is
-read from Stripe (`lib/entitlement.ts`). Until the variables below exist, the
-sign-in page says "being set up" and every tool, PDF export included, is open.
+Status: live in production since 5 October 2026.
 
-## 1. Create the OAuth client (Google Cloud console, about 5 minutes)
+latexci signs users in with Google using the OpenID Connect ID-token flow
+(form_post, state and nonce). No client secret is used or stored, and there is
+no database:
 
-1. https://console.cloud.google.com/apis/credentials, pick or create a project.
-2. "OAuth consent screen": External, app name `latexci`, support email,
-   authorised domain `latexci.com`, scopes `openid`, `email`, `profile` (all
-   non-sensitive, so no Google review). Publish the app ("In production").
-3. "Create credentials" > "OAuth client ID" > Web application:
-   - Authorised JavaScript origins: `https://latexci.com`
-   - Authorised redirect URIs:
-     - `https://latexci.com/api/auth/callback/google`
-     - `http://localhost:3000/api/auth/callback/google` (local dev)
-4. Copy the client ID. The client secret is not used: leave it in Google.
+- the session is a signed cookie (`lib/session.ts`, HMAC with `AUTH_SECRET`);
+- the Google ID token is verified against Google's public keys
+  (`lib/google-id-token.ts`);
+- each signed-in user gets one private JSON record in Vercel Blob
+  (`lib/users.ts`, store `latexci-users`, region Paris `cdg1`): email, name,
+  first and last seen, and counts of sign-ins, PDF exports and Word
+  conversions;
+- documents stay in the browser (`localStorage`, `lib/local-docs.ts`).
 
-## 2. Add them to Vercel (Production)
+Every tool is free. Only PDF export (`/api/compile-pdf`) and Word to LaTeX
+(`/api/word-conversion`) require a session. If `GOOGLE_CLIENT_ID` or
+`AUTH_SECRET` is missing, the sign-in page says "being set up" and both
+features are open to everyone.
 
-```bash
-vercel env add GOOGLE_CLIENT_ID production
-```
+## Google Cloud (already done)
 
-`AUTH_SECRET` is already set (random, 2026-10-05). Changing it signs everyone out.
+- Project `latexci-510720`, OAuth consent screen External, app `latexci`,
+  publishing status "In production". Scopes `openid`, `email`, `profile`
+  (non-sensitive, no Google review needed).
+- OAuth client "latexci web" (Web application):
+  - Authorised JavaScript origins: `https://latexci.com`
+  - Authorised redirect URIs:
+    - `https://latexci.com/api/auth/callback/google`
+    - `http://localhost:3000/api/auth/callback/google` (local dev)
+- The client secret is not used: leave it in Google.
 
-## 3. Redeploy
+## Environment variables (Vercel, Production)
+
+| Variable | Purpose |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | OAuth client ID of "latexci web" |
+| `AUTH_SECRET` | Signs the session cookie. Changing it signs everyone out. |
+| `BLOB_READ_WRITE_TOKEN` | Injected automatically by the Blob store `latexci-users` connected to the project. Without it, user records are simply not written. |
+| `ADMIN_EMAILS` | Comma-separated emails. Admins see a Users table and a CSV export in `/dashboard`. |
+
+## User data
+
+- Records are written best-effort (with `after()`), so a storage error never
+  blocks a sign-in or an export.
+- "Delete my data" in `/dashboard` calls `POST /api/account/delete`, which
+  deletes the record, clears the session cookies, and wipes the documents
+  saved in that browser.
+
+## Check after a deploy
 
 ```bash
 vercel deploy --prod --yes
 ```
 
-Check: https://latexci.com/api/health shows `"auth":"google"`, and
-https://latexci.com/auth shows the "Sign in with Google" button.
-
-## Billing
-
-Pro gates (PDF export, Word quota) stay open while `STRIPE_SECRET_KEY` is
-missing, since nobody could pay. To sell Pro, also set `STRIPE_SECRET_KEY`,
-`STRIPE_WEBHOOK_SECRET` and the four `NEXT_PUBLIC_STRIPE_*` price ids.
-Checkout binds each subscription to the Google account id
-(`metadata.google_sub`); older subscriptions are matched by email.
+- https://latexci.com/api/health shows `"auth":"google"`;
+- https://latexci.com/auth shows the "Sign in with Google" button.

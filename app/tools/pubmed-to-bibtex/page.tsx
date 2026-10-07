@@ -7,9 +7,9 @@ import BibTexTool from "@/components/BibTexTool";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "PubMed to BibTeX Converter — PMID Lookup",
+  title: "PubMed to BibTeX Converter: PMID Lookup",
   description:
-    "Convert a PubMed ID (PMID) into a clean BibTeX entry — metadata fetched from NCBI. Built for biomedical and life-science writing. Free, no signup.",
+    "Convert a PubMed ID (PMID) into a clean BibTeX entry, metadata fetched from NCBI. Built for biomedical and life-science writing. Free, no signup.",
   keywords: [
     "pubmed to bibtex", "pmid to bibtex", "pubmed bibtex generator",
     "cite pubmed article latex", "ncbi bibtex", "pmid citation generator",
@@ -17,36 +17,36 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/pubmed-to-bibtex" },
   openGraph: {
-    title: "PubMed to BibTeX Converter — latexci",
+    title: "PubMed to BibTeX Converter | latexci",
     description: "Paste a PMID, get a publication-ready BibTeX entry from NCBI metadata. Free, no signup.",
     url: "/tools/pubmed-to-bibtex", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "PubMed to BibTeX Converter — latexci" },
+  twitter: { card: "summary_large_image", title: "PubMed to BibTeX Converter | latexci" },
 };
 
 const FAQS = [
   {
     q: "What is a PMID and where do I find it?",
-    a: "The PubMed ID is the number PubMed assigns to every indexed article — it's shown on the article's PubMed page, usually right under the abstract. Paste the number (37652822), the prefixed form (PMID:37652822), or the full PubMed URL.",
+    a: "The PubMed ID is the number PubMed assigns to every indexed article; it's shown on the article's PubMed page, usually right under the abstract. Paste the number (37652822), the prefixed form (PMID:37652822), or the full PubMed URL.",
   },
   {
     q: "Where does the citation data come from?",
     a: "From NCBI, the U.S. National Library of Medicine service that runs PubMed. The entry carries the authors, title, journal, year, and identifiers as recorded in the PubMed index.",
   },
   {
-    q: "PMID, PMCID, DOI — which should I use?",
-    a: "This converter takes the PMID. If you only have the paper's DOI, the DOI converter fetches the same publication via CrossRef. A PMCID (PMC…) identifies the free full-text copy in PubMed Central — look up its article page to get the PMID.",
+    q: "PMID, PMCID, DOI: which should I use?",
+    a: "This converter takes the PMID. If you only have the paper's DOI, the DOI converter fetches the same publication via CrossRef. A PMCID (PMC…) identifies the free full-text copy in PubMed Central, look up its article page to get the PMID.",
   },
   {
     q: "Is this suitable for systematic reviews with many citations?",
-    a: "It converts one PMID at a time, which suits day-to-day writing. For bulk exports of hundreds of records, a reference manager's PubMed import may fit better — then paste the resulting .bib into the Clean & Format tab to tidy it.",
+    a: "It converts one PMID at a time, which suits day-to-day writing. For bulk exports of hundreds of records, a reference manager's PubMed import may fit better; then paste the resulting .bib into the Clean & Format tab to tidy it.",
   },
 ];
 
 const appSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "PubMed to BibTeX Converter — latexci",
+  name: "PubMed to BibTeX Converter | latexci",
   description: "Convert a PubMed ID (PMID) into a formatted BibTeX entry using NCBI metadata.",
   url: "https://latexci.com/tools/pubmed-to-bibtex",
   applicationCategory: "DeveloperApplication",
@@ -92,7 +92,7 @@ export default function PubmedToBibtexPage() {
           <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
             <h2 style={h2}>Biomedical citations without the retyping</h2>
             <p style={para}>
-              Clinical and life-science writing leans on PubMed, but LaTeX leans on BibTeX — and copying
+              Clinical and life-science writing leans on PubMed, but LaTeX leans on BibTeX, and copying
               author lists with fifteen names by hand is where citation errors are born. Paste the PMID
               above and the converter pulls the article&rsquo;s metadata from NCBI and formats it as a
               BibTeX entry: authors, title, journal, year, and identifiers, ready for your{" "}
@@ -100,7 +100,7 @@ export default function PubmedToBibtexPage() {
             </p>
             <h3 style={h3}>Why registry lookups matter in medicine</h3>
             <p style={para}>
-              Citation accuracy is not cosmetic in biomedical work — reviewers check references, and
+              Citation accuracy is not cosmetic in biomedical work: reviewers check references, and
               journals reject manuscripts over unverifiable ones. An entry built from the PubMed record
               is traceable by anyone with the PMID, which is exactly what a careful reviewer will do.
             </p>

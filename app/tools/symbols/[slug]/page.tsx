@@ -315,7 +315,7 @@ export default async function SymbolPage({ params }: Props) {
                 ))}
               </div>
               <p style={{ ...para, marginTop: "1rem" }}>
-                <Link href="/tools/symbols" style={{ color: "var(--accent)" }}>Search all 380+ LaTeX symbols →</Link>
+                <Link href="/tools/symbols" style={{ color: "var(--accent)" }}>Search all 350+ LaTeX symbols →</Link>
               </p>
             </>
           )}

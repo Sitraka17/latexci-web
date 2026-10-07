@@ -6,7 +6,7 @@ import BibTexTool from "@/components/BibTexTool";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "BibTeX Tools — DOI, arXiv, PubMed, ISBN Lookup",
+  title: "BibTeX Tools: DOI, arXiv, PubMed, ISBN Lookup",
   description:
     "Free BibTeX tools: clean and format .bib files, look up DOIs via CrossRef, fetch arXiv and PubMed citations, convert ISBNs to @book entries. No signup, works in any browser.",
   keywords: [
@@ -18,17 +18,17 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/bibtex" },
   openGraph: {
-    title: "BibTeX Tools — latexci",
-    description: "Clean .bib files, look up DOIs, fetch arXiv and PubMed citations — free, no signup.",
+    title: "BibTeX Tools | latexci",
+    description: "Clean .bib files, look up DOIs, fetch arXiv and PubMed citations. Free, no signup.",
     url: "/tools/bibtex", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "BibTeX Tools — latexci" },
+  twitter: { card: "summary_large_image", title: "BibTeX Tools | latexci" },
 };
 
 const schema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "BibTeX Tools — latexci",
+  name: "BibTeX Tools | latexci",
   description: "Clean and format BibTeX files, DOI to BibTeX, arXiv to BibTeX, PubMed/PMID to BibTeX.",
   url: "https://latexci.com/tools/bibtex",
   applicationCategory: "DeveloperApplication",

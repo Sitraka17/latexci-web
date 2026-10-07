@@ -14,7 +14,7 @@ function Btn({
   disabled?: boolean;
   variant?: "default" | "primary" | "danger";
 }) {
-  const bg = variant === "primary" ? "var(--accent)"
+  const bg = variant === "primary" ? "var(--accent-solid)"
            : variant === "danger"  ? "#dc2626"
            : "var(--surface2)";
   const col = variant !== "default" ? "#fff" : "var(--fg-muted)";
@@ -58,6 +58,7 @@ function OutputBox({ value, label }: { value: string; label?: string }) {
       )}
       <textarea
         readOnly value={value}
+        aria-label={label ?? "BibTeX output"}
         style={{
           width: "100%", minHeight: 240, background: "var(--surface)", color: "var(--fg)",
           border: "1px solid var(--border)", borderRadius: 8, padding: "0.9rem 1rem",
@@ -132,7 +133,7 @@ function CleanTab() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label style={{ fontSize: "0.8rem", color: "var(--fg-muted)" }}>Sort:</label>
-          <select value={sort} onChange={e => setSort(e.target.value as typeof sort)} style={{
+          <select aria-label="Sort entries" value={sort} onChange={e => setSort(e.target.value as typeof sort)} style={{
             background: "var(--surface2)", color: "var(--fg)", border: "1px solid var(--border)",
             borderRadius: 5, padding: "0.2rem 0.5rem", fontSize: "0.8rem",
           }}>
@@ -154,6 +155,7 @@ function CleanTab() {
           <label style={{ fontSize: "0.8rem", color: "var(--fg-muted)", whiteSpace: "nowrap" }}>Strip fields:</label>
           <input
             value={strip} onChange={e => setStrip(e.target.value)}
+            aria-label="Fields to strip (comma separated)"
             placeholder="abstract, file, url"
             style={{
               flex: 1, background: "var(--surface2)", color: "var(--fg)", border: "1px solid var(--border)",
@@ -176,6 +178,7 @@ function CleanTab() {
           <textarea
             value={input}
             onChange={e => setInput(e.target.value)}
+            aria-label="BibTeX input"
             placeholder={"@article{smith2023,\n  author = {Smith, John},\n  title  = {My Paper},\n  year   = {2023},\n  journal= {Nature}\n}"}
             style={{
               width: "100%", minHeight: 280, background: "var(--surface)", color: "var(--fg)",
@@ -196,6 +199,7 @@ function CleanTab() {
           </div>
           <textarea
             readOnly value={output}
+            aria-label="Cleaned BibTeX output"
             placeholder="Cleaned BibTeX will appear here…"
             style={{
               width: "100%", minHeight: 280, background: "var(--surface)", color: "var(--fg)",
@@ -281,6 +285,7 @@ function DoiTab() {
       </p>
       <div style={{ display: "flex", gap: "0.65rem" }}>
         <input
+          aria-label="DOI"
           value={doi}
           onChange={e => setDoi(e.target.value)}
           onKeyDown={e => e.key === "Enter" && lookup()}
@@ -341,6 +346,7 @@ function ArxivTab() {
       </p>
       <div style={{ display: "flex", gap: "0.65rem" }}>
         <input
+          aria-label="arXiv ID or URL"
           value={id}
           onChange={e => setId(e.target.value)}
           onKeyDown={e => e.key === "Enter" && lookup()}
@@ -416,6 +422,7 @@ function PmidTab() {
       </p>
       <div style={{ display: "flex", gap: "0.65rem" }}>
         <input
+          aria-label="PubMed ID (PMID)"
           value={id}
           onChange={e => setId(e.target.value)}
           onKeyDown={e => e.key === "Enter" && lookup()}
@@ -491,6 +498,7 @@ function IsbnTab() {
       </p>
       <div style={{ display: "flex", gap: "0.65rem" }}>
         <input
+          aria-label="ISBN"
           value={id}
           onChange={e => setId(e.target.value)}
           onKeyDown={e => e.key === "Enter" && lookup()}
@@ -538,7 +546,7 @@ function IsbnTab() {
 export default function BibTexTool({
   initialTab = "clean",
   heading = "BibTeX Tools",
-  tagline = "Clean .bib files · DOI · arXiv · PubMed · ISBN — all in one place, zero signup.",
+  tagline = "Clean .bib files · DOI · arXiv · PubMed · ISBN, all in one place.",
 }: {
   /** Which tab is active on load — lets dedicated converter landing pages deep-link a mode. */
   initialTab?: Tab;

@@ -63,60 +63,22 @@ function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cm
   return (
     <button
       onClick={copy}
-      title={`Copy: ${sym.command}${sym.description ? ` — ${sym.description}` : ""}`}
-      // No `all: "unset"`: as an inline style it would also reset `outline`
-      // and beat the global :focus-visible ring. Reset only what a button needs.
-      style={{
-        appearance: "none",
-        margin: 0,
-        font: "inherit",
-        color: "inherit",
-        textAlign: "inherit",
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "0.5rem",
-        padding: "0.85rem 0.6rem 0.7rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 10,
-        transition: "border-color 0.15s, transform 0.12s, box-shadow 0.12s",
-        position: "relative",
-        minHeight: 96,
-        width: "100%",
-        boxSizing: "border-box",
-      }}
+      title={`Copy: ${sym.command}${sym.description ? ` (${sym.description})` : ""}`}
       className="symbol-card"
     >
       {/* KaTeX preview */}
       <span
-        style={{ fontSize: "1.35rem", lineHeight: 1.2, minHeight: 32, display: "flex", alignItems: "center" }}
+        className="symbol-card-glyph"
         dangerouslySetInnerHTML={{ __html: html || sym.unicode }}
       />
 
       {/* Command */}
-      <code style={{
-        fontSize: "0.65rem",
-        fontFamily: "var(--font-mono, monospace)",
-        color: "var(--fg-muted)",
-        wordBreak: "break-all",
-        textAlign: "center",
-        lineHeight: 1.3,
-      }}>
+      <code className="symbol-card-cmd">
         {sym.command}
       </code>
 
       {/* Package badge */}
-      <span style={{
-        fontSize: "0.58rem",
-        fontWeight: 700,
-        padding: "0.1rem 0.4rem",
-        borderRadius: 4,
-        letterSpacing: "0.04em",
-        ...pkgStyle(sym.package),
-      }}>
+      <span className="symbol-card-pkg" style={pkgStyle(sym.package)}>
         {sym.package}
       </span>
 
@@ -200,6 +162,7 @@ export default function SymbolSearch() {
           type="text"
           value={inputValue}
           onChange={(e) => handleQueryChange(e.target.value)}
+          aria-label="Search LaTeX symbols"
           placeholder='Search by name ("integral"), command ("\\sum"), or Unicode ("∑")'
           autoFocus
           style={{
@@ -325,7 +288,7 @@ export default function SymbolSearch() {
           <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", textAlign: "right", margin: 0 }}>
             {results.length} symbol{results.length !== 1 ? "s" : ""}
             {activeCategory !== "All" ? ` in ${activeCategory}` : ""}
-            {!katexReady && <span style={{ marginLeft: "0.5rem" }}>— loading preview…</span>}
+            {!katexReady && <span style={{ marginLeft: "0.5rem" }}>(loading preview…)</span>}
           </p>
         </>
       )}
@@ -333,7 +296,7 @@ export default function SymbolSearch() {
       {/* Package legend */}
       <details style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
         <summary style={{ cursor: "pointer", fontSize: "0.82rem", color: "var(--fg-muted)", fontWeight: 600 }}>
-          Package guide — what to add to your preamble
+          Package guide, what to add to your preamble
         </summary>
         <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {[
@@ -359,6 +322,23 @@ export default function SymbolSearch() {
       </details>
 
       <style>{`
+        /* Classes, not inline styles: ~380 cards are server-rendered, and the
+           repeated style attributes alone weighed ~320 KB of HTML. No
+           all: unset either, so the global :focus-visible ring still applies. */
+        .symbol-card {
+          appearance: none; margin: 0; font: inherit; color: inherit; text-align: inherit;
+          cursor: pointer; display: flex; flex-direction: column; align-items: center;
+          justify-content: space-between; gap: 0.5rem; padding: 0.85rem 0.6rem 0.7rem;
+          background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+          transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s;
+          position: relative; min-height: 96px; width: 100%; box-sizing: border-box;
+        }
+        .symbol-card-glyph { font-size: 1.35rem; line-height: 1.2; min-height: 32px; display: flex; align-items: center; }
+        .symbol-card-cmd {
+          font-size: 0.65rem; font-family: var(--font-mono, monospace); color: var(--fg-muted);
+          word-break: break-all; text-align: center; line-height: 1.3;
+        }
+        .symbol-card-pkg { font-size: 0.58rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 4px; letter-spacing: 0.04em; }
         .symbol-card:hover {
           border-color: var(--accent) !important;
           transform: translateY(-2px);

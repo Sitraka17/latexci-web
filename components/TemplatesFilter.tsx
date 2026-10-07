@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import LZString from "lz-string";
 import { TEMPLATES, CATEGORIES } from "@/lib/templates";
 
@@ -45,6 +46,16 @@ function CopySourceBtn({ source }: { source: string }) {
 export default function TemplatesFilter() {
   const [active, setActive] = useState("All");
   const [query,  setQuery]  = useState("");
+  const router = useRouter();
+
+  // The editor deep link (#s=<lz>) is built on click, not at render time:
+  // embedding every compressed source in the hub HTML cost ~80 KB.
+  // href stays the per-template page (crawlable, works for new-tab/middle-click).
+  const openInEditor = useCallback((e: React.MouseEvent<HTMLAnchorElement>, source: string) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    router.push(`/tools/preview#s=${LZString.compressToEncodedURIComponent(source)}`);
+  }, [router]);
 
   // Templates matching the current query (ignoring category filter, for pill counts)
   const queryFiltered = useMemo(() => {
@@ -109,7 +120,7 @@ export default function TemplatesFilter() {
                   display: "inline-flex", alignItems: "center", gap: "0.4rem",
                   padding: "0.28rem 0.8rem", borderRadius: 999,
                   fontSize: "0.8rem", fontWeight: isActive ? 600 : 400,
-                  background: isActive ? "var(--accent)" : "var(--surface)",
+                  background: isActive ? "var(--accent-solid)" : "var(--surface)",
                   border: `1px solid ${isActive ? "var(--accent)" : "var(--border)"}`,
                   color: isActive ? "#fff" : "var(--fg-muted)",
                   cursor: "pointer", transition: "all 0.15s",
@@ -166,7 +177,7 @@ export default function TemplatesFilter() {
             onClick={() => { setActive("All"); setQuery(""); }}
             style={{
               marginTop: "1rem", padding: "0.45rem 1rem", borderRadius: 7,
-              background: "var(--accent)", color: "#fff", border: "none",
+              background: "var(--accent-solid)", color: "#fff", border: "none",
               fontWeight: 600, fontSize: "0.84rem", cursor: "pointer",
             }}
           >
@@ -176,8 +187,7 @@ export default function TemplatesFilter() {
       ) : (
         <div className="templates-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
           {filtered.map(t => {
-            const encoded  = LZString.compressToEncodedURIComponent(t.source);
-            const href     = `/tools/preview#s=${encoded}`;
+            const href     = `/tools/templates/${t.id}`;
             const lines    = t.source.split("\n").length;
             const isGE     = t.category === "Grande École";
             const isNew    = NEW_TEMPLATE_IDS.has(t.id);
@@ -242,6 +252,8 @@ export default function TemplatesFilter() {
                 <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.5rem" }}>
                   <Link
                     href={href}
+                    prefetch={false}
+                    onClick={e => openInEditor(e, t.source)}
                     style={{
                       flex: 2,
                       display: "inline-flex", alignItems: "center", justifyContent: "center",

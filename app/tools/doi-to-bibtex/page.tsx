@@ -7,9 +7,9 @@ import BibTexTool from "@/components/BibTexTool";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "DOI to BibTeX Converter — Free, via CrossRef",
+  title: "DOI to BibTeX Converter: Free, via CrossRef",
   description:
-    "Paste a DOI (or a doi.org link) and get a clean BibTeX entry in seconds — metadata fetched live from CrossRef, the registry publishers deposit to. Free, no signup.",
+    "Paste a DOI (or a doi.org link) and get a clean BibTeX entry in seconds: metadata fetched live from CrossRef, the registry publishers deposit to. Free, no signup.",
   keywords: [
     "doi to bibtex", "doi to bibtex converter", "doi bibtex generator",
     "crossref bibtex", "get bibtex from doi", "cite doi latex",
@@ -17,21 +17,21 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/doi-to-bibtex" },
   openGraph: {
-    title: "DOI to BibTeX Converter — latexci",
+    title: "DOI to BibTeX Converter | latexci",
     description: "Paste a DOI, get a publisher-accurate BibTeX entry via CrossRef. Free, no signup.",
     url: "/tools/doi-to-bibtex", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "DOI to BibTeX Converter — latexci" },
+  twitter: { card: "summary_large_image", title: "DOI to BibTeX Converter | latexci" },
 };
 
 const FAQS = [
   {
     q: "Where does the citation data come from?",
-    a: "From CrossRef, the DOI registry where publishers deposit the official metadata for their articles. The entry reflects what the publisher registered — not a guess, and not AI-generated text.",
+    a: "From CrossRef, the DOI registry where publishers deposit the official metadata for their articles. The entry reflects what the publisher registered, not a guess, and not AI-generated text.",
   },
   {
     q: "What formats can I paste?",
-    a: "A bare DOI like 10.1038/s41586-021-03819-2, or a full link — https://doi.org/… and dx.doi.org links are recognized and the DOI is extracted automatically.",
+    a: "A bare DOI like 10.1038/s41586-021-03819-2, or a full link: https://doi.org/… and dx.doi.org links are recognized and the DOI is extracted automatically.",
   },
   {
     q: "Why not just ask an AI chatbot for the BibTeX?",
@@ -39,14 +39,14 @@ const FAQS = [
   },
   {
     q: "What about arXiv preprints or books?",
-    a: "Preprints are better served by the arXiv converter, and books by the ISBN converter — both free on latexci. If a preprint has been published, prefer citing the journal version via its DOI.",
+    a: "Preprints are better served by the arXiv converter, and books by the ISBN converter, both free on latexci. If a preprint has been published, prefer citing the journal version via its DOI.",
   },
 ];
 
 const appSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "DOI to BibTeX Converter — latexci",
+  name: "DOI to BibTeX Converter | latexci",
   description: "Convert a DOI into a formatted BibTeX entry using CrossRef metadata.",
   url: "https://latexci.com/tools/doi-to-bibtex",
   applicationCategory: "DeveloperApplication",
@@ -85,7 +85,7 @@ export default function DoiToBibtexPage() {
         <BibTexTool
           initialTab="doi"
           heading="DOI to BibTeX Converter"
-          tagline="Paste a DOI, get a publisher-accurate BibTeX entry — via CrossRef, free, no signup."
+          tagline="Paste a DOI, get a publisher-accurate BibTeX entry via CrossRef. Free, no signup."
         />
 
         <section aria-label="About the DOI to BibTeX converter" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
@@ -94,7 +94,7 @@ export default function DoiToBibtexPage() {
             <p style={para}>
               A DOI (Digital Object Identifier) is the permanent ID attached to most journal articles,
               conference papers, datasets, and book chapters. Paste it above and the converter queries
-              CrossRef — the registry where publishers deposit their official metadata — and returns a
+              CrossRef, the registry where publishers deposit their official metadata, and returns a
               formatted BibTeX entry with the authors, title, venue, year, volume, pages, and the DOI
               field itself. Copy it straight into your <code>.bib</code> file.
             </p>
@@ -103,7 +103,7 @@ export default function DoiToBibtexPage() {
               Because the entry is built from the publisher&rsquo;s registered record, you avoid the two
               classic citation failure modes: hand-typing errors, and AI-hallucinated references that
               look plausible but cite papers that don&rsquo;t exist. Do still give the result a quick
-              glance — capitalization you must preserve (like acronyms) belongs in braces, e.g.{" "}
+              glance: capitalization you must preserve (like acronyms) belongs in braces, e.g.{" "}
               <code>{"{{DNA}}"}</code>, and some older records carry sparse metadata.
             </p>
 
