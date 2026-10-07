@@ -17,9 +17,9 @@ const BASE_URL =
 // trains crawlers to ignore our lastmod. These are honest, stable dates — bump the
 // relevant entry when you materially edit a page (templates also covers lib/templates.ts).
 const LAST_MODIFIED: Record<string, string> = {
-  "/": "2026-10-06",
+  "/": "2026-10-07",
   "/academics": "2026-07-05",
-  "/tools/preview": "2026-10-06",
+  "/tools/preview": "2026-10-07",
   "/tools/table": "2026-07-06",
   "/tools/diff": "2026-07-05",
   "/tools/word-to-latex": "2026-10-05",
@@ -32,8 +32,8 @@ const LAST_MODIFIED: Record<string, string> = {
   "/tools/templates": "2026-07-06",
   "/tools/cv-builder": "2026-10-03",
   "/after-overleaf": "2026-07-05",
-  "/pricing": "2026-10-06",
-  "/privacy": "2026-10-06",
+  "/pricing": "2026-10-07",
+  "/privacy": "2026-10-07",
   "/terms": "2026-10-06",
 };
 

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { getSession, isAuthConfigured } from "@/lib/session";
+import { recordUsage } from "@/lib/users";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -17,6 +19,12 @@ export async function POST(req: NextRequest) {
   // ── Rate limit: 5 compilations/min per IP (free for everyone, but protect YToTech) ──
   const rl = rateLimit(req, { limit: 5, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ error: rl.message, feature: "pdf_export" }, { status: 429, headers: rl.headers });
+
+  // ── Sign-in gate: PDF export is free but needs a (Google) account ─────────
+  const session = await getSession();
+  if (isAuthConfigured && !session) {
+    return NextResponse.json({ error: "sign_in_required", feature: "pdf_export" }, { status: 401 });
+  }
 
   // ── Validate body ──────────────────────────────────────────────────────────
   let source: string;
@@ -100,6 +108,8 @@ export async function POST(req: NextRequest) {
       { status: upstreamDown ? 502 : 422 }
     );
   }
+
+  if (session) after(() => recordUsage(session, "pdf"));
 
   return new NextResponse(pdf, {
     headers: {

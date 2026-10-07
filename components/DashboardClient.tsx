@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { clearAllDocs, createDoc, deleteDoc, listDocs, updateDoc, type LocalDoc } from "@/lib/local-docs";
 
-type Me = { configured: boolean; user: { email: string; name: string | null } | null };
+type Me = { configured: boolean; user: { email: string; name: string | null } | null; admin?: boolean };
+type UserRow = { sub: string; email: string; name: string | null; firstSeen: string; lastSeen: string; counts: Record<string, number> };
 
 const cell: CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid var(--border)", fontSize: "0.86rem", verticalAlign: "middle" };
 const head: CSSProperties = { ...cell, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)", textAlign: "left" };
@@ -126,7 +127,7 @@ export default function DashboardClient() {
         {me?.user ? (
           <>
             <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
-              Signed in with Google as <strong>{me.user.email}</strong>. Everything on latexci is free.
+              Signed in with Google as <strong>{me.user.email}</strong>. PDF export and Word to LaTeX are unlocked.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <button style={btn} onClick={signOut}>Sign out</button>
@@ -138,7 +139,7 @@ export default function DashboardClient() {
             <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
               {me && !me.configured
                 ? "Sign-in is being set up. Your documents above work without an account."
-                : "You are not signed in. Everything works without an account; signing in is optional."}
+                : "You are not signed in. Sign in with Google (free) to use PDF export and Word to LaTeX."}
             </p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               {me?.configured && <Link href="/auth?next=/dashboard" style={btn}>Sign in</Link>}
@@ -147,6 +148,56 @@ export default function DashboardClient() {
           </>
         )}
       </section>
+
+      {me?.admin && <AdminUsers />}
     </>
+  );
+}
+
+/** Who signed in (ADMIN_EMAILS only). */
+function AdminUsers() {
+  const [users, setUsers] = useState<UserRow[] | null>(null);
+  useEffect(() => {
+    fetch("/api/admin/users").then((r) => r.json()).then((d) => setUsers(d.users ?? [])).catch(() => setUsers([]));
+  }, []);
+  const total = (k: string) => (users ?? []).reduce((n, u) => n + (u.counts[k] ?? 0), 0);
+  return (
+    <section aria-labelledby="users-h" style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem", marginTop: "2.5rem" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+        <h2 id="users-h" style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>Users (admin)</h2>
+        <a href="/api/admin/users?format=csv" style={btn}>Download CSV</a>
+      </div>
+      {users === null ? (
+        <p style={{ fontSize: "0.86rem", color: "var(--fg-muted)" }}>Loading…</p>
+      ) : (
+        <>
+          <p style={{ fontSize: "0.84rem", color: "var(--fg-muted)", margin: "0 0 1rem" }}>
+            {users.length} account{users.length === 1 ? "" : "s"} · {total("signin")} sign-ins · {total("pdf")} PDF exports · {total("word")} Word conversions
+          </p>
+          <div style={{ overflowX: "auto", border: "1px solid var(--border)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
+              <thead>
+                <tr>
+                  {["Email", "Name", "First seen", "Last seen", "Sign-ins", "PDF", "Word"].map((h) => <th key={h} style={head}>{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.sub}>
+                    <td style={cell}>{u.email}</td>
+                    <td style={cell}>{u.name ?? ""}</td>
+                    <td style={{ ...cell, whiteSpace: "nowrap" }}>{fmt(u.firstSeen)}</td>
+                    <td style={{ ...cell, whiteSpace: "nowrap" }}>{fmt(u.lastSeen)}</td>
+                    <td style={cell}>{u.counts.signin ?? 0}</td>
+                    <td style={cell}>{u.counts.pdf ?? 0}</td>
+                    <td style={cell}>{u.counts.word ?? 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
   );
 }

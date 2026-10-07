@@ -9,11 +9,11 @@ import { breadcrumbSchema } from "@/lib/breadcrumbs";
 export const metadata: Metadata = {
   title: "Pricing: latexci Is Free",
   description:
-    "Every latexci tool is free: live preview, PDF export, Word to LaTeX, BibTeX tools, diff, CV generator and 28 templates. No account, no plan, no limits.",
+    "Every latexci tool is free: live preview, PDF export, Word to LaTeX, BibTeX tools, diff, CV generator and 28 templates. No plan, no limits.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "latexci is free",
-    description: "Every tool, PDF export included. No account, no plan, no limits.",
+    description: "Every tool, PDF export included. No plan, no limits.",
     url: "/pricing",
     type: "website",
   },
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 };
 
 const TOOLS: { name: string; href: string; note: string }[] = [
-  { name: "Live LaTeX preview", href: "/tools/preview", note: "with PDF export" },
-  { name: "Word to LaTeX", href: "/tools/word-to-latex", note: "unlimited .docx conversions" },
+  { name: "Live LaTeX preview", href: "/tools/preview", note: "PDF export with a free sign-in" },
+  { name: "Word to LaTeX", href: "/tools/word-to-latex", note: "unlimited, with a free sign-in" },
   { name: "BibTeX cleaner", href: "/tools/bibtex", note: "plus DOI, arXiv, PubMed and ISBN lookups" },
   { name: "LaTeX diff", href: "/tools/diff", note: "with downloadable patch" },
   { name: "Table generator", href: "/tools/table", note: "booktabs output" },
@@ -34,11 +34,11 @@ const TOOLS: { name: string; href: string; note: string }[] = [
 const FAQS = [
   {
     q: "Is everything really free?",
-    a: "Yes. Every tool, PDF export and Word conversion included, with no account, no trial and no usage limit beyond a basic anti-abuse rate limit.",
+    a: "Yes. Every tool, PDF export and Word conversion included, with no trial, no card and no usage limit beyond a basic anti-abuse rate limit.",
   },
   {
     q: "Do I need an account?",
-    a: "No. Documents you save stay in your browser. Signing in with Google is optional and only shows your name on the dashboard.",
+    a: "Only for PDF export and Word to LaTeX, and it is a single click with Google. Preview, BibTeX tools, diff, tables, CV generator, symbols and templates work without signing in.",
   },
   {
     q: "How is latexci funded?",
@@ -67,8 +67,8 @@ export default function PricingPage() {
       <main style={{ flex: 1, maxWidth: 760, width: "100%", margin: "0 auto", padding: "3rem 1.5rem 4rem", boxSizing: "border-box" }}>
         <h1 style={{ fontSize: "clamp(1.7rem, 4vw, 2.3rem)", fontWeight: 800, margin: "0 0 0.75rem" }}>latexci is free</h1>
         <p style={{ fontSize: "1rem", lineHeight: 1.7, color: "var(--fg-muted)", margin: "0 0 2rem" }}>
-          Every tool on this site costs nothing and needs no account, PDF export included.
-          There is no plan to choose and no limit to watch.
+          Every tool on this site costs nothing. PDF export and Word to LaTeX ask for a free
+          Google sign-in; everything else works without an account.
         </p>
 
         <div style={{ border: "1px solid var(--border)", overflowX: "auto" }}>

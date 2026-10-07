@@ -1,14 +1,13 @@
 /**
  * POST /api/account/delete
  *
- * latexci keeps no account data on its servers: the session is a signed
- * cookie and documents live in the browser. "Deleting the account" therefore
- * means clearing the session and metering cookies (the client also wipes its
- * local documents).
+ * Deletes the user's record (lib/users.ts) and clears the session cookies;
+ * the client also wipes the documents saved in this browser.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { HINT_COOKIE, SESSION_COOKIE, getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { deleteUser } from "@/lib/users";
 
 export const runtime = "nodejs";
 
@@ -18,6 +17,13 @@ export async function POST(req: NextRequest) {
 
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    await deleteUser(session.sub);
+  } catch (err) {
+    console.error("[account/delete] could not delete user record:", err);
+    return NextResponse.json({ error: "Could not delete your data. Please try again." }, { status: 500 });
+  }
 
   const res = NextResponse.json({ ok: true });
   res.cookies.delete(SESSION_COOKIE);

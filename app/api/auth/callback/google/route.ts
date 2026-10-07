@@ -3,11 +3,12 @@
  * Verifies the ID token (signature, issuer, audience, expiry, nonce) and the
  * state, then sets the signed session cookie. GET covers a cancelled sign-in.
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import {
   HINT_COOKIE, SESSION_COOKIE, SESSION_MAX_AGE, isAuthConfigured, safeNext, sign, unsign, type Session,
 } from "@/lib/session";
 import { verifyGoogleIdToken } from "@/lib/google-id-token";
+import { recordUsage } from "@/lib/users";
 
 export const runtime = "nodejs";
 
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
     name: claims.name,
     exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
   };
+  after(() => recordUsage(session, "signin"));
   const secure = req.nextUrl.protocol === "https:";
   const res = NextResponse.redirect(new URL(safeNext(saved.next), req.url), 303);
   res.cookies.set(SESSION_COOKIE, await sign(session), {

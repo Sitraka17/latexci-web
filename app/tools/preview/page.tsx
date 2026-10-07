@@ -50,7 +50,7 @@ const FAQS = [
   },
   {
     q: "Do I need an account?",
-    a: "No. The live preview and the PDF export are free and need no signup.",
+    a: "Not for the preview: it is free and needs no signup. PDF export is free too and asks for a one-click Google sign-in.",
   },
 ];
 

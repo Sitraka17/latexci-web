@@ -19,6 +19,7 @@
     "@uiw/codemirror-theme-vscode": "^4.25.10",
     "@uiw/react-codemirror": "^4.25.10",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.8.1",
     "codemirror": "^6.0.2",
     "diff": "^9.0.0",
     "katex": "^0.17.0",

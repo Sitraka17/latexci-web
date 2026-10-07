@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
 import { createDoc, getDoc, updateDoc } from "@/lib/local-docs";
+import SignInPrompt from "@/components/SignInPrompt";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
@@ -107,6 +108,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [extensions, setExtensions]   = useState<unknown[]>([]);
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pdfStatus, setPdfStatus]     = useState<"idle" | "compiling" | "error">("idle");
+  const [signInFor, setSignInFor]     = useState<string | null>(null);
   const [docTitle, setDocTitle]       = useState("Untitled");
   const [loadError, setLoadError]     = useState(false);
   const [isLight, setIsLight]         = useState(false);
@@ -374,6 +376,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     return () => { if (saveRef.current) clearTimeout(saveRef.current); };
   }, [source, docId]);
 
+  // Stable object: a fresh { __html } on every render made React rewrite the
+  // preview on ANY state change (PDF, Share, Copy HTML...), wiping the KaTeX
+  // output that the hydration effect below only redoes when `html` changes.
+  const previewHtml = useMemo(() => ({ __html: html }), [html]);
+
   // Line count is pure derivation from source — no state/effect needed.
   const lineCount = useMemo(() => source.split("\n").length, [source]);
 
@@ -491,6 +498,12 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source }),
       });
+
+      if (res.status === 401) {
+        setPdfStatus("idle");
+        setSignInFor("PDF export");
+        return;
+      }
 
       if (!res.ok) {
         const { error } = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
@@ -1005,7 +1018,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               <div
                 ref={previewRef}
                 className="latex-preview"
-                dangerouslySetInnerHTML={{ __html: html }}
+                dangerouslySetInnerHTML={previewHtml}
                 style={{
                   maxWidth: 720,
                   margin: "0 auto",
@@ -1025,6 +1038,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       </div>
     </div>
 
+    {signInFor && <SignInPrompt feature={signInFor} onClose={() => setSignInFor(null)} />}
     </>
   );
 }

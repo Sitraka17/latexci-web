@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
+import SignInPrompt from "@/components/SignInPrompt";
 import { useDropzone } from "react-dropzone";
 import dynamic from "next/dynamic";
 
@@ -345,6 +346,7 @@ export default function WordToLatex() {
   const [fileSize, setFileSize] = useState(0);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [report,   setReport]   = useState<QualityReport | null>(null);
+  const [needSignIn, setNeedSignIn] = useState(false);
   const [cmExtensions, setCmExtensions] = useState<unknown[]>([]);
   const loadCm = useCallback(() => {
     if (cmExtensions.length > 0) return;
@@ -361,6 +363,16 @@ export default function WordToLatex() {
     loadCm();
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "docx";
+
+    // Free, but needs an account (.odt/.rtf only show a pandoc command).
+    if (ext === "docx") {
+      const gate = await fetch("/api/word-conversion", { method: "POST" }).catch(() => null);
+      if (gate?.status === 401) {
+        setNeedSignIn(true);
+        setStatus("idle");
+        return;
+      }
+    }
 
     setStatus("converting");
 
@@ -662,6 +674,7 @@ export default function WordToLatex() {
         </div>
       )}
 
+      {needSignIn && <SignInPrompt feature="Word to LaTeX" onClose={() => setNeedSignIn(false)} />}
     </div>
   );
 }

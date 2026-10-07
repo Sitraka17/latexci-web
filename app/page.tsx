@@ -80,7 +80,7 @@ const SCENARIOS = [
 
 const FAQS = [
   { q: "What does latexci cost?",
-    a: "Nothing. Every tool is free with no account: preview, PDF export, Word to LaTeX, BibTeX tools, diff, table and CV generators, symbols and all templates. There is no paid plan." },
+    a: "Nothing. Every tool is free: preview, PDF export, Word to LaTeX, BibTeX tools, diff, table and CV generators, symbols and all templates. There is no paid plan." },
   { q: "Does the preview support math equations?",
     a: "Yes — inline math ($...$), display math (\\[...\\]), and block environments like align, gather, and equation all render via KaTeX, with automatic equation numbering, \\ref cross-references, and bibliography rendering." },
   { q: "What file types does Word → LaTeX accept?",
@@ -90,7 +90,7 @@ const FAQS = [
   { q: "I have Overleaf through my university. Why use this?",
     a: "latexci does things Overleaf doesn't: convert Word files with equation detection, clean and deduplicate .bib files, look up DOIs and arXiv IDs in one click, and diff two .tex files side by side. Use Overleaf as your editor — latexci for the rest. When you graduate and lose institutional access, latexci is still here." },
   { q: "Do I need an account?",
-    a: "No. Documents you save stay in your browser, and share links carry the source in the URL. Signing in with Google is optional." },
+    a: "Only for PDF export and Word to LaTeX: one click with Google, free. Everything else works without an account, and documents you save stay in your browser." },
 ];
 
 // ── Structured data ────────────────────────────────────────────────────────
