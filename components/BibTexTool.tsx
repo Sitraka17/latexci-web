@@ -474,6 +474,12 @@ function IsbnTab() {
     if (!raw) return;
     setLoading(true); setError(""); setResult("");
     try {
+      // Ask Open Library from the browser first: it refuses Vercel's servers
+      // (403) but answers visitors. The server route is only a fallback.
+      const { lookupIsbn } = await import("@/lib/isbn-lookup");
+      const direct = await lookupIsbn(raw);
+      if (direct.ok) { setResult(direct.bibtex); return; }
+      if (direct.status === 400 || direct.status === 404) { setError(direct.error); return; }
       const res = await fetch(`/api/isbn-to-bibtex?isbn=${encodeURIComponent(raw)}`);
       if (!res.ok) {
         const j = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
