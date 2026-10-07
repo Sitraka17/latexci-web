@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import CopyButton from "@/components/CopyButton";
 import { TEMPLATES } from "@/lib/templates";
@@ -39,6 +40,11 @@ export const metadata: Metadata = {
   },
 };
 
+// Template titles and descriptions come from lib/templates.ts; set any long
+// dash there as a colon so the page keeps one punctuation style.
+const plain = (s: string) => s.replace(/\s*\u2014\s*/g, ": ");
+const previewHref = (source: string) => `/tools/preview#s=${LZString.compressToEncodedURIComponent(source)}`;
+
 const THESIS_TEMPLATES = TEMPLATES.filter(t =>
   t.category === "Thesis" || t.id === "article" || t.id === "ieee-paper"
 );
@@ -46,53 +52,72 @@ const GRANDE_ECOLE_TEMPLATES = TEMPLATES.filter(t => t.category === "Grande Éco
 const ML_CONFERENCE_TEMPLATE  = TEMPLATES.find(t => t.id === "ml-conference");
 
 const ESSENTIAL_PACKAGES = [
-  { pkg: "amsmath, amssymb, amsthm", use: "All math: equations, symbols, theorem environments" },
-  { pkg: "geometry", use: "Page margins (universities have strict margin requirements)" },
-  { pkg: "hyperref", use: "Clickable cross-references, URLs, and PDF bookmarks" },
-  { pkg: "biblatex + biber", use: "Modern bibliography management (replaces BibTeX)" },
-  { pkg: "graphicx", use: "Insert figures, logos, plots" },
-  { pkg: "booktabs", use: "Professional tables (\\toprule, \\midrule, \\bottomrule)" },
-  { pkg: "setspace", use: "Line spacing control (\\onehalfspacing, \\doublespacing)" },
-  { pkg: "microtype", use: "Micro-typography: better justification, fewer overflows" },
-  { pkg: "listings or minted", use: "Code listings with syntax highlighting" },
-  { pkg: "algorithm2e", use: "Algorithm pseudocode environments" },
-  { pkg: "cleveref", use: "Smart cross-references: auto-detects \\cref{fig:1} → Figure 1" },
-  { pkg: "todonotes", use: "Inline TODO/fixme notes during draft phase" },
+  { pkg: "amsmath, amssymb, amsthm", use: "All math: equations, symbols, theorem environments", copy: String.raw`\usepackage{amsmath,amssymb,amsthm}` },
+  { pkg: "geometry", use: "Page margins (universities have strict margin requirements)", copy: String.raw`\usepackage{geometry}` },
+  { pkg: "hyperref", use: "Clickable cross-references, URLs, and PDF bookmarks", copy: String.raw`\usepackage{hyperref}` },
+  { pkg: "biblatex + biber", use: "Modern bibliography management (replaces BibTeX)", copy: String.raw`\usepackage[backend=biber]{biblatex}` },
+  { pkg: "graphicx", use: "Insert figures, logos, plots", copy: String.raw`\usepackage{graphicx}` },
+  { pkg: "booktabs", use: String.raw`Professional tables (\toprule, \midrule, \bottomrule)`, copy: String.raw`\usepackage{booktabs}` },
+  { pkg: "setspace", use: String.raw`Line spacing control (\onehalfspacing, \doublespacing)`, copy: String.raw`\usepackage{setspace}` },
+  { pkg: "microtype", use: "Micro-typography: better justification, fewer overflows", copy: String.raw`\usepackage{microtype}` },
+  { pkg: "listings or minted", use: "Code listings with syntax highlighting", copy: String.raw`\usepackage{listings}` },
+  { pkg: "algorithm2e", use: "Algorithm pseudocode environments", copy: String.raw`\usepackage{algorithm2e}` },
+  { pkg: "cleveref", use: String.raw`Smart cross-references: \cref{fig:1} prints "Figure 1"`, copy: String.raw`\usepackage{cleveref}` },
+  { pkg: "todonotes", use: "Inline TODO and fixme notes during the draft phase", copy: String.raw`\usepackage{todonotes}` },
 ];
+
+// Figure 1: a thesis preamble built from Table 3 (String.raw keeps the backslashes).
+const PREAMBLE_SOURCE = String.raw`\documentclass[12pt,a4paper]{report}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}\onehalfspacing
+\usepackage{graphicx,booktabs,microtype}
+\usepackage[backend=biber,style=apa]{biblatex}
+\addbibresource{thesis.bib}
+\usepackage{hyperref}
+\usepackage{cleveref}   % load after hyperref
+\numberwithin{equation}{chapter}
+
+\begin{document}
+\include{chapters/introduction}
+\include{chapters/methods}
+\printbibliography
+\end{document}`;
 
 const WORKFLOW_STEPS = [
   {
-    step: "01",
-    title: "Pick a thesis template",
-    desc: "Start from our PhD or Master's template: title page, chapters, appendices, and bibliography already wired up.",
-    cta: "Browse thesis templates →",
+    title: "Pick a thesis template.",
+    desc: "Start from the PhD or Master's template: title page, chapters, appendices, and bibliography already wired up.",
+    cta: "Browse thesis templates",
     href: "/tools/templates",
-    accent: "#6c63ff",
   },
   {
-    step: "02",
-    title: "Preview while you write",
-    desc: "Paste your LaTeX source into the live preview. See math, sections, and tables render instantly, with no compile cycle.",
-    cta: "Open Live Preview →",
+    title: "Preview while you write.",
+    desc: "Paste your LaTeX source into the live preview. Math, sections, and tables render as you type, with no compile cycle.",
+    cta: "Open the live preview",
     href: "/tools/preview",
-    accent: "#10b981",
   },
   {
-    step: "03",
-    title: "Diff revisions with your advisor",
+    title: "Diff revisions with your advisor.",
     desc: "Your advisor sent back a revised version? Drag both .tex files into the diff tool and see every change highlighted.",
-    cta: "Try LaTeX Diff →",
+    cta: "Try the LaTeX diff",
     href: "/tools/diff",
-    accent: "#f59e0b",
   },
   {
-    step: "04",
-    title: "Convert advisor feedback from Word",
-    desc: "Advisor comments in a .docx? Upload it to Word → LaTeX converter and get clean .tex output to merge back in.",
-    cta: "Convert Word → LaTeX →",
+    title: "Convert advisor feedback from Word.",
+    desc: "Advisor comments in a .docx? Load it into the Word to LaTeX converter and get clean .tex output to merge back in.",
+    cta: "Convert Word to LaTeX",
     href: "/tools/word-to-latex",
-    accent: "#ec4899",
   },
+];
+
+const WHY_LATEX = [
+  { title: "Math that looks right.", desc: "LaTeX sets equations (fractions, integrals, matrices) with professional typesetting that Word cannot match." },
+  { title: "Cross-references never break.", desc: String.raw`\label and \ref mean Figure 3.2 stays Figure 3.2 even when you add a figure before it. Word breaks these constantly.` },
+  { title: "BibTeX and the bibliography.", desc: String.raw`Manage 300 references in a .bib file and cite with \cite{}. The bibliography formats itself in APA, IEEE, or any style.` },
+  { title: "Git-friendly.", desc: "Plain text files diff cleanly in Git. Track every change across months of writing and collaborate without merge conflicts on a binary .docx." },
+  { title: "Precise layout control.", desc: "Universities have strict margin, font, and spacing rules. geometry and setspace handle them in two lines." },
+  { title: "Focus on content.", desc: "LaTeX separates structure from formatting. You write, LaTeX typesets: no fighting with Word's auto-formatting at 2 a.m. before a deadline." },
 ];
 
 const FAQS = [
@@ -118,9 +143,11 @@ const FAQS = [
   },
   {
     q: "Does the preview support theorem, lemma, and proof environments?",
-    a: "The preview renders the document structure, math, and text. Complex custom environments (theorem/lemma/proof) will show their content. For full rendering of custom environments, compile locally with tectonic or pdflatex.",
+    a: "Yes. The preview renders theorem, lemma, proposition, corollary, definition, example and proof environments, including the ones you declare with \\newtheorem. For packages the preview does not know, export a PDF or compile locally with tectonic or pdflatex.",
   },
 ];
+
+const codeStyle = { fontFamily: "var(--font-tt)", fontSize: "0.92em" } as const;
 
 export default function AcademicsPage() {
   const jsonLd = {
@@ -139,446 +166,181 @@ export default function AcademicsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "For Academics", path: "/academics" })) }} />
       <Navbar />
 
-      {/* ── Hero ──────────────────────────────────── */}
-      <section
-        className="has-grid"
-        style={{
-          textAlign: "center",
-          padding: "5rem 1.5rem 4rem",
-        }}
-      >
-        <div style={{ maxWidth: 780, margin: "0 auto" }}>
-          <span style={{
-            display: "inline-block", padding: "0.3rem 1rem", borderRadius: 999,
-            border: "1px solid rgba(108,99,255,0.4)", background: "rgba(108,99,255,0.08)",
-            fontSize: "0.78rem", color: "var(--accent2)", fontWeight: 600,
-            marginBottom: "1.5rem", letterSpacing: "0.05em",
-          }}>
-            🎓 FOR RESEARCHERS & PHD STUDENTS
-          </span>
+      <main className="paper" style={{ flex: 1, width: "100%", boxSizing: "border-box", paddingBottom: "3rem" }}>
+        <header className="titleblock">
+          <h1>LaTeX tools for PhD students and researchers</h1>
+          <p className="subtitle">Thesis templates, revision tools and a package reference, free in the browser</p>
+          <p className="authors">latexci.com &middot; for researchers and PhD students</p>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.6rem" }}>
+            <Link href="/tools/templates" className="btn btn-primary">Start from a thesis template</Link>
+            <Link href="/tools/preview" className="btn">Open the live preview</Link>
+          </div>
+        </header>
 
-          <h1 style={{
-            fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 900,
-            lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1.25rem",
-          }}>
-            LaTeX tools for{" "}
-            <span style={{
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>
-              PhD students &amp; researchers
-            </span>
-          </h1>
-
-          <p style={{
-            fontSize: "1.1rem", color: "var(--fg-muted)", lineHeight: 1.75,
-            maxWidth: 600, margin: "0 auto 2rem",
-          }}>
-            Thesis is 200 pages. Your advisor sends changes in Word. The defense is in 3 months.
-            latexci helps you move faster: preview, diff, convert, and start from pro templates.
+        <section className="abstract" aria-label="Abstract">
+          <p className="abstract-title">Abstract</p>
+          <p>
+            The thesis is 200 pages, the advisor sends changes in Word, and the defense is in three months.
+            This page gathers what helps a researcher move faster: thesis and paper templates that open in
+            the live preview, a diff for advisor revisions, a Word to LaTeX converter, and a reference of the
+            twelve packages a long document needs. Every tool is free and needs no LaTeX install. Templates,
+            preview and diff need no account; PDF export and Word to LaTeX ask for a one-click Google sign-in.
           </p>
-
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/tools/templates" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.75rem 1.75rem", borderRadius: 8,
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-              color: "#fff", fontWeight: 700, fontSize: "0.95rem", textDecoration: "none",
-              boxShadow: "0 0 30px rgba(108,99,255,0.35)",
-            }}>
-              🎓 Start from a thesis template
-            </Link>
-            <Link href="/tools/preview" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.75rem 1.5rem", borderRadius: 8,
-              background: "var(--surface)", color: "var(--fg)", fontWeight: 600,
-              fontSize: "0.95rem", textDecoration: "none", border: "1px solid var(--border)",
-            }}>
-              ⚡ Live Preview
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div style={{
-            display: "flex", gap: "2.5rem", justifyContent: "center",
-            marginTop: "3rem", flexWrap: "wrap",
-          }}>
-            {[
-              ["200+", "Pages handled easily"],
-              ["0", "LaTeX install needed"],
-              ["10+", "LaTeX templates"],
-              ["Free", "No subscription"],
-            ].map(([stat, label]) => (
-              <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--accent2)" }}>{stat}</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--fg-muted)", marginTop: "0.2rem" }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Workflow ────────────────────────────────── */}
-      <section style={{ padding: "4rem 1.5rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, textAlign: "center", marginBottom: "0.5rem" }}>
-          Your thesis workflow, step by step
-        </h2>
-        <p style={{ textAlign: "center", color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "3rem" }}>
-          Every tool is free and works in your browser. Only PDF export and Word to LaTeX ask for a one-click Google sign-in.
-        </p>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: "1.25rem",
-        }}>
-          {WORKFLOW_STEPS.map(s => (
-            <div key={s.step} style={{
-              background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 12, padding: "1.75rem",
-              display: "flex", flexDirection: "column", gap: "0.75rem",
-            }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 40, height: 40, borderRadius: 8,
-                background: `${s.accent}22`, border: `1px solid ${s.accent}44`,
-                fontSize: "0.85rem", fontWeight: 800, color: s.accent, fontFamily: "monospace",
-              }}>{s.step}</div>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>{s.title}</h3>
-              <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--fg-muted)", lineHeight: 1.65 }}>{s.desc}</p>
-              <Link href={s.href} style={{ fontSize: "0.83rem", color: s.accent, fontWeight: 600, textDecoration: "none", marginTop: "auto" }}>
-                {s.cta}
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Thesis templates quick-load ──────────────── */}
-      <section style={{
-        padding: "3.5rem 1.5rem",
-        background: "var(--surface)",
-        borderTop: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.4rem" }}>
-            Thesis & research templates
-          </h2>
-          <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2rem" }}>
-            One click loads the template into the live editor, ready to edit.
-          </p>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "1rem",
-          }}>
-            {THESIS_TEMPLATES.map(t => {
-              const compressed = LZString.compressToEncodedURIComponent(t.source);
-              return (
-                <a
-                  key={t.id}
-                  href={`/tools/preview#s=${compressed}`}
-                  className="thesis-card"
-                  style={{
-                    display: "flex", gap: "1rem", alignItems: "flex-start",
-                    background: "var(--bg)", border: "1px solid var(--border)",
-                    borderRadius: 10, padding: "1.25rem", textDecoration: "none",
-                  }}
-                >
-                  <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>{t.icon}</span>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "0.93rem", color: "var(--fg)", marginBottom: "0.2rem" }}>
-                      {t.title}
-                    </div>
-                    <div style={{
-                      display: "inline-block", fontSize: "0.68rem", fontWeight: 700,
-                      padding: "0.1rem 0.45rem", borderRadius: 999,
-                      background: "rgba(108,99,255,0.12)", color: "var(--accent2)",
-                      border: "1px solid rgba(108,99,255,0.25)", marginBottom: "0.35rem",
-                    }}>{t.category}</div>
-                    <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--fg-muted)", lineHeight: 1.55 }}>{t.desc}</p>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-          <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
-            <Link href="/tools/templates" style={{
-              fontSize: "0.88rem", color: "var(--accent)", fontWeight: 600, textDecoration: "none",
-            }}>
-              View all templates →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Essential packages ───────────────────────── */}
-      <section style={{ padding: "4rem 1.5rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
-        <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.4rem" }}>
-          Essential LaTeX packages for thesis
-        </h2>
-        <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2rem" }}>
-          Add these to your preamble. Each solves a common thesis pain point.
-        </p>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-          gap: "0.75rem",
-        }}>
-          {ESSENTIAL_PACKAGES.map(p => (
-            <div key={p.pkg} style={{
-              display: "flex", gap: "0.75rem", alignItems: "flex-start",
-              background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 8, padding: "0.9rem 1rem",
-            }}>
-              <code style={{
-                background: "rgba(108,99,255,0.1)", color: "var(--accent2)",
-                padding: "0.2rem 0.55rem", borderRadius: 5, fontSize: "0.78rem",
-                fontFamily: "var(--font-mono), monospace", whiteSpace: "nowrap", flexShrink: 0,
-              }}>
-                {p.pkg.split(",")[0]}
-              </code>
-              <span style={{ fontSize: "0.83rem", color: "var(--fg-muted)", lineHeight: 1.5, flex: 1 }}>{p.use}</span>
-              <CopyButton text={`\\usepackage{${p.pkg}}`} label={"\\usepackage"} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Grande École spotlight ──────────────────── */}
-      <section style={{
-        padding: "3.5rem 1.5rem",
-        background: "linear-gradient(135deg, rgba(0,56,168,0.06) 0%, rgba(95,106,122,0.04) 100%)",
-        borderTop: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, margin: 0 }}>
-              🏛️ Centrale Marseille &amp; AMSE templates
-            </h2>
-            <span style={{
-              fontSize: "0.7rem", fontWeight: 700, padding: "0.2rem 0.6rem",
-              borderRadius: 999, background: "rgba(0,56,168,0.12)",
-              color: "#003BA0", border: "1px solid rgba(0,56,168,0.25)",
-              letterSpacing: "0.06em",
-            }}>GRANDE ÉCOLE</span>
-          </div>
-          <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "2rem" }}>
-            Ready-to-compile templates with the correct title pages, headers, and colour schemes
-            for Centrale Méditerranée reports, internship documents, and AMSE working papers.
-          </p>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "1rem",
-          }}>
-            {GRANDE_ECOLE_TEMPLATES.map(t => {
-              const compressed = LZString.compressToEncodedURIComponent(t.source);
-              return (
-                <a
-                  key={t.id}
-                  href={`/tools/preview#s=${compressed}`}
-                  className="thesis-card"
-                  style={{
-                    display: "flex", gap: "1rem", alignItems: "flex-start",
-                    background: "var(--surface)", border: "1px solid var(--border)",
-                    borderRadius: 10, padding: "1.25rem", textDecoration: "none",
-                    borderLeft: "3px solid #003BA0",
-                  }}
-                >
-                  <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>{t.icon}</span>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "0.93rem", color: "var(--fg)", marginBottom: "0.25rem" }}>
-                      {t.title}
-                    </div>
-                    <p style={{ margin: 0, fontSize: "0.81rem", color: "var(--fg-muted)", lineHeight: 1.55 }}>{t.desc}</p>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-          <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", marginTop: "1.25rem" }}>
-            💡 Each template opens in the live editor. Replace placeholder text, add{" "}
-            <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.75em" }}>
-              \includegraphics
-            </code>{" "}
-            for the real logo, and export to PDF with the{" "}
-            <a href="/tools/preview" style={{ color: "var(--accent)" }}>↓ PDF button</a>.
-          </p>
-        </div>
-      </section>
-
-      {/* ── ML Conference template spotlight ────────── */}
-      {ML_CONFERENCE_TEMPLATE && (
-        <section style={{ padding: "3.5rem 1.5rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, margin: 0 }}>
-              🤖 ML Conference Paper template
-            </h2>
-            <span style={{
-              fontSize: "0.68rem", fontWeight: 700, padding: "0.18rem 0.55rem", borderRadius: 999,
-              background: "rgba(16,185,129,0.1)", color: "#10b981",
-              border: "1px solid rgba(16,185,129,0.35)", letterSpacing: "0.06em",
-            }}>NEW</span>
-          </div>
-          <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", marginBottom: "1.5rem", maxWidth: 680 }}>
-            NeurIPS / ICML / ICLR / CVPR all share the same article-class skeleton.
-            This template wires up the anonymous review header, contributions paragraph,
-            algorithm environment, theorem/proof, ablation table, and appendix.
-            Swap in the official <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.8em" }}>neurips_2025.sty</code> once you&apos;re ready to submit.
-          </p>
-          <div style={{
-            display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center",
-          }}>
-            <a
-              href={`/tools/preview#s=${LZString.compressToEncodedURIComponent(ML_CONFERENCE_TEMPLATE.source)}`}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                padding: "0.65rem 1.5rem", borderRadius: 8,
-                background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-                color: "#fff", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none",
-              }}
-            >
-              🤖 Open ML Conference template
-            </a>
-            <span style={{ fontSize: "0.82rem", color: "var(--fg-muted)" }}>
-              Includes algorithm env, booktabs tables, theorem environments, appendix
-            </span>
-          </div>
         </section>
-      )}
 
-      {/* ── EU / GDPR positioning ───────────────────── */}
-      <section style={{
-        padding: "3rem 1.5rem",
-        background: "linear-gradient(135deg, rgba(0,56,168,0.04) 0%, rgba(16,185,129,0.04) 100%)",
-        borderTop: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", alignItems: "center" }}>
-          <div>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "0.4rem",
-              padding: "0.25rem 0.75rem", borderRadius: 999,
-              background: "rgba(0,56,168,0.08)", border: "1px solid rgba(0,56,168,0.2)",
-              fontSize: "0.72rem", fontWeight: 700, color: "#003BA0",
-              marginBottom: "0.75rem", letterSpacing: "0.06em",
-            }}>🇪🇺 EU · GDPR-AWARE</div>
-            <h2 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: "0.6rem", lineHeight: 1.25 }}>
-              Your unpublished research stays in your browser
-            </h2>
-            <p style={{ fontSize: "0.88rem", color: "var(--fg-muted)", lineHeight: 1.75, margin: 0 }}>
-              Preview, diff, and Word→LaTeX run <strong>entirely client-side</strong>.
-              Your .tex source, Word documents, and research content are <em>never uploaded to any server</em>;
-              only PDF export, when you ask for it, sends the LaTeX source to the compile service.
-              For EU institutions with GDPR obligations around unpublished research,
-              this is a meaningful difference from US-hosted cloud compilers.
-            </p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-            {[
-              { icon: "🔒", title: "Zero upload", desc: "Preview, diff, and Word conversion run in WebAssembly and browser JS. Nothing leaves your machine." },
-              { icon: "🇪🇺", title: "GDPR-compatible by design", desc: "Preview, diff, and Word conversion never send document content to a server: no data transfer, no consent friction." },
-              { icon: "🏛️", title: "Institutional confidence", desc: "Share the link to this page with your IT/legal team: the architecture speaks for itself." },
-            ].map(f => (
-              <div key={f.title} style={{
-                display: "flex", gap: "0.75rem", alignItems: "flex-start",
-                background: "var(--surface)", border: "1px solid var(--border)",
-                borderRadius: 8, padding: "0.85rem 1rem",
-              }}>
-                <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{f.icon}</span>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.15rem" }}>{f.title}</div>
-                  <div style={{ fontSize: "0.79rem", color: "var(--fg-muted)", lineHeight: 1.55 }}>{f.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Why LaTeX for thesis ─────────────────────── */}
-      <section style={{
-        padding: "3.5rem 1.5rem",
-        background: "var(--surface)",
-        borderTop: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-      }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 700, textAlign: "center", marginBottom: "2rem" }}>
-            Why academics choose LaTeX over Word
-          </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
-            {[
-              { icon: "🧮", title: "Math that looks right", desc: "LaTeX renders equations (fractions, integrals, matrices) with professional typesetting that Word cannot match." },
-              { icon: "🔗", title: "Cross-references never break", desc: "\\label + \\ref means Figure 3.2 stays Figure 3.2 even when you add a figure before it. Word breaks these constantly." },
-              { icon: "📚", title: "BibTeX + bibliography", desc: "Manage 300 references in a .bib file. Cite with \\cite{}. The bibliography formats itself in APA, IEEE, or any style." },
-              { icon: "🌿", title: "Git-friendly", desc: "Plain text files diff cleanly in Git. Track every change across months of writing. Collaborate without merge conflicts on a binary .docx." },
-              { icon: "📏", title: "Precise layout control", desc: "Universities have strict margin, font, and spacing rules. LaTeX gives you exact control. geometry and setspace handle it in 2 lines." },
-              { icon: "⚡", title: "Focus on content", desc: "LaTeX separates structure from formatting. You write; LaTeX typeset. No fighting with Word's auto-formatting at 2am before a deadline." },
-            ].map(f => (
-              <div key={f.title} style={{
-                padding: "1.25rem", background: "var(--bg)",
-                border: "1px solid var(--border)", borderRadius: 10,
-                display: "flex", gap: "0.75rem", alignItems: "flex-start",
-              }}>
-                <span style={{ fontSize: "1.3rem", flexShrink: 0 }}>{f.icon}</span>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: "0.88rem", marginBottom: "0.3rem" }}>{f.title}</div>
-                  <div style={{ fontSize: "0.81rem", color: "var(--fg-muted)", lineHeight: 1.6 }}>{f.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ─────────────────────────────────────── */}
-      <section style={{ padding: "4rem 1.5rem 5rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
-        <h2 style={{ fontSize: "1.4rem", fontWeight: 700, textAlign: "center", marginBottom: "2rem" }}>
-          Thesis LaTeX: frequently asked
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {FAQS.map(({ q, a }) => (
-            <div key={q} style={{
-              padding: "1.25rem 1.5rem", background: "var(--surface)",
-              border: "1px solid var(--border)", borderRadius: 10,
-            }}>
-              <div style={{ fontWeight: 600, fontSize: "0.92rem", marginBottom: "0.4rem" }}>{q}</div>
-              <div style={{ fontSize: "0.85rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
-                {a.split("\\").map((part, i) =>
-                  i === 0 ? part : <span key={i}><code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.8em" }}>\{part.split(" ")[0]}</code>{part.slice(part.split(" ")[0].length)}</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Footer CTA ──────────────────────────────── */}
-      <section style={{
-        textAlign: "center", padding: "3rem 1.5rem 5rem",
-        background: "radial-gradient(ellipse 60% 80% at 50% 100%, rgba(108,99,255,0.12), transparent)",
-      }}>
-        <h2 style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: "0.75rem" }}>
-          Ready to write your thesis in LaTeX?
-        </h2>
-        <p style={{ color: "var(--fg-muted)", marginBottom: "2rem" }}>
-          Start from a professional template. It&apos;s free, and templates need no account.
+        <h2><span className="secnum">1</span>A thesis workflow in four steps</h2>
+        <p>
+          Each step below uses one tool. Every tool is free and works in your browser; only PDF export and
+          Word to LaTeX ask for a one-click Google sign-in.
         </p>
-        <Link href="/tools/templates" style={{
-          display: "inline-flex", alignItems: "center", gap: "0.5rem",
-          padding: "0.85rem 2rem", borderRadius: 8,
-          background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-          color: "#fff", fontWeight: 700, fontSize: "1rem", textDecoration: "none",
-          boxShadow: "0 0 40px rgba(108,99,255,0.4)",
-        }}>
-          🎓 Browse thesis templates (free)
-        </Link>
-      </section>
+        <ol style={{ paddingLeft: "1.6rem", margin: "0.6rem 0 0" }}>
+          {WORKFLOW_STEPS.map(s => (
+            <li key={s.href} style={{ marginBottom: "0.6rem" }}>
+              <b>{s.title}</b> {s.desc} <Link href={s.href}>{s.cta}</Link>.
+            </li>
+          ))}
+        </ol>
 
-      {/* Footer */}
+        <h2><span className="secnum">2</span>Thesis and research templates</h2>
+        <p>
+          A click on a template name in Table 1 loads it into the live editor, ready to edit. The full
+          collection of 28 templates is on the <Link href="/tools/templates">templates page</Link>.
+        </p>
+        <div style={{ overflowX: "auto", margin: "1.25rem 0 0" }}>
+          <table className="booktabs">
+            <thead>
+              <tr><th>Template</th><th>Description</th><th className="hide-sm">Category</th></tr>
+            </thead>
+            <tbody>
+              {THESIS_TEMPLATES.map(t => (
+                <tr key={t.id}>
+                  <td style={{ whiteSpace: "nowrap" }}><a href={previewHref(t.source)}>{plain(t.title)}</a></td>
+                  <td>{plain(t.desc)}</td>
+                  <td className="muted hide-sm">{t.category}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="caption"><b>Table 1.</b> Templates for theses, proposals and research papers. Each opens in the live preview.</p>
+
+        <h3>2.1&ensp;<span lang="fr">Centrale Marseille</span> and AMSE</h3>
+        <p>
+          Ready-to-compile templates with the correct title pages, headers, and colour schemes for
+          <span lang="fr"> Centrale Méditerranée</span> reports, internship documents, and AMSE working papers
+          (Table 2).
+        </p>
+        <div style={{ overflowX: "auto", margin: "1.25rem 0 0" }}>
+          <table className="booktabs">
+            <thead>
+              <tr><th>Template</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              {GRANDE_ECOLE_TEMPLATES.map(t => (
+                <tr key={t.id}>
+                  <td style={{ whiteSpace: "nowrap" }}><a href={previewHref(t.source)} lang="fr">{plain(t.title)}</a></td>
+                  <td lang="fr">{plain(t.desc)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="caption"><b>Table 2.</b> <span lang="fr">Grande École</span> templates with the official layout.</p>
+        <p className="remark" style={{ marginTop: "1rem", textIndent: 0 }}>
+          <b>Remark.</b> Each template opens in the live editor. Replace the placeholder text, add{" "}
+          <code style={codeStyle}>\includegraphics</code> for the real logo, and export to PDF with the PDF
+          button of the <Link href="/tools/preview">live preview</Link> (one-click Google sign-in).
+        </p>
+
+        {ML_CONFERENCE_TEMPLATE && (
+          <>
+            <h3>2.2&ensp;ML conference paper</h3>
+            <p>
+              NeurIPS, ICML, ICLR and CVPR papers share the same article-class skeleton. This template wires up
+              the anonymous review header, the contributions paragraph, an algorithm environment, theorem and
+              proof, an ablation table in booktabs, and the appendix. Swap in the official{" "}
+              <code style={codeStyle}>neurips_2025.sty</code> once you are ready to submit.
+            </p>
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>
+              <a href={previewHref(ML_CONFERENCE_TEMPLATE.source)} className="btn">Open the ML conference template</a>
+            </div>
+          </>
+        )}
+
+        <h2><span className="secnum">3</span>Essential packages for a thesis</h2>
+        <p>
+          Add these to your preamble; each solves a common thesis problem. The button in the last column of
+          Table 3 copies the <code style={codeStyle}>\usepackage</code> line, and Figure 1 shows them
+          assembled into a working preamble.
+        </p>
+        <div style={{ overflowX: "auto", margin: "1.25rem 0 0" }}>
+          <table className="booktabs">
+            <thead>
+              <tr><th>Package</th><th>Purpose</th><th className="hide-sm" style={{ textAlign: "right" }}>Copy</th></tr>
+            </thead>
+            <tbody>
+              {ESSENTIAL_PACKAGES.map(p => (
+                <tr key={p.pkg}>
+                  <td style={{ whiteSpace: "nowrap" }}><code style={codeStyle}>{p.pkg}</code></td>
+                  <td>{p.use}</td>
+                  <td className="hide-sm" style={{ textAlign: "right" }}><CopyButton text={p.copy} label={"\\usepackage"} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="caption"><b>Table 3.</b> Twelve packages that cover most thesis requirements.</p>
+
+        <figure style={{ margin: "2rem 0 0" }}>
+          <div className="figure">
+            <pre style={{ margin: 0, padding: "1rem 1.15rem", fontFamily: "var(--font-tt)", fontSize: "0.86rem", lineHeight: 1.6, whiteSpace: "pre-wrap", color: "var(--fg)", overflowX: "auto" }}>{PREAMBLE_SOURCE}</pre>
+          </div>
+          <figcaption className="caption"><b>Figure 1.</b> A thesis preamble built from Table 3. Chapters live in their own files; <code style={codeStyle}>\includeonly</code> compiles one at a time.</figcaption>
+        </figure>
+
+        <h2><span className="secnum">4</span>Unpublished research stays in your browser</h2>
+        <p>
+          Preview, diff, and Word to LaTeX run entirely client-side: your .tex source, your Word documents and
+          your research content are not uploaded to a server. Only PDF export, when you ask for it, sends the
+          LaTeX source to the YToTech compile service and downloads the result. For EU institutions with GDPR
+          obligations around unpublished research, this is a meaningful difference from cloud compilers that
+          store every project.
+        </p>
+        <p className="remark" style={{ marginTop: "0.8rem", textIndent: 0 }}>
+          <b>Local processing.</b> Preview, diff, and Word conversion run as JavaScript in your browser; the
+          document content does not leave your machine.
+        </p>
+        <p className="remark" style={{ marginTop: "0.4rem", textIndent: 0 }}>
+          <b>GDPR.</b> Because these tools never send document content to a server, there is no data transfer to
+          declare and no consent to collect. Documents you save stay in your browser.
+        </p>
+        <p className="remark" style={{ marginTop: "0.4rem", textIndent: 0 }}>
+          <b>Institutional confidence.</b> Share the link to this page with your IT or legal team: the
+          architecture speaks for itself.
+        </p>
+
+        <h2><span className="secnum">5</span>Why academics choose LaTeX over Word</h2>
+        <ol style={{ paddingLeft: "1.6rem", margin: "0.5rem 0 0" }}>
+          {WHY_LATEX.map(f => (
+            <li key={f.title} style={{ marginBottom: "0.5rem" }}>
+              <b>{f.title}</b> {f.desc}
+            </li>
+          ))}
+        </ol>
+
+        <h2><span className="secnum">6</span>Getting started</h2>
+        <p>
+          Ready to write your thesis in LaTeX? Start from a professional template. It is free, and templates
+          need no account.
+        </p>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>
+          <Link href="/tools/templates" className="btn btn-primary">Browse thesis templates (free)</Link>
+        </div>
+
+        <h2 style={{ marginTop: "3rem" }}>Appendix A&ensp;Questions</h2>
+        <Faq items={FAQS} />
+      </main>
+
       <SiteFooter />
     </div>
   );

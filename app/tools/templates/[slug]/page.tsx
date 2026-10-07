@@ -108,7 +108,6 @@ export default async function TemplatePage({ params }: Props) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-            <span style={{ fontSize: "1.9rem", lineHeight: 1 }} aria-hidden="true">{t.icon}</span>
             <h1 style={{ color: "var(--fg)", fontSize: "1.9rem", fontWeight: 800, letterSpacing: "-0.03em", margin: 0 }}>
               {t.title} LaTeX Template
             </h1>
@@ -126,7 +125,7 @@ export default async function TemplatePage({ params }: Props) {
                 fontSize: "0.9rem", textDecoration: "none",
               }}
             >
-              ✦ Open in editor
+              Open in editor
             </Link>
             <CopyButton text={t.source} label="Copy source" />
             {t.id.startsWith("cv") && (
@@ -189,7 +188,7 @@ export default async function TemplatePage({ params }: Props) {
                       fontSize: "0.85rem", color: "var(--fg-muted)", textDecoration: "none",
                     }}
                   >
-                    <span aria-hidden="true">{r.icon}</span> {r.title}
+                    {r.title}
                   </Link>
                 ))}
               </div>

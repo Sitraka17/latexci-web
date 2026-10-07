@@ -72,7 +72,7 @@ export default function Navbar() {
             <div className="mobile-panel">
               <NavLinks variant="mobile" />
               <a href="https://discord.gg/latexci" target="_blank" rel="noopener noreferrer" className="mobile-link mobile-discord">
-                💬 Discord community ↗
+                Discord community ↗
               </a>
               <a href="https://github.com/Sitraka17/latexci-web" target="_blank" rel="noopener noreferrer" className="mobile-link mobile-muted">
                 GitHub ↗

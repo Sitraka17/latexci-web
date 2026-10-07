@@ -27,7 +27,7 @@ const LEARN = [
 ];
 
 const COMMUNITY = [
-  { label: "💬 Discord",     href: "https://discord.gg/latexci", external: true, accent: true },
+  { label: "Discord",     href: "https://discord.gg/latexci", external: true, accent: true },
   { label: "GitHub Issues",  href: "https://github.com/Sitraka17/latexci-web/issues", external: true },
   { label: "Feature Requests", href: "https://github.com/Sitraka17/latexci-web/discussions", external: true },
 ];
@@ -60,7 +60,7 @@ export default function SiteFooter() {
           <div>
             <div style={{
               fontWeight: 800, fontSize: "1.1rem", letterSpacing: "-0.03em",
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+              background: "var(--accent-solid)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               marginBottom: "0.6rem",
             }}>
@@ -70,8 +70,8 @@ export default function SiteFooter() {
               fontSize: "0.82rem", color: "var(--fg-muted)", lineHeight: 1.75,
               maxWidth: 260, margin: "0 0 1.1rem",
             }}>
-              Free, open-source LaTeX tools for researchers and students.
-              No signup, no tracking, works in any browser.
+              Free LaTeX tools for researchers and students, in any browser.
+              No paid plan, no advertising.
             </p>
             <a
               href="https://github.com/Sitraka17/latexci-web"
@@ -92,7 +92,6 @@ export default function SiteFooter() {
               rel="noopener noreferrer"
               className="ft-coffee"
             >
-              <span aria-hidden="true">☕</span>
               Buy me a coffee
             </a>
           </div>
@@ -135,12 +134,7 @@ export default function SiteFooter() {
           flexWrap: "wrap", gap: "0.75rem",
         }}>
           <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--fg-muted)" }}>
-            © {YEAR} latexci · Open source under the{" "}
-            <a href="https://github.com/Sitraka17/latexci-web/blob/main/LICENSE"
-              target="_blank" rel="noopener noreferrer"
-              style={{ color: "var(--accent)", textDecoration: "none" }}>
-              MIT License
-            </a>
+            © {YEAR} latexci
           </p>
           <div style={{ display: "flex", gap: "1.25rem" }}>
             {[

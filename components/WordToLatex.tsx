@@ -509,7 +509,7 @@ export default function WordToLatex() {
       <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
         <h1 style={{
           fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.03em",
-          background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+          background: "var(--accent-solid)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: "0.5rem",
         }}>
           Word → LaTeX Converter
@@ -529,7 +529,10 @@ export default function WordToLatex() {
         transition: "all 0.2s", marginBottom: "1.5rem",
       }}>
         <input {...getInputProps()} />
-        <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>📄</div>
+        <svg width="34" height="42" viewBox="0 0 34 42" aria-hidden="true" style={{ display: "block", margin: "0 auto 0.75rem", color: "var(--fg-muted)" }}>
+              <path d="M2 1h20l10 10v30H2z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M22 1v10h10M8 20h18M8 26h18M8 32h12" fill="none" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
         {isDragActive ? (
           <p style={{ color: "var(--accent)", fontWeight: 600, margin: 0 }}>Drop it!</p>
         ) : (
@@ -607,7 +610,7 @@ export default function WordToLatex() {
           )}
           {report.images > 0 && (
             <p style={{ margin: "0.4rem 0 0", fontSize: "0.8rem", color: "var(--fg-muted)" }}>
-              📎 Images have been replaced with <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>\\includegraphics</code> placeholders.
+              Images have been replaced with <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>\\includegraphics</code> placeholders.
               Save your images separately and rename them <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>figure-1.png</code>, <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>figure-2.png</code>, etc.
             </p>
           )}

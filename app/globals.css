@@ -4,76 +4,83 @@
    DARK theme (default)
 ───────────────────────────────────────────────────── */
 :root {
-  --bg:           #0d0d13;
-  --surface:      #141419;
-  --surface2:     #1c1c26;
-  --border:       #28283a;
-  --accent:       #7c6cf8; /* text and borders: 4.94:1 on --bg */
-  --accent-solid: #6e5ef0; /* filled buttons with white text: 4.64:1 */
-  --accent2:      #b49ff5;
-  --fg:           #e4e1ef;
-  --fg-muted:     #8a88a4;
+  /* Computer Modern, from the KaTeX fonts already loaded by katex.min.css:
+     roman for headings and prose, sans for interface (as in Beamer),
+     typewriter for inline code. */
+  --font-serif: var(--font-cm-serif), "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
+  --font-sans:  var(--font-cm-sans), "Latin Modern Sans", "CMU Sans Serif", "Helvetica Neue", Arial, sans-serif;
+  --font-tt:    var(--font-cm-tt), "Latin Modern Mono", "CMU Typewriter Text", ui-monospace, monospace;
+  --radius: 2px;
+  --bg:           #141518;
+  --surface:      #1b1c20;
+  --surface2:     #23252b;
+  --border:       #353840;
+  --accent:       #9db2f5; /* links and text accents: 8.8:1 on --bg */
+  --accent-solid: #2f4da6; /* filled buttons, white text: 7.7:1 */
+  --accent2:      #c3d0fa;
+  --fg:           #e9e7e1;
+  --fg-muted:     #a6a39a;
   --green:        #34d399;
   --red:          #f87171;
   --amber:        #fbbf24;
-  --nav-bg:       rgba(13, 13, 19, 0.85);
-  --nav-border:   rgba(40, 40, 58, 0.9);
-  --shadow-sm:    0 1px 4px rgba(0,0,0,0.5);
-  --shadow-md:    0 4px 20px rgba(0,0,0,0.4);
+  --nav-bg:       rgba(20, 21, 24, 0.92);
+  --nav-border:   #353840;
+  --shadow-sm:    none;
+  --shadow-md:    none;
 
   /* Preview / paper — dark mode */
-  --preview-desk:      #0c0c15;
-  --preview-hdr:       #090910;
-  --preview-hdr-bdr:   #17172a;
-  --preview-hdr-muted: #7876a4;
+  --preview-desk:      #111215;
+  --preview-hdr:       #0e0f12;
+  --preview-hdr-bdr:   #2a2c32;
+  --preview-hdr-muted: #8d8a82;
   --preview-hdr-dot:   #2d7a45;
-  --paper-bg:          #14142a;
-  --paper-fg:          #c8c5e0;
-  --paper-shadow:      0 4px 40px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05);
-  --editor-bg:         #13131e;
-  --editor-border:     #28283a;
-  --editor-sidebar-bg: #0f0f1a;
-  --editor-statusbar:  #09090f;
-  --editor-statusbar-fg: rgba(150,148,180,0.95);
-  --editor-statusbar-lang: rgba(170,168,196,0.95);
+  --paper-bg:          #1d1e22;
+  --paper-fg:          #e6e4de;
+  --paper-shadow:      0 0 0 1px #2c2e34;
+  --editor-bg:         #17181c;
+  --editor-border:     #353840;
+  --editor-sidebar-bg: #131417;
+  --editor-statusbar:  #0e0f12;
+  --editor-statusbar-fg: #a6a39a;
+  --editor-statusbar-lang: #e9e7e1;
 }
 
 /* ─────────────────────────────────────────────────────
    LIGHT / BEIGE theme
 ───────────────────────────────────────────────────── */
 html.light {
-  --bg:           #ece7da;
-  --surface:      #f7f3ea;
-  --surface2:     #ede8de;
-  --border:       #cfc8bc;
-  --accent:       #5a46c8;
-  --accent-solid: #5a46c8;
-  --accent2:      #7a62e0;
-  --fg:           #1a1714;
-  --fg-muted:     #635a4b;   /* darkened for WCAG AA (≥4.5:1) on light surfaces */
+  --bg:           #fbfaf6;
+  --surface:      #ffffff;
+  --surface2:     #f3f1eb;
+  --border:       #d6d1c4;
+  --accent:       #23408e;
+  --accent-solid: #23408e;
+  --accent2:      #3a5cb8;
+  --fg:           #161616;
+  --fg-muted:     #55524a;   /* darkened for WCAG AA (≥4.5:1) on light surfaces */
   --green:        #166534;
   --red:          #991b1b;
   --amber:        #92400e;
-  --nav-bg:       rgba(247, 243, 234, 0.9);
-  --nav-border:   rgba(207, 200, 188, 0.9);
-  --shadow-sm:    0 1px 4px rgba(0,0,0,0.08);
-  --shadow-md:    0 4px 20px rgba(0,0,0,0.1);
+  --nav-bg:       rgba(251, 250, 246, 0.94);
+  --nav-border:   #d6d1c4;
+  --shadow-sm:    none;
+  --shadow-md:    none;
 
   /* Preview / paper — light mode (warm parchment desk) */
-  --preview-desk:      #e8e2d8;
-  --preview-hdr:       #ddd8ce;
-  --preview-hdr-bdr:   #ccc6bc;
-  --preview-hdr-muted: #7a6a5a;
+  --preview-desk:      #eceae3;
+  --preview-hdr:       #e4e1d8;
+  --preview-hdr-bdr:   #d0cbbd;
+  --preview-hdr-muted: #6b675d;
   --preview-hdr-dot:   #2d7a45;
   --paper-bg:          #ffffff;
-  --paper-fg:          #18140f;
-  --paper-shadow:      0 4px 32px rgba(60,40,20,0.14), 0 0 0 1px rgba(60,40,20,0.06);
-  --editor-bg:         #faf6f0;
-  --editor-border:     #d4c8bc;
-  --editor-sidebar-bg: #f0ebe3;
-  --editor-statusbar:  #2d1e12;
-  --editor-statusbar-fg: rgba(192,178,162,0.85);
-  --editor-statusbar-lang: rgba(212,192,168,0.9);
+  --paper-fg:          #141414;
+  --paper-shadow:      0 0 0 1px #d6d1c4, 0 2px 10px rgba(0,0,0,0.06);
+  --editor-bg:         #fdfcf9;
+  --editor-border:     #d6d1c4;
+  --editor-sidebar-bg: #f3f1eb;
+  --editor-statusbar:  #ece9e1;
+  --editor-statusbar-fg: #55524a;
+  --editor-statusbar-lang: #161616;
 }
 
 /* ─────────────────────────────────────────────────────
@@ -122,7 +129,7 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   margin: 0;
   min-height: 100vh;
   /* Respect notch / home-indicator safe areas (needs viewport-fit=cover) */
@@ -177,14 +184,14 @@ button, a, [role="button"] {
    In dark mode the panel inherits the app's dark vars.
 ───────────────────────────────────────────────────── */
 html.light .editor-panel {
-  --surface:  #f7f3ea;
-  --surface2: #ede8e0;
-  --border:   #d4c8bc;
-  --fg:       #2c2018;
-  --fg-muted: #7a6a5a;
-  --accent:   #6d3fa0;
-  --accent-solid: #6d3fa0;
-  --accent2:  #9070c8;
+  --surface:  #ffffff;
+  --surface2: #f3f1eb;
+  --border:   #d6d1c4;
+  --fg:       #161616;
+  --fg-muted: #55524a;
+  --accent:   #23408e;
+  --accent-solid: #23408e;
+  --accent2:  #3a5cb8;
 }
 
 /* ─────────────────────────────────────────────────────
@@ -198,7 +205,7 @@ html.light .editor-panel {
 .cm-editor.cm-focused { outline: none !important; }
 .cm-scroller { overflow: auto; }
 /* Warm gutter border in light mode only; dark mode uses the theme */
-html.light .cm-gutters { border-right: 1px solid #d8cfc4 !important; }
+html.light .cm-gutters { border-right: 1px solid #d6d1c4 !important; }
 
 /* ─────────────────────────────────────────────────────
    Diff
@@ -250,54 +257,48 @@ html.light .cm-gutters { border-right: 1px solid #d8cfc4 !important; }
 .latex-preview {
   line-height: 1.8;
   color: var(--paper-fg);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
 }
 .latex-preview h1, .latex-preview h2,
-.latex-preview h3, .latex-preview h4 { color: #dddaf0; font-family: Georgia, serif; }
+.latex-preview h3, .latex-preview h4 { color: var(--paper-fg); font-family: var(--font-serif); }
 .latex-preview h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.6rem; }
-.latex-preview h2 {
-  font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.5rem;
-  border-bottom: 1px solid #27273e; padding-bottom: 0.25rem;
-}
-.latex-preview h3 { font-size: 1.05rem; font-weight: 600; margin: 1.4rem 0 0.3rem; }
+.latex-preview h2 { font-size: 1.3rem; font-weight: 700; margin: 2rem 0 0.6rem; }
+.latex-preview h3 { font-size: 1.1rem; font-weight: 700; margin: 1.4rem 0 0.3rem; }
 .latex-preview h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.25rem; }
 .latex-preview p  { margin: 0.7rem 0; }
 .latex-preview code {
-  background: #22223a; color: #b49ff5;
+  background: var(--surface2); color: var(--accent);
   padding: 0.1em 0.35em; border-radius: 3px;
   font-family: var(--font-mono), monospace; font-size: 0.83em;
 }
 .latex-preview pre {
-  background: #1a1a2e; border: 1px solid #27273e;
+  background: var(--surface2); border: 1px solid var(--border);
   border-radius: 5px; padding: 0.85rem 1rem; overflow-x: auto; margin: 0.75rem 0;
 }
 .latex-preview ul, .latex-preview ol { margin: 0.7rem 0; padding-left: 1.6rem; }
 .latex-preview li { margin: 0.25rem 0; }
 .latex-preview table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.91em; }
-.latex-preview th { background: #1e1e34; border: 1px solid #27273e; padding: 0.45rem 0.75rem; font-weight: 600; text-align: left; color: #dddaf0; }
-.latex-preview td { border: 1px solid #27273e; padding: 0.45rem 0.75rem; }
+.latex-preview th { background: var(--surface2); border: 1px solid var(--border); padding: 0.45rem 0.75rem; font-weight: 600; text-align: left; color: var(--paper-fg); }
+.latex-preview td { border: 1px solid var(--border); padding: 0.45rem 0.75rem; }
 .latex-preview .math-block  { margin: 1.4rem 0; text-align: center; overflow-x: auto; }
-.latex-preview .doc-title   { font-size: 1.85rem; font-weight: 700; text-align: center; margin-bottom: 0.4rem; color: #eeeaf8; }
-.latex-preview .doc-author  { text-align: center; color: #8e8aaa; font-size: 0.94rem; margin: 0.2rem 0; }
-.latex-preview .doc-date    { text-align: center; color: #6a6888; font-size: 0.87rem; margin: 0.2rem 0; }
-.latex-preview .doc-rule    { border: none; border-top: 1px solid #27273e; margin: 1rem 0 1.5rem; }
-.latex-preview .abstract    {
-  background: #1c1c34; border-left: 3px solid #4a4890;
-  padding: 0.75rem 1rem; margin: 1rem 0;
-  border-radius: 0 4px 4px 0; font-size: 0.93em; color: #b0aece;
-}
+.latex-preview .doc-title   { font-size: 1.75rem; font-weight: 400; line-height: 1.25; text-align: center; margin: 1rem 0 1.1rem; color: var(--paper-fg); }
+.latex-preview .doc-author  { text-align: center; color: var(--paper-fg); font-size: 1.05rem; margin: 0.3rem 0; }
+.latex-preview .doc-date    { text-align: center; color: var(--paper-fg); font-size: 1.05rem; margin: 0.3rem 0 1.6rem; }
+.latex-preview .doc-rule    { display: none; }
+/* As \begin{abstract} sets it: centred bold title, narrower block, smaller type. */
+.latex-preview .abstract    { margin: 1.2rem 2.5rem 1.6rem; font-size: 0.92em; color: var(--paper-fg); background: none; border: 0; padding: 0; }
 .latex-preview .thm-box     {
-  border: 1px solid #27273e; border-radius: 4px;
-  padding: 0.75rem 1rem; margin: 1rem 0; background: #1a1a2e;
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.75rem 1rem; margin: 1rem 0; background: var(--surface2);
 }
-.latex-preview .thm-label   { font-weight: 700; font-style: italic; color: #b49ff5; }
+.latex-preview .thm-label   { font-weight: 700; font-style: italic; color: var(--accent); }
 .latex-preview .fig-block   { text-align: center; margin: 1.5rem 0; }
 .latex-preview .fig-placeholder {
-  background: #1c1c2e; border: 2px dashed #303050;
+  background: var(--surface2); border: 1px dashed var(--border);
   padding: 2rem; border-radius: 6px; color: #5e5c7a; font-size: 0.88em;
 }
 .latex-preview figcaption   { font-size: 0.87em; color: #7070a0; margin-top: 0.5rem; font-style: italic; }
-.latex-preview .ref         { color: #b49ff5; }
+.latex-preview .ref         { color: var(--accent); }
 .latex-preview .unknown-env {
   background: #1e1a0a; border: 1px solid #3a3000;
   border-radius: 4px; padding: 0.35rem 0.7rem; color: #d4a06a; font-size: 0.84em;
@@ -307,17 +308,17 @@ html.light .cm-gutters { border-right: 1px solid #d8cfc4 !important; }
   background: color-mix(in srgb, var(--accent) 9%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1.5rem;
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 .latex-preview .preview-notice-head { font-weight: 700; font-size: 0.98rem; margin-bottom: 0.45rem; }
 .latex-preview .preview-notice p { font-size: 0.85rem; line-height: 1.6; color: var(--fg-muted); margin: 0.35rem 0 0; }
 .latex-preview .preview-notice-sub { font-style: italic; color: var(--fg) !important; }
 .latex-preview .beamer-outline-head {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--fg-muted); margin: 0 0 0.6rem;
 }
-.latex-preview .beamer-outline { font-family: var(--font-inter), system-ui, sans-serif; }
+.latex-preview .beamer-outline { font-family: var(--font-sans); }
 .latex-preview .beamer-section {
   font-weight: 700; font-size: 0.92rem; color: var(--accent);
   margin: 0.9rem 0 0.35rem; padding-bottom: 0.2rem;
@@ -330,8 +331,8 @@ html.light .cm-gutters { border-right: 1px solid #d8cfc4 !important; }
 }
 .latex-preview .beamer-frame::before { content: "▸"; position: absolute; left: 0; color: var(--accent2); font-size: 0.75rem; }
 .latex-preview .toc-placeholder { text-align: center; color: #5e5c7a; padding: 1rem; font-style: italic; }
-.latex-preview .appendix-marker { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid #27273e; }
-.latex-preview sup.footnote { cursor: help; color: #b49ff5; }
+.latex-preview .appendix-marker { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+.latex-preview sup.footnote { cursor: help; color: var(--accent); }
 
 /* ─────────────────────────────────────────────────────
    LaTeX Preview — light mode overrides (warm cream paper)
@@ -341,7 +342,7 @@ html.light .latex-preview h1,
 html.light .latex-preview h2,
 html.light .latex-preview h3,
 html.light .latex-preview h4 { color: #111; }
-html.light .latex-preview h2 { border-bottom-color: #ddd8d0; }
+
 html.light .latex-preview code { background: #f0ede5; color: #3c2c1c; }
 html.light .latex-preview pre { background: #f5f1ea; border-color: #d9d4c9; }
 html.light .latex-preview th { background: #f0ece5; border-color: #cec9c0; color: #111; }
@@ -350,18 +351,18 @@ html.light .latex-preview .doc-title  { color: #111; }
 html.light .latex-preview .doc-author { color: #555; }
 html.light .latex-preview .doc-date   { color: #888; }
 html.light .latex-preview .doc-rule   { border-top-color: #ccc; }
-html.light .latex-preview .abstract   {
-  background: #f5f1ea; border-left-color: #b5b0a8; color: #28201a;
-}
+html.light .latex-preview .abstract   { background: none; color: var(--paper-fg); }
+/* amsart-style run-in label: "Abstract." in small caps. */
+.latex-preview .abstract strong:first-child { font-variant: small-caps; font-weight: 400; letter-spacing: 0.03em; }
 html.light .latex-preview .thm-box    { border-color: #cec9c0; background: #faf7f1; }
 html.light .latex-preview .thm-label  { color: #3a3028; }
 html.light .latex-preview .fig-placeholder { background: #f0ede5; border-color: #c5c0b8; color: #8a8078; }
 html.light .latex-preview figcaption  { color: #666; }
-html.light .latex-preview .ref        { color: #4a38a8; }
+html.light .latex-preview .ref        { color: #23408e; }
 html.light .latex-preview .unknown-env { background: #fff8e6; border-color: #f0d98a; color: #7a6020; }
 html.light .latex-preview .toc-placeholder { color: #888; }
 html.light .latex-preview .appendix-marker { border-bottom-color: #cec9c0; }
-html.light .latex-preview sup.footnote { color: #4a38a8; }
+html.light .latex-preview sup.footnote { color: #23408e; }
 
 /* ── Equation numbering ──────────────────────────────────────────────── */
 .math-numbered {
@@ -383,7 +384,7 @@ html.light .latex-preview sup.footnote { color: #4a38a8; }
   font-size: 0.88em;
   color: var(--paper-fg);
   opacity: 0.65;
-  font-family: Georgia, serif;
+  font-family: var(--font-serif);
 }
 
 /* ── Section numbers ─────────────────────────────────────────────────── */
@@ -504,6 +505,8 @@ html.light .latex-preview sup.footnote { color: #4a38a8; }
 html.light .has-grid::before {
   opacity: 0.09;
 }
+/* The dotted background grid is decoration: off in the LaTeX look. */
+.has-grid::before { display: none; }
 
 /* ─────────────────────────────────────────────────────
    Template cards (filterable grid)
@@ -918,3 +921,103 @@ footer {
   .cvb-grid { grid-template-columns: 1fr; }
   .cvb-out { position: static; }
 }
+
+
+/* ─────────────────────────────────────────────────────
+   LaTeX look (2026-10 redesign)
+   Headings in Computer Modern Roman like an article, interface in CM Sans
+   like Beamer, inline code in CM Typewriter, square corners, no shadows.
+───────────────────────────────────────────────────── */
+h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: 0 !important; }
+code, kbd, samp { font-family: var(--font-tt); }
+pre code, .cm-editor code { font-family: inherit; }
+/* Inline styles across the app still carry rounded radii and soft shadows. */
+[style*="border-radius"] { border-radius: var(--radius) !important; }
+[style*="box-shadow"]:not(.latex-preview) { box-shadow: none !important; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+a { text-underline-offset: 0.15em; }
+
+/* Article-style blocks used by the home page and long-form pages. */
+.paper { max-width: 760px; margin: 0 auto; padding: 0 1.25rem; font-family: var(--font-serif); color: var(--fg); }
+.paper p, .paper li { font-size: 1.06rem; line-height: 1.65; }
+.paper a { color: var(--accent); }
+.paper .titleblock { text-align: center; padding: 3.25rem 0 1.5rem; }
+.paper .titleblock h1 { font-size: clamp(2rem, 5vw, 2.7rem); font-weight: 700; line-height: 1.15; margin: 0 0 0.6rem; }
+.paper .titleblock .subtitle { font-size: 1.15rem; margin: 0 0 0.9rem; }
+.paper .titleblock .authors { font-variant: small-caps; letter-spacing: 0.04em; color: var(--fg-muted); font-size: 1rem; margin: 0; }
+.paper .abstract { margin: 1.75rem auto 0; max-width: 620px; font-size: 0.98rem; }
+.paper .abstract p { font-size: 0.98rem; text-align: justify; hyphens: auto; }
+.paper .abstract-title { text-align: center; font-weight: 700; font-size: 0.95rem; margin: 0 0 0.35rem; }
+.paper h2 { font-size: 1.45rem; font-weight: 700; margin: 2.75rem 0 0.85rem; }
+.paper h2 .secnum { display: inline-block; min-width: 1.9rem; }
+.paper h3 { font-size: 1.12rem; font-weight: 700; margin: 1.6rem 0 0.5rem; }
+.paper .caption { font-size: 0.92rem; margin: 0.6rem 0 0; text-align: center; }
+.paper .caption b { font-weight: 700; }
+.paper .remark { font-style: normal; }
+.paper .remark b { font-style: normal; }
+.paper .remark em { font-style: italic; }
+
+/* booktabs-style table: thick top/bottom rules, thin mid rule, no verticals. */
+.booktabs { width: 100%; border-collapse: collapse; font-family: var(--font-serif); }
+.booktabs thead th { border-top: 1.6px solid var(--fg); border-bottom: 0.8px solid var(--fg); }
+.booktabs tbody tr:last-child td { border-bottom: 1.6px solid var(--fg); }
+.booktabs th, .booktabs td { padding: 0.5rem 0.6rem; text-align: left; vertical-align: top; font-size: 0.98rem; }
+.booktabs th { font-weight: 700; }
+.booktabs td.muted { color: var(--fg-muted); font-size: 0.9rem; white-space: nowrap; }
+@media (max-width: 560px) { .booktabs .hide-sm { display: none; } }
+
+/* Buttons: plain rules and a solid ink-blue primary, Beamer-like. */
+.btn { display: inline-block; padding: 0.55rem 1.05rem; font-family: var(--font-sans); font-size: 0.95rem; text-decoration: none; border: 1px solid var(--fg); color: var(--fg); background: transparent; border-radius: var(--radius); }
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent-solid); border-color: var(--accent-solid); color: #fff; }
+.btn-primary:hover { background: var(--accent-solid); filter: brightness(1.1); }
+
+/* Figure frame */
+.figure { border: 1px solid var(--border); background: var(--surface); }
+.figure-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.figure-grid > * { padding: 1rem 1.15rem; min-width: 0; }
+.figure-grid > * + * { border-left: 1px solid var(--border); }
+@media (max-width: 640px) { .figure-grid { grid-template-columns: 1fr; } .figure-grid > * + * { border-left: 0; border-top: 1px solid var(--border); } }
+
+/* Paragraphs as LaTeX sets them: no gap, indent from the second one on. */
+.paper p { margin: 0 0 0.2rem; }
+.paper p + p { text-indent: 1.5em; }
+.paper .abstract p + p, .paper .caption { text-indent: 0; }
+.paper h2 + p, .paper h3 + p { text-indent: 0; }
+.paper ol { list-style: decimal; }
+.paper ul { list-style: disc; }
+.paper .btn { color: var(--fg); }
+.paper .btn-primary, .paper .btn-primary:hover { color: #fff; }
+
+/* Navigation: a plain running head, no pills, no brand colours. */
+.site-nav { font-family: var(--font-sans); border-bottom: 1px solid var(--border) !important; backdrop-filter: none !important; }
+.site-logo, .site-logo span { font-family: var(--font-serif); font-weight: 700; color: var(--fg) !important; background: none !important; -webkit-text-fill-color: currentColor !important; letter-spacing: 0 !important; }
+.nav-link { font-size: 0.92rem; }
+.nav-link[aria-current="page"] { color: var(--fg) !important; text-decoration: underline; text-underline-offset: 0.3em; background: none !important; }
+.nav-pricing { background: none !important; border: 0 !important; color: var(--fg-muted) !important; font-weight: 400 !important; padding: 0.3rem 0.4rem !important; }
+.nav-pricing:hover { color: var(--fg) !important; }
+.nav-icon-btn, .nav-discord { background: none !important; border: 1px solid var(--border) !important; color: var(--fg-muted) !important; }
+.nav-icon-btn svg, .nav-discord svg { fill: currentColor; }
+.nav-icon-btn:hover, .nav-discord:hover { color: var(--fg) !important; border-color: var(--fg) !important; }
+.mobile-pricing, .mobile-discord { color: var(--fg) !important; font-weight: 400 !important; }
+.theme-toggle-btn { background: none !important; }
+
+/* FAQ as a description list: question in bold, answer below, hairlines. */
+.faq { gap: 0 !important; border-top: 1px solid var(--border); }
+.faq-item { border: 0 !important; border-bottom: 1px solid var(--border) !important; background: none !important; border-radius: 0 !important; }
+.faq-item[open] { border-color: var(--border) !important; }
+.faq-item summary { font-family: var(--font-serif); font-weight: 700; font-size: 1.02rem; padding: 0.75rem 0 !important; background: none !important; }
+.faq-item[open] summary { background: none !important; }
+.faq-plus { border: 0 !important; background: none !important; font-family: var(--font-serif); color: var(--fg-muted) !important; }
+.faq-answer { font-family: var(--font-serif); font-size: 1rem; line-height: 1.6; padding: 0 0 0.9rem !important; color: var(--fg) !important; }
+@media (max-width: 560px) { .booktabs td:first-child { white-space: normal !important; min-width: 6.5rem; } }
+.paper figure p + p { text-indent: 0; }
+
+/* Gradient-filled headings and words (legacy inline styles): plain ink. */
+[style*="background-clip: text"], [style*="-webkit-background-clip: text"], [style*="background-clip:text"] {
+  background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--fg) !important;
+}
+/* Active nav item: underline only, no box. */
+.nav-link[aria-current="page"] { border: 0 !important; box-shadow: none !important; }
+.paper .btn { text-indent: 0; }
+.paper p:has(> .btn) { text-indent: 0; }

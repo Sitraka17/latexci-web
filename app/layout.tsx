@@ -1,25 +1,46 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
-// KaTeX styles are self-hosted (bundled) rather than fetched from a CDN, so the
-// math CSS is not a render-blocking cross-origin request on every page.
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
-// Self-hosted via next/font — no render-blocking Google Fonts CSS request.
-// Exposed as CSS variables so both globals.css and inline styles can use them.
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+// Computer Modern Unicode, the LaTeX typeface with full accent coverage
+// (SIL Open Font License, subset to Latin; see app/fonts/README.txt). Loaded
+// Loaded through next/font for font-display: swap + preload.
+const cmSerif = localFont({
+  src: [
+    { path: "./fonts/cmu-serif-500-roman.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/cmu-serif-500-italic.woff2", weight: "400", style: "italic" },
+    { path: "./fonts/cmu-serif-700-roman.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/cmu-serif-700-italic.woff2", weight: "700", style: "italic" },
+  ],
+  variable: "--font-cm-serif",
   display: "swap",
+  fallback: ["Times New Roman", "serif"],
+});
+const cmSans = localFont({
+  src: [
+    { path: "./fonts/cmu-sans-serif-500-roman.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/cmu-sans-serif-500-italic.woff2", weight: "400", style: "italic" },
+    { path: "./fonts/cmu-sans-serif-700-roman.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-cm-sans",
+  display: "swap",
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
+});
+const cmTypewriter = localFont({
+  src: "./fonts/cmu-typewriter-text-500-roman.woff2",
+  variable: "--font-cm-tt",
+  display: "swap",
+  preload: false,
+  fallback: ["ui-monospace", "monospace"],
 });
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
   display: "swap",
-  // Only used for code snippets: fetched on demand instead of preloaded, so it
-  // no longer competes with the HTML, CSS and text font on first load.
   preload: false,
 });
 
@@ -32,8 +53,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: dark)",  color: "#0d0d13" },
-    { media: "(prefers-color-scheme: light)", color: "#ece7da" },
+    { media: "(prefers-color-scheme: dark)",  color: "#141518" },
+    { media: "(prefers-color-scheme: light)", color: "#fbfaf6" },
   ],
 };
 
@@ -98,7 +119,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`h-full ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`h-full ${cmSerif.variable} ${cmSans.variable} ${cmTypewriter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Anti-flash: read saved theme before first paint — must be synchronous */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('latexci_theme');if(t==='light'||(t==null&&window.matchMedia('(prefers-color-scheme:light)').matches)){document.documentElement.classList.add('light');}}catch(e){}})();` }} />
