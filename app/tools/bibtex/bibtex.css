@@ -1,0 +1,84 @@
+/* BibTeX tool pages (/tools/bibtex and the four converter pages).
+   Builds on the shared tool-page classes in globals.css. */
+
+.bib-wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem 1rem; box-sizing: border-box; }
+.bib-frame .tabs { padding: 0 1.1rem; }
+.bib-body { padding: 1.1rem 1.1rem 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; }
+
+/* Options line of the cleaner */
+.bib-opts { display: grid; grid-template-columns: 13rem minmax(0, 1fr) auto auto; gap: 1.1rem; align-items: end; }
+.bib-check { display: flex; align-items: center; gap: 0.45rem; font-family: var(--font-sans); font-size: 0.92rem; color: var(--fg); cursor: pointer; padding-bottom: 0.55rem; white-space: nowrap; }
+.bib-check input { accent-color: var(--accent-solid); width: 0.95rem; height: 0.95rem; margin: 0; }
+
+/* Two panes: input on the left, output on the right */
+.bib-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.1rem; }
+.bib-pane { min-width: 0; display: flex; flex-direction: column; }
+.bib-panehead { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; min-height: 2.1rem; margin-bottom: 0.35rem; font-family: var(--font-sans); font-size: 0.82rem; color: var(--fg-muted); }
+textarea.bib-area { display: block; width: 100%; white-space: pre; overflow: auto; min-height: 19rem; flex: 1; resize: vertical; box-sizing: border-box; line-height: 1.6; border-radius: var(--radius); }
+textarea.bib-area.codebox { background: var(--surface2); }
+textarea.bib-area:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+textarea.bib-area::placeholder, .bib-row input::placeholder { color: var(--fg-muted); opacity: 0.8; }
+
+.bib-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.bib-stats { font-family: var(--font-sans); font-size: 0.88rem; color: var(--fg-muted); }
+
+/* Lookup tabs */
+.bib-intro { font-family: var(--font-serif); font-size: 1.02rem; line-height: 1.6; color: var(--fg); margin: 0 0 1rem; }
+.bib-intro a { color: var(--accent); }
+.bib-row { display: flex; gap: 0.6rem; align-items: stretch; }
+.bib-row input { flex: 1; min-width: 0; }
+.bib-row .btn { white-space: nowrap; }
+.bib-examples { font-family: var(--font-sans); font-size: 0.88rem; color: var(--fg-muted); margin: 0.9rem 0 0; line-height: 1.9; }
+.bib-ex { background: none; border: 0; padding: 0; margin: 0 0 0 0.9rem; font-family: var(--font-mono), monospace; font-size: 0.84rem; color: var(--accent); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+.bib-ex:hover { color: var(--fg); }
+.bib-ex-list { list-style: none; margin: 0.15rem 0 0; padding: 0; }
+.bib-ex-list li { display: flex; gap: 0.75rem; align-items: baseline; }
+.bib-ex-list .bib-ex { margin-left: 0; }
+
+.bib-msg { font-family: var(--font-serif); font-size: 0.98rem; line-height: 1.55; margin: 0; padding: 0.1rem 0 0.1rem 0.8rem; border-left: 2px solid var(--fg-muted); color: var(--fg); }
+.bib-msg b { font-weight: 700; }
+.bib-msg.is-error { border-left-color: var(--red); }
+.bib-msg.is-error b { color: var(--red); }
+.bib-msg div + div { margin-top: 0.15rem; }
+.bib-lookup .bib-msg { margin-top: 1rem; }
+
+.bib-wrap .note { max-width: 46rem; margin: 1.1rem 0 0; }
+
+/* Article below the tool */
+.bib-paper { padding-bottom: 3.5rem; box-sizing: border-box; width: 100%; }
+.bib-paper h3 .secnum { display: inline-block; min-width: 2.3rem; }
+.bib-paper figure { margin: 1.5rem 0 0; }
+.bib-paper .figure-grid pre, .bib-paper pre.codebox { font-family: var(--font-mono), monospace; font-size: 0.8rem; line-height: 1.55; color: var(--fg); margin: 0; overflow-x: auto; white-space: pre; }
+.bib-paper .bib-figlabel { display: block; font-family: var(--font-sans); font-size: 0.8rem; color: var(--fg-muted); margin: 0 0 0.5rem; }
+.bib-paper .bib-table { overflow-x: auto; margin: 1.25rem 0 0; }
+.bib-paper .booktabs code { font-size: 0.86rem; overflow-wrap: anywhere; }
+.bib-paper .bib-seealso { margin: 0; padding-left: 1.4rem; }
+.bib-paper h2 + .faq { margin-top: 0; }
+
+@media (max-width: 860px) {
+  .bib-opts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .bib-check { padding-bottom: 0; }
+}
+@media (max-width: 720px) {
+  .bib-cols { grid-template-columns: minmax(0, 1fr); }
+  textarea.bib-area { min-height: 14rem; }
+}
+@media (max-width: 520px) {
+  .bib-wrap { padding-left: 1rem; padding-right: 1rem; }
+  .bib-frame .tabs { gap: 1.1rem; padding: 0 0.8rem; }
+  .bib-body { padding: 0.9rem 0.8rem 1rem; }
+  .bib-opts { grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
+  .bib-check { white-space: normal; }
+  .bib-row { flex-direction: column; }
+  .bib-ex-list li { flex-direction: column; gap: 0; margin-bottom: 0.3rem; }
+}
+
+.bib-paper .bib-fig { padding: 0.9rem 1.1rem; }
+.bib-paper .bib-seealso { margin-top: 0.6rem; }
+
+/* Before / after figure: stacked, so that no line of BibTeX is cut. */
+.bib-paper .bib-stack > * { padding: 0.9rem 1.1rem; min-width: 0; }
+.bib-paper .bib-stack > * + * { border-top: 1px solid var(--border); }
+.bib-paper .bib-stack pre { font-family: var(--font-mono), monospace; font-size: 0.8rem; line-height: 1.55; color: var(--fg); margin: 0; overflow-x: auto; white-space: pre; }
+.bib-lookup textarea.bib-area { min-height: 13rem; }
+.bib-paper .bib-fig pre { font-family: var(--font-mono), monospace; font-size: 0.8rem; line-height: 1.55; color: var(--fg); margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import BibTexTool from "@/components/BibTexTool";
+import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ const FAQS = [
   },
   {
     q: "Is this suitable for systematic reviews with many citations?",
-    a: "It converts one PMID at a time, which suits day-to-day writing. For bulk exports of hundreds of records, a reference manager's PubMed import may fit better; then paste the resulting .bib into the Clean & Format tab to tidy it.",
+    a: "It converts one PMID at a time, which suits day-to-day writing. For bulk exports of hundreds of records, a reference manager's PubMed import may fit better; then paste the resulting .bib into the Clean and format tab to tidy it.",
   },
 ];
 
@@ -63,9 +63,21 @@ const faqSchema = {
 };
 const breadcrumb = breadcrumbSchema({ name: "PubMed to BibTeX", path: "/tools/pubmed-to-bibtex" });
 
-const h2: CSSProperties = { color: "var(--fg)", fontSize: "1.4rem", fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 1rem" };
-const h3: CSSProperties = { color: "var(--fg)", fontSize: "1.02rem", fontWeight: 600, margin: "1.8rem 0 0.5rem" };
-const para: CSSProperties = { color: "var(--fg-muted)", fontSize: "0.95rem", lineHeight: 1.75, margin: "0 0 1rem" };
+const EXAMPLE_QUERY = "28498958";
+// Real output of the converter for EXAMPLE_QUERY, pasted verbatim.
+const EXAMPLE_ENTRY = String.raw`@article{Solis-Mezarino2017_pmid28498958,
+  author   = {Solis-Mezarino, V. and Herzog, F.},
+  title    = {compleXView: a server for the interpretation of protein abundance and connectivity information to identify protein complexes},
+  journal  = {Nucleic acids research},
+  year     = {2017},
+  month    = jul,
+  volume   = {45},
+  number   = {W1},
+  pages    = {W276-W284},
+  doi      = {10.1093/nar/gkx411},
+  note     = {PMID: 28498958},
+  url      = {https://pubmed.ncbi.nlm.nih.gov/28498958/}
+}`;
 
 const RELATED = [
   { label: "DOI → BibTeX",   href: "/tools/doi-to-bibtex" },
@@ -88,42 +100,66 @@ export default function PubmedToBibtexPage() {
           tagline="Paste a PMID, get a publication-ready BibTeX entry from NCBI metadata."
         />
 
-        <section aria-label="About the PubMed to BibTeX converter" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
-            <h2 style={h2}>Biomedical citations without the retyping</h2>
-            <p style={para}>
+        <section className="paper bib-paper" aria-label="About the PubMed to BibTeX converter">
+          <h2><span className="secnum">1</span>Biomedical citations without the retyping</h2>
+          <p>
               Clinical and life-science writing leans on PubMed, but LaTeX leans on BibTeX, and copying
               author lists with fifteen names by hand is where citation errors are born. Paste the PMID
               above and the converter pulls the article&rsquo;s metadata from NCBI and formats it as a
               BibTeX entry: authors, title, journal, year, and identifiers, ready for your{" "}
               <code>.bib</code> file.
             </p>
-            <h3 style={h3}>Why registry lookups matter in medicine</h3>
-            <p style={para}>
+
+          <figure>
+            <div className="figure bib-fig">
+              <span className="bib-figlabel">Query: <code>{EXAMPLE_QUERY}</code></span>
+              <pre>{EXAMPLE_ENTRY}</pre>
+            </div>
+            <figcaption className="caption">
+              <b>Figure 2.</b> The entry returned for PMID 28498958 (retrieved 11 October 2026). The DOI recorded by PubMed is carried over.
+            </figcaption>
+          </figure>
+
+          <h3><span className="secnum">1.1</span>Why registry lookups matter in medicine</h3>
+          <p>
               Citation accuracy is not cosmetic in biomedical work: reviewers check references, and
               journals reject manuscripts over unverifiable ones. An entry built from the PubMed record
               is traceable by anyone with the PMID, which is exactly what a careful reviewer will do.
             </p>
 
-            <h2 style={{ ...h2, marginTop: "2.5rem" }}>Frequently asked questions</h2>
-            {FAQS.map((f) => (
-              <div key={f.q} style={{ marginBottom: "1.3rem" }}>
-                <h3 style={{ ...h3, margin: "0 0 0.35rem" }}>{f.q}</h3>
-                <p style={{ ...para, margin: 0 }}>{f.a}</p>
-              </div>
-            ))}
-
-            <nav aria-label="Related tools" style={{ marginTop: "2.5rem", display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-              {RELATED.map(({ label, href }) => (
-                <Link key={href} href={href} style={{
-                  padding: "0.35rem 0.9rem", borderRadius: 7, border: "1px solid var(--border)",
-                  background: "var(--surface2)", fontSize: "0.82rem", color: "var(--fg-muted)", textDecoration: "none",
-                }}>
-                  {label}
-                </Link>
-              ))}
-            </nav>
+          <h2><span className="secnum">2</span>Accepted input</h2>
+          <p>
+            The field accepts a PMID in any of the forms of Table 1.
+          </p>
+          <div className="bib-table">
+            <table className="booktabs">
+              <thead>
+                <tr><th>Form</th><th>Example</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Number</td><td><code>28498958</code></td></tr>
+                <tr><td>With the PMID prefix</td><td><code>PMID:28498958</code></td></tr>
+                <tr><td>PubMed URL</td><td><code>https://pubmed.ncbi.nlm.nih.gov/28498958/</code></td></tr>
+              </tbody>
+            </table>
           </div>
+          <p className="caption"><b>Table 1.</b> Accepted forms of a PubMed identifier.</p>
+
+          <h2><span className="secnum">3</span>Related tools</h2>
+          <p>
+            The same page also cleans a whole <code>.bib</code> file and looks up the other kinds of
+            identifier. None of these tools needs an account.
+          </p>
+          <nav aria-label="Related tools">
+            <ul className="bib-seealso">
+              {RELATED.map(({ label, href }) => (
+                <li key={href}><Link href={href}>{label}</Link></li>
+              ))}
+            </ul>
+          </nav>
+
+          <h2>Appendix A&ensp;Questions</h2>
+          <Faq items={FAQS} name="pubmed-bibtex-faq" />
         </section>
       </main>
       <SiteFooter />

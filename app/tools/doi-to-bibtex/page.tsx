@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import BibTexTool from "@/components/BibTexTool";
+import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
@@ -63,9 +63,22 @@ const faqSchema = {
 };
 const breadcrumb = breadcrumbSchema({ name: "DOI to BibTeX", path: "/tools/doi-to-bibtex" });
 
-const h2: CSSProperties = { color: "var(--fg)", fontSize: "1.4rem", fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 1rem" };
-const h3: CSSProperties = { color: "var(--fg)", fontSize: "1.02rem", fontWeight: 600, margin: "1.8rem 0 0.5rem" };
-const para: CSSProperties = { color: "var(--fg-muted)", fontSize: "0.95rem", lineHeight: 1.75, margin: "0 0 1rem" };
+const EXAMPLE_QUERY = "10.1093/comjnl/27.2.97";
+// Real output of the converter for EXAMPLE_QUERY, pasted verbatim.
+const EXAMPLE_ENTRY = String.raw`@article{Knuth_1984,
+  title        = {Literate Programming},
+  volume       = {27},
+  issn         = {1460-2067},
+  url          = {http://dx.doi.org/10.1093/comjnl/27.2.97},
+  doi          = {10.1093/comjnl/27.2.97},
+  number       = {2},
+  journal      = {The Computer Journal},
+  publisher    = {Oxford University Press (OUP)},
+  author       = {Knuth, D. E.},
+  year         = {1984},
+  month        = Feb,
+  pages        = {97–111}
+}`;
 
 const RELATED = [
   { label: "arXiv → BibTeX",  href: "/tools/arxiv-to-bibtex" },
@@ -88,18 +101,28 @@ export default function DoiToBibtexPage() {
           tagline="Paste a DOI, get a publisher-accurate BibTeX entry via CrossRef. Free, no signup."
         />
 
-        <section aria-label="About the DOI to BibTeX converter" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
-            <h2 style={h2}>From DOI to citation in one paste</h2>
-            <p style={para}>
+        <section className="paper bib-paper" aria-label="About the DOI to BibTeX converter">
+          <h2><span className="secnum">1</span>From DOI to citation in one paste</h2>
+          <p>
               A DOI (Digital Object Identifier) is the permanent ID attached to most journal articles,
               conference papers, datasets, and book chapters. Paste it above and the converter queries
               CrossRef, the registry where publishers deposit their official metadata, and returns a
               formatted BibTeX entry with the authors, title, venue, year, volume, pages, and the DOI
               field itself. Copy it straight into your <code>.bib</code> file.
             </p>
-            <h3 style={h3}>Accurate by construction</h3>
-            <p style={para}>
+
+          <figure>
+            <div className="figure bib-fig">
+              <span className="bib-figlabel">Query: <code>{EXAMPLE_QUERY}</code></span>
+              <pre>{EXAMPLE_ENTRY}</pre>
+            </div>
+            <figcaption className="caption">
+              <b>Figure 2.</b> The entry returned for the DOI of Knuth&rsquo;s <em>Literate Programming</em>, exactly as CrossRef serves it (retrieved 11 October 2026).
+            </figcaption>
+          </figure>
+
+          <h3><span className="secnum">1.1</span>Accurate by construction</h3>
+          <p>
               Because the entry is built from the publisher&rsquo;s registered record, you avoid the two
               classic citation failure modes: hand-typing errors, and AI-hallucinated references that
               look plausible but cite papers that don&rsquo;t exist. Do still give the result a quick
@@ -107,25 +130,40 @@ export default function DoiToBibtexPage() {
               <code>{"{{DNA}}"}</code>, and some older records carry sparse metadata.
             </p>
 
-            <h2 style={{ ...h2, marginTop: "2.5rem" }}>Frequently asked questions</h2>
-            {FAQS.map((f) => (
-              <div key={f.q} style={{ marginBottom: "1.3rem" }}>
-                <h3 style={{ ...h3, margin: "0 0 0.35rem" }}>{f.q}</h3>
-                <p style={{ ...para, margin: 0 }}>{f.a}</p>
-              </div>
-            ))}
-
-            <nav aria-label="Related tools" style={{ marginTop: "2.5rem", display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-              {RELATED.map(({ label, href }) => (
-                <Link key={href} href={href} style={{
-                  padding: "0.35rem 0.9rem", borderRadius: 7, border: "1px solid var(--border)",
-                  background: "var(--surface2)", fontSize: "0.82rem", color: "var(--fg-muted)", textDecoration: "none",
-                }}>
-                  {label}
-                </Link>
-              ))}
-            </nav>
+          <h2><span className="secnum">2</span>Accepted input</h2>
+          <p>
+            The field accepts a DOI in any of the forms of Table 1; wrappers are removed before the lookup.
+          </p>
+          <div className="bib-table">
+            <table className="booktabs">
+              <thead>
+                <tr><th>Form</th><th>Example</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Bare DOI</td><td><code>10.1093/comjnl/27.2.97</code></td></tr>
+                <tr><td>With the doi: prefix</td><td><code>doi:10.1093/comjnl/27.2.97</code></td></tr>
+                <tr><td>Resolver link</td><td><code>https://doi.org/10.1093/comjnl/27.2.97</code></td></tr>
+                <tr><td>Older resolver link</td><td><code>http://dx.doi.org/10.1093/comjnl/27.2.97</code></td></tr>
+              </tbody>
+            </table>
           </div>
+          <p className="caption"><b>Table 1.</b> Ways to write the same DOI.</p>
+
+          <h2><span className="secnum">3</span>Related tools</h2>
+          <p>
+            The same page also cleans a whole <code>.bib</code> file and looks up the other kinds of
+            identifier. None of these tools needs an account.
+          </p>
+          <nav aria-label="Related tools">
+            <ul className="bib-seealso">
+              {RELATED.map(({ label, href }) => (
+                <li key={href}><Link href={href}>{label}</Link></li>
+              ))}
+            </ul>
+          </nav>
+
+          <h2>Appendix A&ensp;Questions</h2>
+          <Faq items={FAQS} name="doi-bibtex-faq" />
         </section>
       </main>
       <SiteFooter />
