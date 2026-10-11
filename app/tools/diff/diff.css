@@ -1,0 +1,88 @@
+/* LaTeX diff: toolbar, two source panes and the diff, in one ruled figure.
+   The page scrolls normally; the editors have a fixed, resizable height and
+   the diff takes the height of its content. */
+.ld-wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
+.ld-wrap figure { margin: 0; }
+
+.ld { --ld-size: 0.82rem; --ld-lh: 1.65; }
+
+/* Toolbar */
+.ld-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem 1.25rem;
+  padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); font-family: var(--font-sans);
+}
+.ld-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.ld-group-label { font-size: 0.85rem; color: var(--fg-muted); }
+.ld-seg { display: flex; }
+.ld-seg .btn + .btn { margin-left: -1px; }
+.ld .btn[aria-pressed="true"] { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+.ld .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; position: relative; z-index: 1; }
+.ld-actions { margin-left: auto; }
+.ld-file { width: 9.5rem; padding: 0.3rem 0.45rem; font-family: var(--font-mono), monospace; font-size: 0.8rem; }
+
+/* Source panes */
+.ld-editors {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  height: 21rem; min-height: 9rem; resize: vertical; overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.ld-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.ld-pane + .ld-pane, .ld-cols > .ld-diff { border-left: 1px solid var(--border); }
+.ld-pane.is-drop { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.ld-pane-head {
+  display: flex; align-items: center; gap: 0.6rem; min-height: 2.3rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.75rem; border-bottom: 1px solid var(--border); background: var(--surface2);
+  font-family: var(--font-sans); font-size: 0.82rem; color: var(--fg-muted);
+}
+.ld-pane-name { font-family: var(--font-mono), monospace; font-weight: 700; color: var(--fg); }
+.ld-pane-original .ld-pane-name, .ld-tone-removed { color: var(--red); }
+.ld-pane-revised .ld-pane-name, .ld-tone-added { color: var(--green); }
+.ld-pane-hint { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-clear { padding: 0.12rem 0.5rem; font-size: 0.8rem; border-color: var(--border); color: var(--fg-muted); }
+.ld-clear:hover { color: var(--fg); border-color: var(--fg); }
+.ld-pane textarea {
+  flex: 1; width: 100%; min-height: 0; resize: none; border: 0; border-radius: 0; margin: 0;
+  padding: 0.7rem 0.75rem; background: var(--surface); color: var(--fg);
+  font-family: var(--font-mono), monospace; font-size: var(--ld-size); line-height: var(--ld-lh);
+}
+.ld-pane textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Diff */
+.ld-diff { min-width: 0; }
+.ld-stats { display: inline-flex; gap: 0.75rem; margin-left: auto; font-family: var(--font-mono), monospace; padding-right: 0.25rem; }
+.ld-stats .ld-tone-added, .ld-stats .ld-tone-removed { font-weight: 700; }
+.ld-diff-body {
+  font-family: var(--font-mono), monospace; font-size: var(--ld-size); line-height: var(--ld-lh);
+  background: var(--surface); color: var(--fg);
+}
+.ld-unified { padding: 0.35rem 0; }
+.ld-line { display: flex; }
+.ld-num { flex: 0 0 2.7rem; text-align: right; padding-right: 0.6rem; color: var(--fg-muted); user-select: none; }
+.ld-sign { flex: 0 0 1.2rem; text-align: center; color: var(--fg-muted); user-select: none; }
+.ld .ld-text { flex: 1; min-width: 0; display: block; padding: 0 0.4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: inherit; }
+.ld .ld-words { margin: 0; padding: 0.7rem 0.9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ld .ld-words span { white-space: inherit; padding: 0 1px; }
+.ld .is-struck { text-decoration: line-through; }
+.ld-empty { margin: 0; padding: 2rem 1rem; text-align: center; font-family: var(--font-serif); font-size: 1.02rem; color: var(--fg-muted); }
+
+.ld-sbs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.ld-sbs-row { display: contents; }
+.ld-sbs-head {
+  padding: 0.3rem 0.75rem; border-bottom: 1px solid var(--border);
+  font-family: var(--font-sans); font-size: 0.82rem; font-weight: 700;
+}
+.ld .ld-cell { display: block; min-width: 0; min-height: calc(var(--ld-lh) * 1em); padding: 0 0.75rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ld-cell-left { border-right: 1px solid var(--border); }
+.ld-cell mark { color: inherit; background: color-mix(in srgb, currentColor 30%, transparent); }
+
+/* Columns layout: three panes side by side, as tall as the diff. */
+.ld-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.35fr); min-height: 26rem; }
+
+/* Phone: tabs replace the side-by-side panes. */
+.ld-tabs { padding: 0 0.75rem; gap: 1.25rem; overflow-y: hidden; }
+.ld-tabs .tab { margin-bottom: 0; }
+.ld-mobile .ld-editors { height: 24rem; }
+.ld-mobile .ld-actions { margin-left: 0; }
+
+.ld-prose { padding-bottom: 3.5rem; }
+.ld-prose .codebox { margin: 0.8rem 0; }

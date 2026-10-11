@@ -6,6 +6,17 @@ type Align = "l" | "c" | "r";
 const DEFAULT_ROWS = 4;
 const DEFAULT_COLS = 3;
 
+// Starting content, so the preview shows a real table instead of bare rules.
+const SAMPLE: string[][] = [
+  ["Element", "Symbol", "Atomic mass"],
+  ["Hydrogen", "H", "1.008"],
+  ["Carbon", "C", "12.011"],
+  ["Oxygen", "O", "15.999"],
+];
+const SAMPLE_ALIGNS: Align[] = ["l", "c", "r"];
+
+const ALIGN_NAME: Record<Align, "left" | "center" | "right"> = { l: "left", c: "center", r: "right" };
+
 // Single pass: escaping in sequence would re-escape the braces of an earlier
 // replacement (\ -> \textbackslash{} -> \textbackslash\{\}).
 const LATEX_ESCAPES: Record<string, string> = {
@@ -30,51 +41,11 @@ function makeAligns(cols: number, old?: Align[]): Align[] {
   return Array.from({ length: cols }, (_, c) => old?.[c] ?? "l");
 }
 
-function Btn({
-  onClick,
-  children,
-  title,
-  danger,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  title?: string;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        padding: "0.28rem 0.7rem",
-        fontSize: "0.78rem",
-        borderRadius: 6,
-        border: "1px solid var(--border)",
-        background: danger ? "rgba(239,68,68,0.08)" : "var(--surface2)",
-        color: danger ? "var(--red)" : "var(--fg-muted)",
-        cursor: "pointer",
-        transition: "border-color 0.12s, color 0.12s",
-        whiteSpace: "nowrap",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = danger ? "var(--red)" : "var(--accent)";
-        e.currentTarget.style.color = danger ? "var(--red)" : "var(--fg)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.color = danger ? "var(--red)" : "var(--fg-muted)";
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 export default function TableGenerator() {
   const [rows, setRows] = useState(DEFAULT_ROWS);
   const [cols, setCols] = useState(DEFAULT_COLS);
-  const [data, setData] = useState(() => makeGrid(DEFAULT_ROWS, DEFAULT_COLS));
-  const [aligns, setAligns] = useState<Align[]>(() => makeAligns(DEFAULT_COLS));
+  const [data, setData] = useState(() => makeGrid(DEFAULT_ROWS, DEFAULT_COLS, SAMPLE));
+  const [aligns, setAligns] = useState<Align[]>(() => makeAligns(DEFAULT_COLS, SAMPLE_ALIGNS));
   const [headerRow, setHeaderRow] = useState(true);
   const [borders, setBorders] = useState<"none" | "simple" | "booktabs">("booktabs");
   const [hlines, setHlines] = useState(false);
@@ -108,6 +79,7 @@ export default function TableGenerator() {
     setData((prev) => prev.map((row) => row.slice(0, -1)));
     setAligns((prev) => prev.slice(0, -1));
   };
+  const clearAll = () => setData(makeGrid(rows, cols));
   const setAlign = (c: number, a: Align) => {
     setAligns((prev) => prev.map((v, i) => (i === c ? a : v)));
   };
@@ -214,347 +186,146 @@ export default function TableGenerator() {
     setAligns(makeAligns(newCols, aligns));
   }, [aligns]);
 
+  // ── Typeset preview ─────────────────────────────────────────────────────
+  // Mirrors the rules emitted above: which rule sits under each row. Top and
+  // bottom rules and vertical bars come from the border style (see table.css).
+  const ruleBelow = (r: number): "mid" | "thin" | null => {
+    const isHeader = headerRow && r === 0;
+    const isLast = r === data.length - 1;
+    if (isHeader) return borders === "booktabs" ? "mid" : borders === "simple" || hlines ? "thin" : null;
+    return !isLast && (borders === "simple" || hlines) ? "thin" : null;
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      {/* Toolbar */}
-      <div
-        style={{
-          padding: "0.6rem 1rem",
-          borderBottom: "1px solid var(--border)",
-          background: "var(--surface)",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "0.5rem",
-          alignItems: "center",
-          flexShrink: 0,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: "0.75rem",
-            color: "var(--fg-muted)",
-            marginRight: 4,
-          }}
-        >
-          {rows} × {cols}
-        </span>
-
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: "var(--border)",
-            margin: "0 4px",
-          }}
-        />
-
-        <Btn onClick={addRow} title="Add row">+ Row</Btn>
-        <Btn onClick={removeRow} title="Remove last row" danger>− Row</Btn>
-        <Btn onClick={addCol} title="Add column">+ Col</Btn>
-        <Btn onClick={removeCol} title="Remove last column" danger>− Col</Btn>
-
-        <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
-
-        {/* Border style */}
-        <select
-          aria-label="Border style"
-          value={borders}
-          onChange={(e) => setBorders(e.target.value as typeof borders)}
-          style={{
-            padding: "0.25rem 0.5rem",
-            borderRadius: 6,
-            border: "1px solid var(--border)",
-            background: "var(--surface2)",
-            color: "var(--fg)",
-            fontSize: "0.78rem",
-            cursor: "pointer",
-          }}
-        >
-          <option value="booktabs">booktabs (recommended)</option>
-          <option value="simple">Simple borders</option>
-          <option value="none">No borders</option>
-        </select>
-
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.35rem",
-            fontSize: "0.78rem",
-            color: "var(--fg-muted)",
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={headerRow}
-            onChange={(e) => setHeaderRow(e.target.checked)}
-          />
-          Bold header
-        </label>
-
-        {borders !== "simple" && (
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              fontSize: "0.78rem",
-              color: "var(--fg-muted)",
-              cursor: "pointer",
-            }}
+    <div className="tg">
+      <div className="tg-toolbar">
+        <span className="tg-size">{rows} × {cols}</span>
+        <div className="tg-group">
+          <button type="button" className="btn btn-sm" onClick={addRow}>Add row</button>
+          <button type="button" className="btn btn-sm" onClick={removeRow} disabled={rows <= 2} title="Remove last row">Remove row</button>
+          <button type="button" className="btn btn-sm" onClick={addCol}>Add column</button>
+          <button type="button" className="btn btn-sm" onClick={removeCol} disabled={cols <= 2} title="Remove last column">Remove column</button>
+          <button type="button" className="btn btn-sm" onClick={clearAll} title="Empty every cell">Clear</button>
+        </div>
+        <div className="tg-group">
+          <select
+            aria-label="Border style"
+            className="input tg-select"
+            value={borders}
+            onChange={(e) => setBorders(e.target.value as typeof borders)}
           >
-            <input
-              type="checkbox"
-              checked={hlines}
-              onChange={(e) => setHlines(e.target.checked)}
-            />
-            Row lines
+            <option value="booktabs">booktabs (recommended)</option>
+            <option value="simple">Simple borders</option>
+            <option value="none">No borders</option>
+          </select>
+          <label className="tg-check">
+            <input type="checkbox" checked={headerRow} onChange={(e) => setHeaderRow(e.target.checked)} />
+            Bold header
           </label>
-        )}
-
-        <div style={{ flex: 1 }} />
-
-        {/* Paste from Excel/CSV hint */}
-        <span style={{ fontSize: "0.72rem", color: "var(--fg-muted)", opacity: 0.75 }}>
-          Paste Excel/CSV into any cell →
-        </span>
-
-        <button
-          onClick={copy}
-          style={{
-            padding: "0.3rem 0.85rem",
-            borderRadius: 6,
-            border: "1px solid var(--accent)",
-            background: copied
-              ? "rgba(52,211,153,0.15)"
-              : "var(--accent-solid)",
-            color: copied ? "var(--green)" : "#fff",
-            fontSize: "0.8rem",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.15s",
-          }}
-        >
-          {copied ? "✓ Copied!" : "Copy LaTeX"}
+          {borders !== "simple" && (
+            <label className="tg-check">
+              <input type="checkbox" checked={hlines} onChange={(e) => setHlines(e.target.checked)} />
+              Row lines
+            </label>
+          )}
+        </div>
+        <button type="button" className="btn btn-sm btn-primary tg-copy" onClick={copy}>
+          {copied ? "Copied" : "Copy LaTeX"}
         </button>
       </div>
 
-      {/* Main: grid + output */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          overflow: "hidden",
-          minHeight: 0,
-        }}
-        className="table-gen-layout"
-      >
-        {/* Left: data input grid */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "1.5rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-            minWidth: 0,
-          }}
-          onPaste={handlePaste}
-        >
-          <div>
-            <p
-              style={{
-                margin: "0 0 0.75rem",
-                fontSize: "0.8rem",
-                color: "var(--fg-muted)",
-              }}
-            >
-              Enter your data. Tab to move. <strong>Paste from Excel or CSV</strong> to fill the whole table instantly.
+      <div className="tg-body">
+          {/* (a) data grid */}
+          <section className="tg-panel" onPaste={handlePaste} aria-label="Table data">
+            <h2 className="tg-panel-title">(a) Data</h2>
+            <p className="tg-help">
+              Type in the cells, Tab to move. Paste a block copied from Excel or a CSV file into any cell
+              to fill the whole table. The <code>l</code>, <code>c</code>, <code>r</code> buttons set the
+              alignment of each column.
             </p>
-
-            {/* Align row */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                gap: 4,
-                marginBottom: 4,
-                marginLeft: 0,
-              }}
-            >
-              {aligns.map((a, c) => (
-                <div key={c} style={{ display: "flex", justifyContent: "center", gap: 2 }}>
-                  {(["l", "c", "r"] as Align[]).map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setAlign(c, opt)}
-                      aria-label={`Column ${c + 1}: ${opt === "l" ? "left align" : opt === "c" ? "center" : "right align"}`}
-                      aria-pressed={a === opt}
-                      title={
-                        opt === "l" ? "Left align" : opt === "c" ? "Center" : "Right align"
-                      }
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 4,
-                        border: "1px solid var(--border)",
-                        background: a === opt ? "var(--accent-solid)" : "var(--surface2)",
-                        color: a === opt ? "#fff" : "var(--fg-muted)",
-                        fontSize: "0.62rem",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontFamily: "monospace",
+            <div className="tg-scroll">
+              <div className="tg-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(5.5rem, 1fr))` }}>
+                {aligns.map((a, c) => (
+                  <div key={`a-${c}`} className="tg-align">
+                    {(["l", "c", "r"] as Align[]).map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setAlign(c, opt)}
+                        aria-label={`Column ${c + 1}: ${opt === "l" ? "left align" : opt === "c" ? "center" : "right align"}`}
+                        aria-pressed={a === opt}
+                        title={opt === "l" ? "Left align" : opt === "c" ? "Center" : "Right align"}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+                {data.map((row, r) =>
+                  row.map((cell, c) => (
+                    <input
+                      key={`${r}-${c}`}
+                      value={cell}
+                      className={`tg-cell${r === 0 && headerRow ? " is-header" : ""}`}
+                      aria-label={`Row ${r + 1}, column ${c + 1}${r === 0 && headerRow ? " (header)" : ""}`}
+                      placeholder={r === 0 && headerRow ? `Col ${c + 1}` : ""}
+                      onChange={(e) => setCell(r, c, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Tab" && c === cols - 1 && r === rows - 1) {
+                          e.preventDefault();
+                          addRow();
+                        }
                       }}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              ))}
+                    />
+                  ))
+                )}
+              </div>
             </div>
+          </section>
 
-            {/* Data grid */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                gap: 4,
-              }}
-            >
-              {data.map((row, r) =>
-                row.map((cell, c) => (
-                  <input
-                    key={`${r}-${c}`}
-                    value={cell}
-                    aria-label={`Row ${r + 1}, column ${c + 1}${r === 0 && headerRow ? " (header)" : ""}`}
-                    placeholder={r === 0 && headerRow ? `Col ${c + 1}` : ""}
-                    onChange={(e) => setCell(r, c, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Tab" && c === cols - 1 && r === rows - 1) {
-                        e.preventDefault();
-                        addRow();
-                      }
-                    }}
-                    style={{
-                      padding: "0.4rem 0.55rem",
-                      borderRadius: 5,
-                      border: `1px solid ${r === 0 && headerRow ? "var(--accent)" : "var(--border)"}`,
-                      background:
-                        r === 0 && headerRow ? "var(--surface2)" : "var(--surface)",
-                      color: "var(--fg)",
-                      fontSize: "0.82rem",
-                      fontWeight: r === 0 && headerRow ? 600 : 400,
-                      outline: "none",
-                      width: "100%",
-                    }}
-                  />
-                ))
-              )}
+          {/* (b) typeset preview */}
+          <section className="tg-panel tg-panel-preview" aria-label="Preview">
+            <h2 className="tg-panel-title">(b) Preview</h2>
+            <div className="tg-scroll">
+              <div className="tg-preview">
+                <table className={`tg-pv tg-pv-${borders}`}>
+                  <tbody>
+                    {data.map((row, r) => {
+                      const rule = ruleBelow(r);
+                      const isHeader = headerRow && r === 0;
+                      return (
+                        <tr key={r} className={rule ? `rule-${rule}` : undefined}>
+                          {row.map((cell, c) => {
+                            const style = { textAlign: ALIGN_NAME[aligns[c] ?? "l"] };
+                            return isHeader
+                              ? <th key={c} scope="col" style={style}>{cell || " "}</th>
+                              : <td key={c} style={style}>{cell || " "}</td>;
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <p className="tg-pv-caption">Table 1. Your caption here</p>
+              </div>
             </div>
-          </div>
+          </section>
 
-          {/* Tips */}
-          <div
-            style={{
-              padding: "0.9rem 1rem",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
-              fontSize: "0.8rem",
-              color: "var(--fg-muted)",
-              lineHeight: 1.65,
-            }}
-          >
-            <strong style={{ color: "var(--fg)" }}>Tips:</strong>
-            {" "}Use <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>booktabs</code> for journal submissions: it produces cleaner, publication-ready tables.
-            {" "}<code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>\toprule</code>,{" "}
-            <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>\midrule</code>,{" "}
-            <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3, fontSize: "0.85em" }}>\bottomrule</code> replace vertical lines.
-            Tab through cells; Tab on the last cell adds a new row.
-          </div>
-        </div>
-
-        {/* Right: LaTeX output */}
-        <div
-          style={{
-            width: "46%",
-            borderLeft: "1px solid var(--border)",
-            background: "#1e1e1e",
-            display: "flex",
-            flexDirection: "column",
-            flexShrink: 0,
-            minWidth: 0,
-          }}
-        >
-          <div
-            style={{
-              padding: "0.4rem 0.85rem",
-              borderBottom: "1px solid #2c2c3e",
-              background: "#141419",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              flexShrink: 0,
-            }}
-          >
-            <span
-              style={{
-                fontSize: "0.7rem",
-                color: "#8a88a4",
-                fontFamily: "var(--font-mono), monospace",
-              }}
-            >
-              output.tex
-            </span>
-            <div style={{ flex: 1 }} />
-            <button
-              onClick={copy}
-              style={{
-                fontSize: "0.68rem",
-                padding: "0.18rem 0.55rem",
-                borderRadius: 4,
-                border: "1px solid #28283a",
-                background: "transparent",
-                color: copied ? "#34d399" : "#8a88a4",
-                cursor: "pointer",
-              }}
-            >
-              {copied ? "✓" : "Copy"}
-            </button>
-          </div>
-          <pre
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              margin: 0,
-              padding: "1.25rem 1rem",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: "0.78rem",
-              lineHeight: 1.7,
-              color: "#d4d4d4",
-              background: "transparent",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
-          >
-            {latex}
-          </pre>
-        </div>
+        {/* (c) LaTeX output */}
+        <section className="tg-panel tg-panel-out" aria-label="LaTeX output">
+          <h2 className="tg-panel-title">
+            <span>(c) LaTeX</span>
+            <button type="button" className="btn btn-sm" onClick={copy}>{copied ? "Copied" : "Copy"}</button>
+          </h2>
+          <pre className="codebox tg-code">{latex}</pre>
+          <p className="note">
+            <b>Tip.</b> Use <code>booktabs</code> for journal submissions: <code>\toprule</code>,{" "}
+            <code>\midrule</code> and <code>\bottomrule</code> replace vertical lines. Pressing Tab in the
+            last cell adds a new row.
+          </p>
+        </section>
       </div>
-
-      <style>{`
-        @media (max-width: 700px) {
-          .table-gen-layout { flex-direction: column !important; }
-          .table-gen-layout > div:last-child { width: 100% !important; border-left: none !important; border-top: 1px solid var(--border); }
-        }
-      `}</style>
     </div>
   );
 }
