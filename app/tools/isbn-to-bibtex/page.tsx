@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import BibTexTool from "@/components/BibTexTool";
+import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
@@ -63,9 +63,17 @@ const faqSchema = {
 };
 const breadcrumb = breadcrumbSchema({ name: "ISBN to BibTeX", path: "/tools/isbn-to-bibtex" });
 
-const h2: CSSProperties = { color: "var(--fg)", fontSize: "1.4rem", fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 1rem" };
-const h3: CSSProperties = { color: "var(--fg)", fontSize: "1.02rem", fontWeight: 600, margin: "1.8rem 0 0.5rem" };
-const para: CSSProperties = { color: "var(--fg-muted)", fontSize: "0.95rem", lineHeight: 1.75, margin: "0 0 1rem" };
+const EXAMPLE_QUERY = "9780201633610";
+// Real output of the converter for EXAMPLE_QUERY, pasted verbatim.
+const EXAMPLE_ENTRY = String.raw`@book{Gamma1995_isbn9780201633610,
+  author    = {Erich Gamma and Richard Helm and Ralph Johnson and John Vlissides},
+  title     = {Design Patterns: Elements of Reusable Object-Oriented Software (Addison-Wesley Professional Computing Series)},
+  publisher = {Addison-Wesley Professional},
+  year      = {1995},
+  pages     = {395},
+  isbn      = {9780201633610},
+  note      = {Open Library: https://openlibrary.org/works/OL6030812W}
+}`;
 
 const RELATED = [
   { label: "DOI → BibTeX",    href: "/tools/doi-to-bibtex" },
@@ -88,42 +96,67 @@ export default function IsbnToBibtexPage() {
           tagline="Paste an ISBN-10 or ISBN-13, get a formatted @book entry from Open Library data."
         />
 
-        <section aria-label="About the ISBN to BibTeX converter" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
-            <h2 style={h2}>Books deserve better than hand-typed citations</h2>
-            <p style={para}>
+        <section className="paper bib-paper" aria-label="About the ISBN to BibTeX converter">
+          <h2><span className="secnum">1</span>Books deserve better than hand-typed citations</h2>
+          <p>
               Articles have DOIs; books have ISBNs. Paste the one from the copyright page above and the
               converter looks it up in Open Library and returns a BibTeX <code>@book</code> entry (title,
-              authors, publisher, and year), ready to paste into your <code>.bib</code> file. Handy for
+              authors, publisher, and year), ready to paste into your <code>.bib</code>{" "}file. Handy for
               textbooks in course notes, monographs in a thesis&rsquo; literature review, or methods
               handbooks in a paper.
             </p>
-            <h3 style={h3}>Mind the edition</h3>
-            <p style={para}>
+
+          <figure>
+            <div className="figure bib-fig">
+              <span className="bib-figlabel">Query: <code>{EXAMPLE_QUERY}</code></span>
+              <pre>{EXAMPLE_ENTRY}</pre>
+            </div>
+            <figcaption className="caption">
+              <b>Figure 2.</b> The entry returned for ISBN 9780201633610 (retrieved 11 October 2026). Catalogue titles sometimes carry a series name, as here: trim it before citing.
+            </figcaption>
+          </figure>
+
+          <h3><span className="secnum">1.1</span>Mind the edition</h3>
+          <p>
               An ISBN identifies one specific edition of a book. If your citation includes page numbers,
               make sure the ISBN you convert matches the copy on your desk: editions can differ in
               pagination and content. When in doubt, the copyright page of your copy has the right ISBN.
             </p>
 
-            <h2 style={{ ...h2, marginTop: "2.5rem" }}>Frequently asked questions</h2>
-            {FAQS.map((f) => (
-              <div key={f.q} style={{ marginBottom: "1.3rem" }}>
-                <h3 style={{ ...h3, margin: "0 0 0.35rem" }}>{f.q}</h3>
-                <p style={{ ...para, margin: 0 }}>{f.a}</p>
-              </div>
-            ))}
-
-            <nav aria-label="Related tools" style={{ marginTop: "2.5rem", display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-              {RELATED.map(({ label, href }) => (
-                <Link key={href} href={href} style={{
-                  padding: "0.35rem 0.9rem", borderRadius: 7, border: "1px solid var(--border)",
-                  background: "var(--surface2)", fontSize: "0.82rem", color: "var(--fg-muted)", textDecoration: "none",
-                }}>
-                  {label}
-                </Link>
-              ))}
-            </nav>
+          <h2><span className="secnum">2</span>Accepted input</h2>
+          <p>
+            The field accepts an ISBN in any of the forms of Table 1. The check digit is verified before the lookup, which catches most typing errors.
+          </p>
+          <div className="bib-table">
+            <table className="booktabs">
+              <thead>
+                <tr><th>Form</th><th>Example</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>ISBN-13</td><td><code>9780201633610</code></td></tr>
+                <tr><td>ISBN-13 with hyphens</td><td><code>978-0-201-63361-0</code></td></tr>
+                <tr><td>ISBN-10</td><td><code>0201633612</code></td></tr>
+                <tr><td>With a label</td><td><code>ISBN 978-0-201-63361-0</code></td></tr>
+              </tbody>
+            </table>
           </div>
+          <p className="caption"><b>Table 1.</b> Ways to write the same book number.</p>
+
+          <h2><span className="secnum">3</span>Related tools</h2>
+          <p>
+            The same page also cleans a whole <code>.bib</code> file and looks up the other kinds of
+            identifier. None of these tools needs an account.
+          </p>
+          <nav aria-label="Related tools">
+            <ul className="bib-seealso">
+              {RELATED.map(({ label, href }) => (
+                <li key={href}><Link href={href}>{label}</Link></li>
+              ))}
+            </ul>
+          </nav>
+
+          <h2>Appendix A&ensp;Questions</h2>
+          <Faq items={FAQS} name="isbn-bibtex-faq" />
         </section>
       </main>
       <SiteFooter />
