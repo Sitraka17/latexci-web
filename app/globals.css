@@ -1021,3 +1021,46 @@ a { text-underline-offset: 0.15em; }
 .nav-link[aria-current="page"] { border: 0 !important; box-shadow: none !important; }
 .paper .btn { text-indent: 0; }
 .paper p:has(> .btn) { text-indent: 0; }
+
+/* ─────────────────────────────────────────────────────
+   Tool pages (shared by BibTeX, table, CV, diff, Word)
+   A tool page reads: title block, the tool in a ruled frame, then
+   numbered article sections (.paper) explaining it.
+───────────────────────────────────────────────────── */
+.tool-head { max-width: 1100px; margin: 0 auto; padding: 2.25rem 1.25rem 1.25rem; }
+.tool-head h1 { font-family: var(--font-serif); font-size: clamp(1.7rem, 4vw, 2.2rem); font-weight: 700; line-height: 1.15; margin: 0 0 0.5rem; }
+.tool-head .lede { font-family: var(--font-serif); font-size: 1.08rem; line-height: 1.6; color: var(--fg); margin: 0; max-width: 46rem; }
+.tool-frame { border: 1px solid var(--border); background: var(--surface); }
+.tool-caption { font-family: var(--font-serif); font-size: 0.92rem; text-align: center; margin: 0.6rem 0 0; }
+.tool-caption b { font-weight: 700; }
+
+/* Underlined tabs, like a Beamer navigation line. */
+.tabs { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab { font-family: var(--font-sans); font-size: 0.95rem; padding: 0.55rem 0; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--fg-muted); cursor: pointer; white-space: nowrap; margin-bottom: -1px; }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"], .tab.is-active { color: var(--fg); border-bottom-color: var(--fg); font-weight: 700; }
+
+/* Form fields: label above, hairline box, no rounding. */
+.field { display: flex; flex-direction: column; gap: 0.3rem; font-family: var(--font-sans); }
+.field > label, .field-label { font-size: 0.82rem; color: var(--fg-muted); }
+.input, .field input, .field select, .field textarea {
+  font-family: var(--font-sans); font-size: 0.95rem; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 0.65rem; width: 100%; box-sizing: border-box;
+}
+.input:focus, .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.input.mono, textarea.mono { font-family: var(--font-mono), monospace; font-size: 0.85rem; }
+
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 0.85rem; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+button.btn { cursor: pointer; }
+
+/* Code output panel that follows the theme (no always-dark slab). */
+.codebox { font-family: var(--font-mono), monospace; font-size: 0.84rem; line-height: 1.6; color: var(--fg); background: var(--surface); border: 1px solid var(--border); padding: 0.9rem 1rem; overflow: auto; white-space: pre; margin: 0; }
+
+/* Run-in notes: "Remark.", "Tip.", "Note." in bold, then prose. */
+.note { font-family: var(--font-serif); font-size: 0.98rem; line-height: 1.6; margin: 1rem 0 0; }
+.note b:first-child { font-weight: 700; }
+
+/* Diff colours readable in both themes (were fixed mint and pink). */
+.diff-added   { background: color-mix(in srgb, var(--green) 14%, transparent) !important; color: var(--green) !important; }
+.diff-removed { background: color-mix(in srgb, var(--red) 12%, transparent) !important; color: var(--red) !important; }
