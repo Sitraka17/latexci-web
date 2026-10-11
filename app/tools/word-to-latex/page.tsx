@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import WordToLatex from "@/components/WordToLatex";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
+import "./word.css";
 
 export const metadata: Metadata = {
   title: "Word to LaTeX Converter: .docx to .tex in Your Browser",
@@ -68,10 +68,6 @@ const faqSchema = {
   mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 };
 
-const para: CSSProperties = { color: "var(--fg-muted)", fontSize: "0.95rem", lineHeight: 1.75, margin: "0 0 1rem" };
-const h2: CSSProperties = { color: "var(--fg)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 1rem" };
-const h3: CSSProperties = { color: "var(--fg)", fontSize: "1.02rem", fontWeight: 600, margin: "1.8rem 0 0.5rem" };
-
 export default function WordToLatexPage() {
   return (
     // Scrolling page, not the fixed-height ToolLayout: the converter output
@@ -82,33 +78,42 @@ export default function WordToLatexPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Word to LaTeX", path: "/tools/word-to-latex" })) }} />
       <Navbar />
       <main style={{ flex: 1 }}>
+        <header className="tool-head">
+          <h1>Word to LaTeX converter</h1>
+          <p className="lede">
+            Turn a Word .docx into clean LaTeX: headings, lists, booktabs tables, footnotes, figures and Word
+            equations, with a report of what to check. It is free and asks for a one-click Google sign-in.
+            The .docx is converted in your browser and is never uploaded.
+          </p>
+        </header>
+
         <WordToLatex />
 
-        <section aria-label="About the Word to LaTeX converter" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
-            <h2 style={h2}>What the converter does</h2>
-            <p style={para}>
-              Drop a .docx and the converter rebuilds it as a LaTeX document: Word heading styles become sections,
-              bold and italic become <code>\textbf</code> and <code>\textit</code>, bulleted and numbered lists become
-              <code> itemize</code> and <code>enumerate</code>, tables become booktabs tables, and hyperlinks keep their
-              targets. Equations typed with Word&rsquo;s equation editor are converted to LaTeX math, and every image
-              becomes a figure with a placeholder you can point at the real file.
-            </p>
-            <p style={para}>
-              A quality report counts what was found (headings, tables, equations, images, footnotes, links) and
-              flags what needs a human look, so you know where to check before compiling.
-            </p>
-            <h3 style={h3}>Where to look after converting</h3>
-            <p style={para}>
-              Complex tables with merged cells, custom paragraph styles and very long equations are the usual spots
-              to tidy by hand. Then open the result in the{" "}
-              <Link href="/tools/preview" style={{ color: "var(--accent)" }}>live LaTeX preview</Link>, or start
-              from one of the <Link href="/tools/templates" style={{ color: "var(--accent)" }}>free templates</Link>{" "}
-              and paste the converted body into it.
-            </p>
-            <h2 style={{ ...h2, marginTop: "2.5rem" }}>Frequently asked questions</h2>
-            <Faq items={FAQS} name="word-faq" />
-          </div>
+        <section aria-label="About the Word to LaTeX converter" className="paper w2l-paper">
+          <h2><span className="secnum">1</span>What the converter does</h2>
+          <p>
+            Drop a .docx and the converter rebuilds it as a LaTeX document: Word heading styles become sections,
+            bold and italic become <code>\textbf</code> and <code>\textit</code>, bulleted and numbered lists become
+            <code> itemize</code> and <code>enumerate</code>, tables become booktabs tables, and hyperlinks keep their
+            targets. Equations typed with Word&rsquo;s equation editor are converted to LaTeX math, and every image
+            becomes a figure with a placeholder you can point at the real file.
+          </p>
+          <p>
+            A quality report counts what was found (headings, tables, equations, images, footnotes, links) and
+            flags what needs a human look, so you know where to check before compiling.
+          </p>
+
+          <h2><span className="secnum">2</span>Where to look after converting</h2>
+          <p>
+            Complex tables with merged cells, custom paragraph styles and very long equations are the usual spots
+            to tidy by hand. Then open the result in the{" "}
+            <Link href="/tools/preview">live LaTeX preview</Link>, or start
+            from one of the <Link href="/tools/templates">free templates</Link>{" "}
+            and paste the converted body into it.
+          </p>
+
+          <h2>Appendix A&ensp;Questions</h2>
+          <Faq items={FAQS} name="word-faq" />
         </section>
       </main>
       <SiteFooter />

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import CvBuilder from "@/components/CvBuilder";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
+import "./cv.css";
 
 export const metadata: Metadata = {
   title: "LaTeX CV Generator: Fill a Form, Get a Clean CV",
@@ -65,8 +65,6 @@ const faqSchema = {
 };
 const breadcrumb = breadcrumbSchema({ name: "CV Generator", path: "/tools/cv-builder" });
 
-const para: CSSProperties = { color: "var(--fg-muted)", fontSize: "0.95rem", lineHeight: 1.75, margin: "0 0 1rem" };
-
 export default function CvBuilderPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -75,36 +73,57 @@ export default function CvBuilderPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <Navbar />
       <main style={{ flex: 1 }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "2.25rem 1.5rem 3rem" }}>
-          <h1 style={{ color: "var(--fg)", fontSize: "1.9rem", fontWeight: 800, letterSpacing: "-0.03em", margin: "0 0 0.4rem" }}>
-            LaTeX CV generator
-          </h1>
-          <p style={{ ...para, maxWidth: 720 }}>
+        <header className="tool-head">
+          <h1>LaTeX CV generator</h1>
+          <p className="lede">
             Fill in the form, choose a layout, and get a clean LaTeX CV that compiles. Import your publications from
-            ORCID, then open the result in Overleaf for the PDF. Built on the same layouts as our{" "}
-            <Link href="/tools/templates/cv" style={{ color: "var(--accent)" }}>academic</Link> and{" "}
-            <Link href="/tools/templates/cv-photo" style={{ color: "var(--accent)" }}>industry</Link> CV templates.
+            ORCID, then open the result in Overleaf for the PDF. No account is needed. Built on the same layouts as our{" "}
+            <Link href="/tools/templates/cv">academic</Link> and{" "}
+            <Link href="/tools/templates/cv-photo">industry</Link> CV templates.
           </p>
+        </header>
+
+        <div className="cvb-wrap">
           <CvBuilder />
         </div>
 
-        <section aria-label="About the CV generator" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "3rem 1.5rem" }}>
-            <h2 style={{ color: "var(--fg)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 1rem" }}>Why a LaTeX CV</h2>
-            <p style={para}>
-              Academic hiring committees read many CVs, and a LaTeX CV is easy to recognise: consistent spacing, real
-              small caps, a publication list that stays aligned over several pages. The catch has always been writing
-              it. This generator removes that step: you type your details once, the LaTeX is produced for you, and you
-              keep full control of the source if you want to adjust it.
-            </p>
-            <p style={para}>
-              Looking for a different design? Browse the{" "}
-              <Link href="/tools/templates" style={{ color: "var(--accent)" }}>free LaTeX templates</Link>, including
-              French academic and industry CVs.
-            </p>
-            <h2 style={{ color: "var(--fg)", fontSize: "1.4rem", fontWeight: 700, margin: "2.25rem 0 1rem" }}>Frequently asked questions</h2>
-            <Faq items={FAQS} name="cv-faq" />
+        <section aria-label="About the CV generator" className="paper cvb-paper">
+          <h2><span className="secnum">7</span>Why a LaTeX CV</h2>
+          <p>
+            Academic hiring committees read many CVs, and a LaTeX CV is easy to recognise: consistent spacing, real
+            small caps, a publication list that stays aligned over several pages. The catch has always been writing
+            it. This generator removes that step: you type your details once, the LaTeX is produced for you, and you
+            keep full control of the source if you want to adjust it.
+          </p>
+          <p>
+            Table 1 compares the two layouts. Looking for a different design? Browse the{" "}
+            <Link href="/tools/templates">free LaTeX templates</Link>, including
+            French academic and industry CVs.
+          </p>
+
+          <div style={{ overflowX: "auto", margin: "1.25rem 0 0" }}>
+            <table className="booktabs">
+              <thead>
+                <tr><th>Layout</th><th>Meant for</th><th>What it sets</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Academic</td>
+                  <td>The classic research CV</td>
+                  <td>Dated entries, a publication list, small-caps headings</td>
+                </tr>
+                <tr>
+                  <td>Industry</td>
+                  <td>A compact one-page resume</td>
+                  <td>Bullet points, skill tags, an optional photo slot</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+          <p className="caption"><b>Table 1.</b> The two layouts. Both exist in English and in French.</p>
+
+          <h2>Appendix A&ensp;Questions</h2>
+          <Faq items={FAQS} name="cv-faq" />
         </section>
       </main>
       <SiteFooter />
