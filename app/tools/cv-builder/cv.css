@@ -1,0 +1,41 @@
+/* CV generator (components/CvBuilder.tsx). Shared classes (.tool-head, .field,
+   .btn, .codebox, .note) and the base .cvb-grid / .cvb-out live in globals.css. */
+.tool-head .lede a { color: var(--accent); }
+.cvb-wrap { max-width: 1100px; margin: 0 auto; padding: 0.25rem 1.25rem 0; box-sizing: border-box; }
+.cvb-grid { grid-template-columns: minmax(0, 11fr) minmax(0, 12fr); gap: 2.5rem; }
+@media (max-width: 900px) { .cvb-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Form: numbered sections, like \section in an article. */
+.cvb-form { display: grid; gap: 1.6rem; min-width: 0; }
+.cvb-sec { border: 0; padding: 0; margin: 0; min-width: 0; }
+.cvb-sec > legend { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--fg); padding: 0; }
+.cvb-sec > legend .secnum { display: inline-block; min-width: 1.7rem; }
+.cvb-sec-body { display: grid; gap: 0.8rem; margin-top: 0.7rem; min-width: 0; }
+.cvb-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; min-width: 0; }
+.cvb-form .field { min-width: 0; }
+.cvb-form .field textarea { resize: vertical; line-height: 1.5; }
+
+.cvb-choices { display: flex; flex-wrap: wrap; gap: 0.8rem 2.5rem; font-family: var(--font-sans); }
+.cvb-choice { display: flex; flex-direction: column; gap: 0.35rem; }
+.cvb-options { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; font-size: 0.95rem; color: var(--fg); }
+.cvb-options label { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+.cvb-options input { accent-color: var(--accent-solid); margin: 0; }
+
+/* Repeated items: a hairline above each, no box. */
+.cvb-item { display: grid; gap: 0.7rem; padding-top: 0.75rem; border-top: 1px solid var(--border); min-width: 0; }
+.cvb-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.cvb-item-title { font-family: var(--font-serif); font-weight: 700; font-size: 1.02rem; color: var(--fg); }
+.cvb-add { padding-top: 0.75rem; border-top: 1px solid var(--border); }
+.cvb-orcid { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.8rem; }
+.cvb-hint { font-family: var(--font-sans); font-size: 0.85rem; color: var(--fg-muted); min-width: 0; }
+.cvb-reset { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--fg); }
+
+/* Output column */
+.cvb-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.cvb-note { margin: 0 0 0.75rem; }
+.cvb-fig { margin: 0; min-width: 0; }
+.cvb-code { font-size: 0.78rem; line-height: 1.55; max-height: calc(100vh - 250px); min-height: 18rem; }
+.cvb-code code { font-family: inherit; white-space: pre; }
+@media (max-width: 900px) { .cvb-code { max-height: 70vh; } }
+
+.cvb-paper { margin-top: 1rem; padding-bottom: 3.5rem; width: 100%; box-sizing: border-box; }

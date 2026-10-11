@@ -1,0 +1,56 @@
+/* Word to LaTeX converter (components/WordToLatex.tsx). Shared classes
+   (.tool-head, .tool-frame, .booktabs, .note, .btn) live in globals.css. */
+.w2l { max-width: 1100px; margin: 0 auto; padding: 0.25rem 1.25rem 0; box-sizing: border-box; }
+.w2l-top { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 2.5rem; align-items: stretch; }
+/* The drop zone takes the height of Table 1 beside it. */
+.w2l-top > figure { display: flex; flex-direction: column; }
+.w2l-top > figure > .w2l-drop { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.w2l-top.is-compact { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 900px) { .w2l-top { grid-template-columns: minmax(0, 1fr); gap: 1.75rem; } }
+.w2l-fig { margin: 0; min-width: 0; }
+.w2l-block { margin-top: 1.75rem; }
+
+/* Drop zone: a dashed hairline frame. */
+.tool-frame.w2l-drop {
+  border: 1px dashed var(--fg-muted); padding: 3.4rem 1.5rem; text-align: center; cursor: pointer;
+  font-family: var(--font-sans); color: var(--fg);
+}
+.tool-frame.w2l-drop:hover, .tool-frame.w2l-drop.is-active { border-color: var(--fg); background: var(--surface2); }
+.tool-frame.w2l-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.w2l-icon { display: block; margin: 0 auto 0.9rem; color: var(--fg-muted); }
+.w2l-drop-main { font-size: 1rem; font-weight: 700; margin: 0 0 0.3rem; }
+.w2l-drop-sub { font-size: 0.88rem; color: var(--fg-muted); margin: 0; }
+.w2l-top > figure > .tool-frame.w2l-drop.is-compact { flex-direction: row; justify-content: flex-start; align-items: center; gap: 0.9rem; padding: 0.7rem 1rem; text-align: left; }
+.w2l-drop.is-compact .w2l-icon { margin: 0; width: 19px; height: 24px; flex-shrink: 0; }
+.w2l-drop.is-compact .w2l-drop-main { margin: 0; }
+
+/* Tables */
+.w2l-scroll { overflow-x: auto; }
+.w2l-table th, .w2l-table td { font-size: 0.95rem; padding: 0.4rem 0.6rem; }
+.w2l-table code { font-family: var(--font-tt); font-size: 0.95em; }
+.w2l-table .w2l-num { text-align: right; font-variant-numeric: tabular-nums; width: 4.5rem; }
+.w2l-table .w2l-todo { color: var(--amber); }
+.w2l-muted { color: var(--fg-muted); }
+.w2l-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
+
+.w2l .note { max-width: 46rem; }
+.w2l .note.w2l-error { color: var(--red); }
+
+/* Editor frame: file name and actions on a ruled bar, source below. */
+.w2l-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border);
+}
+.w2l-file { font-family: var(--font-tt); font-size: 0.92rem; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+.w2l-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+/* CodeMirror without a bundled theme: it takes the site tokens, light and dark. */
+.w2l-editor .cm-editor { background: var(--surface) !important; color: var(--fg) !important; }
+.w2l-editor .cm-gutters { background: var(--surface2) !important; color: var(--fg-muted) !important; border-right: 1px solid var(--border) !important; }
+.w2l-editor .cm-activeLine, .w2l-editor .cm-activeLineGutter { background: color-mix(in srgb, var(--fg) 6%, transparent) !important; }
+.w2l-editor .cm-cursor { border-left-color: var(--fg) !important; }
+.w2l-editor .cm-selectionBackground { background: color-mix(in srgb, var(--accent) 28%, transparent) !important; }
+
+/* Article below the tool. */
+.w2l-paper { margin-top: 1rem; padding-bottom: 3.5rem; width: 100%; box-sizing: border-box; }
+.w2l-editor .cm-scroller { font-family: var(--font-mono), monospace !important; line-height: 1.6; }
+.w2l-table code { white-space: nowrap; }

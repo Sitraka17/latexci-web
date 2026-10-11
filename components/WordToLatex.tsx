@@ -347,20 +347,10 @@ export default function WordToLatex() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [report,   setReport]   = useState<QualityReport | null>(null);
   const [needSignIn, setNeedSignIn] = useState(false);
-  const [cmExtensions, setCmExtensions] = useState<unknown[]>([]);
-  const loadCm = useCallback(() => {
-    if (cmExtensions.length > 0) return;
-    Promise.all([
-      import("@codemirror/lang-markdown").then(m => m.markdown()),
-      import("@uiw/codemirror-theme-vscode").then(m => m.vscodeDark),
-    ]).then(exts => setCmExtensions(exts));
-  }, [cmExtensions.length]);
-
   const convert = useCallback(async (file: File) => {
     setFileName(file.name);
     setFileSize(file.size);
     setError(""); setResult(""); setWarnings([]); setReport(null);
-    loadCm();
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "docx";
 
@@ -470,7 +460,7 @@ export default function WordToLatex() {
       setError(String(err));
       setStatus("error");
     }
-  }, [loadCm]);
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: ACCEPTED, maxFiles: 1, maxSize: 20 * 1024 * 1024,
@@ -499,182 +489,151 @@ export default function WordToLatex() {
   const reset = () => { setStatus("idle"); setResult(""); setError(""); setWarnings([]); setReport(null); setFileName(""); setFileSize(0); };
   const fmtSize = (b: number) => b < 1024 ? `${b} B` : b < 1024**2 ? `${(b/1024).toFixed(1)} KB` : `${(b/1024**2).toFixed(1)} MB`;
 
-  const scoreColor = { excellent: "#10b981", good: "#3b82f6", fair: "#f59e0b", "needs-review": "#ef4444" };
-  const scoreLabel = { excellent: "Excellent", good: "Good", fair: "Fair", "needs-review": "Needs review" };
+  const scoreLabel = { excellent: "excellent", good: "good", fair: "fair", "needs-review": "needs review" };
+  const done = status === "done" && !!result;
+  const lineCount = result.split("\n").length;
+
+  const reportRows = report ? [
+    { k: "Sections", v: report.headings, note: <>from Word heading styles, <code>\section</code> to <code>\paragraph</code></> },
+    { k: "Paragraphs", v: report.paragraphs, note: <>plain text, special characters escaped</> },
+    { k: "Tables", v: report.tables, note: <><code>tabular</code> with booktabs rules; check merged cells</> },
+    { k: "Lists", v: report.lists, note: <><code>itemize</code> and <code>enumerate</code></> },
+    { k: "Links", v: report.links, note: <><code>\href</code>, targets kept</> },
+    { k: "Footnotes", v: report.footnotes, note: <><code>\footnote</code>, placed where the mark was</> },
+    { k: "Images", v: report.images, todo: report.images > 0,
+      note: <>to do: save each image next to the .tex as <code>figure-1</code>, <code>figure-2</code>, and so on</> },
+    { k: "Equations (OMML)", v: report.equations, todo: report.equations > 0,
+      note: <>to check: converted in place, best effort; verify the complex ones before compiling</> },
+  ] : [];
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "3rem 1.5rem" }}>
+    <div className="w2l">
 
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-        <h1 style={{
-          fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.03em",
-          background: "var(--accent-solid)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: "0.5rem",
-        }}>
-          Word → LaTeX Converter
-        </h1>
-        <p style={{ color: "var(--fg-muted)", fontSize: "1rem", lineHeight: 1.65, maxWidth: 600, margin: "0 auto" }}>
-          Upload a <code style={{ background: "var(--surface2)", padding: "0.1em 0.4em", borderRadius: 4 }}>.docx</code> and
-          get clean LaTeX with <strong>equation detection</strong>, image stubs, booktabs tables, and a quality report.
-          Everything runs in your browser. Zero upload.
-        </p>
-      </div>
-
-      {/* Drop zone */}
-      <div {...getRootProps()} style={{
-        border: `2px dashed ${isDragActive ? "var(--accent)" : "var(--border)"}`,
-        borderRadius: 12, padding: "3rem 2rem", textAlign: "center", cursor: "pointer",
-        background: isDragActive ? "color-mix(in srgb, var(--accent) 5%, transparent)" : "var(--surface)",
-        transition: "all 0.2s", marginBottom: "1.5rem",
-      }}>
-        <input {...getInputProps()} />
-        <svg width="34" height="42" viewBox="0 0 34 42" aria-hidden="true" style={{ display: "block", margin: "0 auto 0.75rem", color: "var(--fg-muted)" }}>
+      <div className={`w2l-top${done ? " is-compact" : ""}`}>
+        {/* Drop zone */}
+        <figure className="w2l-fig">
+          <div {...getRootProps()} className={`tool-frame w2l-drop${isDragActive ? " is-active" : ""}${done ? " is-compact" : ""}`}>
+            <input {...getInputProps()} />
+            <svg width="34" height="42" viewBox="0 0 34 42" aria-hidden="true" className="w2l-icon">
               <path d="M2 1h20l10 10v30H2z" fill="none" stroke="currentColor" strokeWidth="1.4" />
               <path d="M22 1v10h10M8 20h18M8 26h18M8 32h12" fill="none" stroke="currentColor" strokeWidth="1.2" />
             </svg>
-        {isDragActive ? (
-          <p style={{ color: "var(--accent)", fontWeight: 600, margin: 0 }}>Drop it!</p>
-        ) : (
-          <>
-            <p style={{ color: "var(--fg)", fontWeight: 600, margin: "0 0 0.25rem" }}>Drag & drop a .docx file here</p>
-            <p style={{ color: "var(--fg-muted)", fontSize: "0.88rem", margin: "0 0 0.5rem" }}>or click to browse · max 20 MB</p>
-            <p style={{ color: "var(--fg-muted)", fontSize: "0.78rem", margin: 0, opacity: 0.7 }}>Supports headings · bold/italic · tables · images · footnotes · equations</p>
-          </>
+            {isDragActive ? (
+              <p className="w2l-drop-main">Release to convert.</p>
+            ) : done ? (
+              <p className="w2l-drop-sub">Drop another .docx here, or click to choose one.</p>
+            ) : (
+              <div>
+                <p className="w2l-drop-main">Drop a .docx file here, or click to choose one.</p>
+                <p className="w2l-drop-sub">20 MB at most. A free Google sign-in is asked if you are not signed in yet.</p>
+              </div>
+            )}
+          </div>
+          {!done && (
+            <figcaption className="tool-caption">
+              <b>Figure 1.</b> Drop zone. The file is read by your browser and is never uploaded;
+              .odt and .rtf files return the pandoc command to run.
+            </figcaption>
+          )}
+        </figure>
+
+        {status === "idle" && (
+          <div className="w2l-fig">
+            <h2 className="w2l-sr">What gets converted</h2>
+            <div className="w2l-scroll">
+              <table className="booktabs w2l-table">
+                <thead>
+                  <tr><th>Word feature</th><th>LaTeX output</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Heading 1 to 3 styles</td><td><code>\section</code>, <code>\subsection</code>, <code>\subsubsection</code></td><td>supported</td></tr>
+                  <tr><td>Bold, italic, underline</td><td><code>\textbf</code>, <code>\textit</code>, <code>\underline</code></td><td>supported</td></tr>
+                  <tr><td>Bulleted and numbered lists</td><td><code>itemize</code>, <code>enumerate</code></td><td>supported</td></tr>
+                  <tr><td>Tables</td><td><code>tabular</code> with booktabs rules</td><td>supported</td></tr>
+                  <tr><td>Images</td><td><code>figure</code> with an <code>\includegraphics</code> placeholder</td><td>supported</td></tr>
+                  <tr><td>Hyperlinks</td><td><code>\href</code></td><td>supported</td></tr>
+                  <tr><td>Footnotes</td><td><code>\footnote</code></td><td>supported</td></tr>
+                  <tr><td>Equations (equation editor, OMML)</td><td>inline <code>$…$</code> and display <code>\[…\]</code> math</td><td>supported, best effort</td></tr>
+                  <tr><td>Columns, text boxes, complex layouts</td><td>none</td><td><i>not supported</i></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="tool-caption"><b>Table 1.</b> What gets converted, and into what.</p>
+          </div>
         )}
       </div>
 
+      {status === "idle" && (
+        <p className="note">
+          <b>Remark.</b> Privacy: your file is read entirely in your browser. Nothing is uploaded to any server;
+          the sign-in only records that the converter was used.
+        </p>
+      )}
+
       {status === "converting" && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "1rem 1.25rem", background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid var(--accent)", borderRadius: 8, marginBottom: "1.25rem" }}>
-          <div style={{ width: 16, height: 16, border: "2px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
-          <span style={{ color: "var(--accent)" }}>Converting <strong>{fileName}</strong>…</span>
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        </div>
+        <p className="note" role="status"><b>Converting.</b> {fileName}…</p>
       )}
 
       {status === "error" && (
-        <div style={{ padding: "1rem 1.25rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 8, marginBottom: "1.25rem", color: "#f87171" }}>
-          <strong>Conversion failed.</strong> {error}
-        </div>
+        <p className="note w2l-error" role="alert"><b>Conversion failed.</b> {error}</p>
       )}
 
-      {warnings.length > 0 && status === "done" && (
-        <div style={{ padding: "0.75rem 1rem", background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.3)", borderRadius: 8, marginBottom: "1rem", fontSize: "0.82rem", color: "#ca8a04" }}>
-          <strong>⚠ Conversion notes:</strong>
-          <ul style={{ margin: "0.35rem 0 0", paddingLeft: "1.25rem" }}>
-            {warnings.map((w, i) => <li key={i}>{w}</li>)}
-          </ul>
-        </div>
+      {done && (
+        <p className="note" role="status">
+          <b>Result.</b> {fileName} ({fmtSize(fileSize)}) converted to {lineCount} lines of LaTeX.
+          {report && <> Overall assessment: {scoreLabel[report.score]}.</>}
+        </p>
       )}
 
       {/* Quality report */}
       {report && (
-        <div style={{ marginBottom: "1.25rem", padding: "1rem 1.25rem", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-            <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--fg-muted)", letterSpacing: "0.05em" }}>CONVERSION REPORT</span>
-            <span style={{
-              fontSize: "0.75rem", fontWeight: 700, padding: "0.15rem 0.6rem", borderRadius: 12,
-              background: `${scoreColor[report.score]}18`,
-              color: scoreColor[report.score], border: `1px solid ${scoreColor[report.score]}40`,
-            }}>
-              {scoreLabel[report.score]}
-            </span>
+        <div className="w2l-fig w2l-block">
+          <div className="w2l-scroll">
+            <table className="booktabs w2l-table">
+              <thead>
+                <tr><th>Item</th><th className="w2l-num">Count</th><th>Note</th></tr>
+              </thead>
+              <tbody>
+                {reportRows.map((row) => (
+                  <tr key={row.k}>
+                    <td>{row.k}</td>
+                    <td className="w2l-num">{row.v}</td>
+                    <td className={row.todo ? "w2l-todo" : undefined}>{row.v > 0 ? row.note : <span className="w2l-muted">none found</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.65rem" }}>
-            {[
-              { k: "Sections", v: report.headings, ok: true },
-              { k: "Paragraphs", v: report.paragraphs, ok: true },
-              { k: "Tables", v: report.tables, ok: true },
-              { k: "Lists", v: report.lists, ok: true },
-              { k: "Links", v: report.links, ok: true },
-              { k: "Images", v: report.images, ok: report.images === 0, warn: report.images > 0,
-                note: report.images > 0 ? "→ replace \\includegraphics{figure-N} placeholders with your files" : undefined },
-              { k: "Equations (OMML)", v: report.equations, ok: report.equations === 0, warn: report.equations > 0,
-                note: report.equations > 0 ? "→ check equation stubs at bottom of file" : undefined },
-            ].map(item => (
-              <div key={item.k} title={item.note} style={{
-                padding: "0.3rem 0.7rem", borderRadius: 6, fontSize: "0.78rem",
-                background: item.warn ? "rgba(245,158,11,0.08)" : "var(--surface2)",
-                border: `1px solid ${item.warn ? "rgba(245,158,11,0.3)" : "var(--border)"}`,
-                color: item.warn ? "#ca8a04" : "var(--fg-muted)",
-                cursor: item.note ? "help" : "default",
-              }}>
-                {item.warn ? "⚠ " : item.v > 0 ? "✓ " : ""}{item.k}: <strong>{item.v}</strong>
-              </div>
-            ))}
-          </div>
-          {report.equations > 0 && (
-            <p style={{ margin: "0.6rem 0 0", fontSize: "0.8rem", color: "#ca8a04" }}>
-              ⚠ <strong>{report.equations} equation{report.equations > 1 ? "s" : ""}</strong> converted in place (OMML to LaTeX, best-effort). Check complex ones before compiling.
-            </p>
-          )}
-          {report.images > 0 && (
-            <p style={{ margin: "0.4rem 0 0", fontSize: "0.8rem", color: "var(--fg-muted)" }}>
-              Images have been replaced with <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>\\includegraphics</code> placeholders.
-              Save your images separately and rename them <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>figure-1.png</code>, <code style={{ background: "var(--surface2)", padding: "0 0.3em", borderRadius: 3 }}>figure-2.png</code>, etc.
-            </p>
-          )}
+          <p className="tool-caption"><b>Table 1.</b> Conversion report: what was found in {fileName} and what needs a human look.</p>
         </div>
       )}
+
+      {status === "done" && warnings.map((w, i) => (
+        <p key={i} className="note"><b>Note.</b> {w}</p>
+      ))}
 
       {/* Result */}
-      {status === "done" && result && (
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ color: "var(--green)", fontWeight: 600, fontSize: "0.9rem" }}>✓ {fileName} converted</span>
-              <span style={{ fontSize: "0.75rem", color: "var(--fg-muted)", display: "block" }}>
-                {fmtSize(fileSize)} → {result.split("\n").length} lines · edit before downloading
+      {done && (
+        <figure className="w2l-fig w2l-block">
+          <div className="tool-frame">
+            <div className="w2l-bar">
+              <span className="w2l-file">{fileName.replace(/\.(docx|odt|rtf)$/i, ".tex") || "output.tex"}</span>
+              <span className="w2l-actions">
+                <button type="button" className="btn btn-sm" onClick={reset}>New file</button>
+                <button type="button" className="btn btn-sm" onClick={copyLatex}>{copied ? "Copied" : "Copy LaTeX"}</button>
+                <button type="button" className="btn btn-sm btn-primary" onClick={downloadLatex}>Download .tex</button>
               </span>
             </div>
-            <button onClick={reset} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--fg-muted)", fontSize: "0.8rem", padding: "0.3rem 0.75rem", cursor: "pointer" }}>↑ New file</button>
-            <button onClick={copyLatex} style={{ background: copied ? "rgba(16,185,129,0.12)" : "var(--surface2)", border: `1px solid ${copied ? "var(--green)" : "var(--border)"}`, borderRadius: 6, color: copied ? "var(--green)" : "var(--fg-muted)", fontSize: "0.8rem", padding: "0.3rem 0.8rem", cursor: "pointer" }}>
-              {copied ? "✓ Copied!" : "Copy LaTeX"}
-            </button>
-            <button onClick={downloadLatex} style={{ background: "var(--accent-solid)", border: "none", borderRadius: 6, color: "#fff", fontSize: "0.8rem", padding: "0.3rem 0.8rem", cursor: "pointer", fontWeight: 600 }}>↓ Download .tex</button>
-          </div>
-          <div style={{ border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
-            {cmExtensions.length > 0 ? (
-              <CodeMirror value={result} onChange={setResult}
-                extensions={cmExtensions as import("@uiw/react-codemirror").ReactCodeMirrorProps["extensions"]}
+            <div className="w2l-editor">
+              <CodeMirror value={result} onChange={setResult} theme="none"
                 height="60vh" style={{ fontSize: "12.5px" }}
                 basicSetup={{ lineNumbers: true, highlightActiveLine: true }} />
-            ) : (
-              <textarea value={result} onChange={e => setResult(e.target.value)} style={{
-                width: "100%", height: "60vh", background: "var(--surface)", color: "var(--fg)",
-                border: "none", outline: "none", padding: "1rem",
-                fontFamily: "var(--font-mono), monospace", fontSize: "12.5px",
-                lineHeight: 1.65, resize: "none",
-              }} />
-            )}
+            </div>
           </div>
-        </div>
-      )}
-
-      {status === "idle" && (
-        <div style={{ marginTop: "1.5rem", padding: "1.25rem 1.5rem", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10 }}>
-          <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.92rem", fontWeight: 600 }}>What gets converted</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 2rem", fontSize: "0.84rem", color: "var(--fg-muted)" }}>
-            {[
-              ["✓", "Headings → \\section, \\subsection"],
-              ["✓", "Bold, italic, underline"],
-              ["✓", "Tables → booktabs \\begin{tabular}"],
-              ["✓", "Lists → itemize / enumerate"],
-              ["✓", "Images → \\includegraphics stubs"],
-              ["✓", "Links → \\href"],
-              ["✓", "Equations (OMML) → inline and display LaTeX math"],
-              ["✗", "Complex layouts (columns, text boxes)"],
-            ].map(([icon, text], i) => (
-              <div key={i} style={{ display: "flex", gap: "0.4rem" }}>
-                <span style={{ color: icon === "✓" ? "var(--green)" : "var(--fg-muted)", opacity: icon === "✗" ? 0.5 : 1 }}>{icon}</span>
-                <span>{text}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: "1rem", padding: "0.65rem 0.9rem", background: "var(--surface2)", borderRadius: 7, fontSize: "0.8rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
-            <strong>Privacy:</strong> Your file is read entirely in your browser. Nothing is uploaded to any server.
-          </div>
-        </div>
+          <figcaption className="tool-caption">
+            <b>Figure 1.</b> The converted LaTeX source, {lineCount} lines. Edit it here before copying or downloading.
+          </figcaption>
+        </figure>
       )}
 
       {needSignIn && <SignInPrompt feature="Word to LaTeX" onClose={() => setNeedSignIn(false)} />}
