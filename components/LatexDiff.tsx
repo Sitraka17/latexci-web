@@ -1,8 +1,5 @@
 "use client";
-import {
-  useState, useMemo, useCallback, useEffect, useRef, type ReactNode,
-  type CSSProperties,
-} from "react";
+import { useState, useMemo, useCallback, useEffect, type ReactNode } from "react";
 import * as Diff from "diff";
 import { useDropzone } from "react-dropzone";
 
@@ -47,108 +44,12 @@ In conclusion, primes are truly fascinating objects.
 
 \\end{document}`;
 
-// ── Drag-to-resize hook ───────────────────────────────────────────────────────
-// The caller owns the container ref and attaches it to the element being
-// measured; the hook only reads it inside event handlers/effects, so the
-// returned values are safe to use during render.
-function useDrag(
-  containerRef: React.RefObject<HTMLDivElement | null>,
-  axis: "x" | "y",
-  initial = 50,
-  min = 15,
-  max = 85,
-) {
-  const [pct, setPct] = useState(initial);
-  const dragging = useRef(false);
-
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    dragging.current = true;
-    document.body.style.cursor = axis === "x" ? "col-resize" : "row-resize";
-    document.body.style.userSelect = "none";
-  }, [axis]);
-
-  const reset = useCallback(() => setPct(initial), [initial]);
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragging.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const raw =
-        axis === "x"
-          ? ((e.clientX - rect.left) / rect.width) * 100
-          : ((e.clientY - rect.top) / rect.height) * 100;
-      setPct(Math.max(min, Math.min(max, raw)));
-    };
-    const onUp = () => {
-      if (!dragging.current) return;
-      dragging.current = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [containerRef, axis, min, max]);
-
-  return { pct, onMouseDown, reset };
-}
-
-// ── Drag handle visual ────────────────────────────────────────────────────────
-function DragHandle({
-  axis, onMouseDown, onDoubleClick,
-}: {
-  axis: "x" | "y";
-  onMouseDown: (e: React.MouseEvent) => void;
-  onDoubleClick: () => void;
-}) {
-  const isVert = axis === "y";
-  return (
-    <div
-      onMouseDown={onMouseDown}
-      onDoubleClick={onDoubleClick}
-      title="Drag to resize · double-click to reset"
-      style={{
-        flexShrink: 0,
-        width: isVert ? "100%" : 6,
-        height: isVert ? 6 : "100%",
-        cursor: isVert ? "row-resize" : "col-resize",
-        background: "var(--border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "background 0.15s",
-        zIndex: 10,
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = "var(--accent-solid)")}
-      onMouseLeave={e => (e.currentTarget.style.background = "var(--border)")}
-    >
-      {/* Grip dots */}
-      <div style={{
-        display: "flex",
-        flexDirection: isVert ? "row" : "column",
-        gap: 3, pointerEvents: "none",
-      }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{
-            width: 3, height: 3, borderRadius: "50%",
-            background: "var(--fg-muted)", opacity: 0.5,
-          }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ── Drop-zone editor pane ─────────────────────────────────────────────────────
 function EditorPane({
-  value, onChange, label, color, onClear, onFileName,
+  value, onChange, label, side, onClear, onFileName,
 }: {
   value: string; onChange: (v: string) => void;
-  label: string; color: string; onClear: () => void;
+  label: string; side: "original" | "revised"; onClear: () => void;
   onFileName?: (name: string) => void;
 }) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -162,40 +63,15 @@ function EditorPane({
   });
 
   return (
-    <div {...getRootProps()} style={{
-      flex: 1, display: "flex", flexDirection: "column", overflow: "hidden",
-      outline: isDragActive ? `2px dashed ${color}` : "none",
-      outlineOffset: -2, transition: "outline 0.15s",
-    }}>
+    <div {...getRootProps()} className={`ld-pane ld-pane-${side}${isDragActive ? " is-drop" : ""}`}>
       <input {...getInputProps()} />
-      {/* Pane header */}
-      <div style={{
-        padding: "0.35rem 0.75rem", borderBottom: "1px solid var(--border)",
-        background: "var(--surface2)", display: "flex", alignItems: "center",
-        gap: "0.5rem", flexShrink: 0,
-      }}>
-        <span style={{
-          width: 8, height: 8, borderRadius: "50%",
-          background: color, display: "inline-block", flexShrink: 0,
-        }} />
-        <span style={{ fontSize: "0.8rem", fontWeight: 600, color, flex: 1 }}>
-          {label}
+      <div className="ld-pane-head">
+        <span className="ld-pane-name">{label}</span>
+        <span className="ld-pane-hint">
+          {isDragActive ? "Drop to load" : "paste, or drop a .tex file"}
         </span>
-        <span style={{ fontSize: "0.68rem", color: "var(--fg-muted)" }}>
-          {isDragActive ? "Drop to load" : "drop .tex · paste"}
-        </span>
-        <button
-          onClick={onClear}
-          title="Clear editor"
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: "var(--fg-muted)", fontSize: "0.72rem", padding: "0 0.2rem",
-            lineHeight: 1,
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = "var(--fg)")}
-          onMouseLeave={e => (e.currentTarget.style.color = "var(--fg-muted)")}
-        >
-          ✕
+        <button type="button" className="btn btn-sm ld-clear" onClick={onClear} title="Clear editor">
+          Clear
         </button>
       </div>
       <textarea
@@ -204,14 +80,6 @@ function EditorPane({
         spellCheck={false}
         aria-label={label.startsWith("revised") ? "Revised LaTeX" : "Original LaTeX"}
         placeholder={`Paste ${label} LaTeX here…`}
-        style={{
-          flex: 1, background: isDragActive
-            ? "color-mix(in srgb, var(--accent) 4%, var(--surface))"
-            : "var(--surface)",
-          color: "var(--fg)", border: "none", outline: "none",
-          padding: "0.75rem", fontFamily: "var(--font-mono), monospace",
-          fontSize: "12px", lineHeight: 1.65, resize: "none", width: "100%",
-        }}
       />
     </div>
   );
@@ -281,73 +149,32 @@ function SideBySideDiff({ original, revised, mode }: {
       .filter(p => (side === "left" ? !p.added : !p.removed))
       .map((p, k) =>
         p.added || p.removed
-          ? <mark key={k} style={{ background: p.removed ? "rgba(248,113,113,0.28)" : "rgba(52,211,153,0.28)", color: "inherit", borderRadius: 2 }}>{p.value}</mark>
+          ? <mark key={k}>{p.value}</mark>
           : <span key={k}>{p.value}</span>
       );
   };
 
-  const cellStyle = (side: "left" | "right", kind: string): React.CSSProperties => {
+  const cellClass = (side: "left" | "right", kind: SideBySideRow["kind"]) => {
     const isLeft = side === "left";
-    const bg =
-      kind === "removed" && isLeft ? "rgba(248,113,113,0.12)" :
-      kind === "added"   && !isLeft ? "rgba(52,211,153,0.12)"  :
-      kind === "changed" && isLeft ? "rgba(248,113,113,0.10)"  :
-      kind === "changed" && !isLeft ? "rgba(52,211,153,0.10)"  :
-      "transparent";
-    return {
-      display: "block",
-      padding: "0 0.6rem",
-      background: bg,
-      fontFamily: "var(--font-mono), monospace",
-      fontSize: "12.5px",
-      lineHeight: "1.7",
-      whiteSpace: "pre",
-      color:
-        kind === "removed" && isLeft ? "#f87171" :
-        kind === "added"   && !isLeft ? "#34d399" :
-        kind === "changed" && isLeft ? "#fca5a5" :
-        kind === "changed" && !isLeft ? "#6ee7b7" :
-        "var(--fg-muted)",
-      textDecoration: kind === "removed" && isLeft ? "line-through" : "none",
-      minHeight: "1.7em",
-    };
+    const tone =
+      (kind === "removed" || kind === "changed") && isLeft ? "diff-removed" :
+      (kind === "added" || kind === "changed") && !isLeft ? "diff-added" :
+      "diff-neutral";
+    return `ld-cell ld-cell-${side} ${tone}${kind === "removed" && isLeft ? " is-struck" : ""}`;
   };
 
+  // One grid row per source line, so the two sides stay aligned when a long
+  // line wraps.
   return (
-    <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
-      {/* Left: original */}
-      <div style={{
-        flex: 1, overflowY: "auto", overflowX: "auto",
-        borderRight: "1px solid var(--border)",
-      }}>
-        <div style={{
-          padding: "0.35rem 0.75rem", borderBottom: "1px solid var(--border)",
-          background: "var(--surface2)", fontSize: "0.75rem",
-          fontWeight: 600, color: "#f87171", flexShrink: 0,
-        }}>original.tex (removals)</div>
-        <div style={{ padding: "0.25rem 0" }}>
-          {paired.map((row, idx) => (
-            <span key={idx} style={cellStyle("left", row.kind)}>
-              {renderCell(row, "left")}
-            </span>
-          ))}
+    <div className="ld-sbs">
+      <div className="ld-sbs-head ld-cell-left ld-tone-removed">original.tex (removals)</div>
+      <div className="ld-sbs-head ld-tone-added">revised.tex (additions)</div>
+      {paired.map((row, idx) => (
+        <div key={idx} className="ld-sbs-row">
+          <span className={cellClass("left", row.kind)}>{renderCell(row, "left")}</span>
+          <span className={cellClass("right", row.kind)}>{renderCell(row, "right")}</span>
         </div>
-      </div>
-      {/* Right: revised */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "auto" }}>
-        <div style={{
-          padding: "0.35rem 0.75rem", borderBottom: "1px solid var(--border)",
-          background: "var(--surface2)", fontSize: "0.75rem",
-          fontWeight: 600, color: "#34d399", flexShrink: 0,
-        }}>revised.tex (additions)</div>
-        <div style={{ padding: "0.25rem 0" }}>
-          {paired.map((row, idx) => (
-            <span key={idx} style={cellStyle("right", row.kind)}>
-              {renderCell(row, "right")}
-            </span>
-          ))}
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
@@ -382,26 +209,12 @@ function UnifiedDiff({ diff, mode }: { diff: DiffPart[]; mode: "lines" | "words"
 
   const isEmpty = stats.added === 0 && stats.removed === 0;
 
-  if (isEmpty) return (
-    <div style={{
-      color: "var(--fg-muted)", padding: "3rem", textAlign: "center",
-      fontSize: "0.9rem",
-    }}>
-      <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>✓</div>
-      Files are identical
-    </div>
-  );
+  if (isEmpty) return <p className="ld-empty">The two files are identical.</p>;
 
   if (mode === "words") return (
-    <p style={{ lineHeight: 2, margin: "0.75rem 1.25rem", fontSize: "12.5px", fontFamily: "var(--font-mono), monospace" }}>
+    <p className="ld-words">
       {diff.map((part, i) => (
-        <span key={i} style={{
-          background: part.added ? "rgba(52,211,153,0.2)" : part.removed ? "rgba(248,113,113,0.2)" : "transparent",
-          color: part.added ? "#34d399" : part.removed ? "#f87171" : "var(--fg)",
-          textDecoration: part.removed ? "line-through" : "none",
-          borderRadius: 3,
-          padding: part.added || part.removed ? "0 2px" : 0,
-        }}>
+        <span key={i} className={part.added ? "diff-added" : part.removed ? "diff-removed is-struck" : undefined}>
           {part.value}
         </span>
       ))}
@@ -419,57 +232,27 @@ function UnifiedDiff({ diff, mode }: { diff: DiffPart[]; mode: "lines" | "words"
       const prefix = part.added ? "+" : part.removed ? "−" : " ";
       const num = !part.added ? lineNum++ : null;
       rows.push(
-        <div key={`${pi}-${li}`} style={{ display: "flex" }}>
-          <span style={{
-            width: 36, textAlign: "right", paddingRight: "0.75rem",
-            color: "var(--fg-muted)", fontSize: "11px", lineHeight: "1.7",
-            flexShrink: 0, opacity: 0.5, userSelect: "none",
-          }}>
-            {num ?? ""}
-          </span>
-          <span style={{
-            width: 18, textAlign: "center", flexShrink: 0,
-            lineHeight: "1.7", fontSize: "12px",
-            color: part.added ? "#34d399" : part.removed ? "#f87171" : "var(--fg-muted)",
-          }}>
-            {prefix}
-          </span>
-          <span className={cls} style={{ flex: 1, display: "block" }}>{line || " "}</span>
+        <div key={`${pi}-${li}`} className="ld-line">
+          <span className="ld-num">{num ?? ""}</span>
+          <span className={`ld-sign ${part.added ? "ld-tone-added" : part.removed ? "ld-tone-removed" : ""}`}>{prefix}</span>
+          <span className={`ld-text ${cls}`}>{line || " "}</span>
         </div>
       );
     });
   });
 
-  return <div style={{ padding: "0.25rem 0" }}>{rows}</div>;
+  return <div className="ld-unified">{rows}</div>;
 }
 
 // ── Toolbar button ────────────────────────────────────────────────────────────
+// A toggle carries aria-pressed (styled in diff.css); a plain action does not.
 function TBtn({
-  children, onClick, active, title, danger,
+  children, onClick, active, title,
 }: {
-  children: ReactNode; onClick: () => void; active?: boolean; title?: string; danger?: boolean;
+  children: ReactNode; onClick: () => void; active?: boolean; title?: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        background: active ? "color-mix(in srgb, var(--accent) 18%, transparent)" : "var(--surface)",
-        border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
-        borderRadius: 5, color: active ? "var(--accent2)" : danger ? "#f87171" : "var(--fg-muted)",
-        fontSize: "0.73rem", padding: "0.22rem 0.65rem",
-        cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
-        fontWeight: active ? 600 : 400,
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = danger ? "#f87171" : "var(--accent)";
-        e.currentTarget.style.color = danger ? "#f87171" : "var(--fg)";
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = active ? "var(--accent)" : "var(--border)";
-        e.currentTarget.style.color = active ? "var(--accent2)" : danger ? "#f87171" : "var(--fg-muted)";
-      }}
-    >
+    <button type="button" className="btn btn-sm" onClick={onClick} title={title} aria-pressed={active}>
       {children}
     </button>
   );
@@ -499,15 +282,6 @@ export default function LatexDiff() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
-
-  // Resizable panels
-  // "stacked" layout: editorSplit = % of height for editors row
-  //                   hSplit      = % of editors width for original
-  // "columns" layout: hSplit splits original | revised | diff (we reuse hSplit for orig/revised)
-  const editorDragRef = useRef<HTMLDivElement>(null);
-  const hSplitDragRef = useRef<HTMLDivElement>(null);
-  const editorDrag = useDrag(editorDragRef, "y", 42, 15, 82);
-  const hSplitDrag = useDrag(hSplitDragRef, "x", 50, 15, 85);
 
   const diff = useMemo(() =>
     diffMode === "words"
@@ -542,7 +316,7 @@ export default function LatexDiff() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard blocked (permissions / insecure context) — don't show a false "copied"
+      // clipboard blocked (permissions / insecure context): don't show a false "copied"
     }
   }, [diff]);
 
@@ -561,254 +335,152 @@ export default function LatexDiff() {
   const isIdentical = stats.added === 0 && stats.removed === 0;
 
   // ── Toolbar ───────────────────────────────────────────────────────────────
+  // On a phone the three panes become tabs, so the view and layout toggles
+  // (which only make sense with the panes side by side) are left out.
   const toolbar = (
-    <div style={{
-      padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--border)",
-      background: "var(--surface2)", display: "flex", alignItems: "center",
-      gap: "0.5rem", flexShrink: 0, flexWrap: "wrap",
-    }}>
-      {/* Stats */}
-      <span style={{ fontSize: "0.75rem", color: "#34d399", fontWeight: 700 }}>+{stats.added}</span>
-      <span style={{ fontSize: "0.75rem", color: "#f87171", fontWeight: 700 }}>−{stats.removed}</span>
-      <span style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>{stats.unchanged} same</span>
-      {isIdentical && (
-        <span style={{ fontSize: "0.72rem", color: "#34d399", fontWeight: 600 }}>✓ identical</span>
-      )}
-
-      <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
-
-      {/* Diff mode */}
-      <span style={{ fontSize: "0.7rem", color: "var(--fg-muted)" }}>Diff:</span>
-      {(["lines", "words"] as DiffMode[]).map(m => (
-        <TBtn key={m} active={diffMode === m} onClick={() => setDiffMode(m)}>{m}</TBtn>
-      ))}
-
-      <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
-
-      {/* View mode */}
-      <span style={{ fontSize: "0.7rem", color: "var(--fg-muted)" }}>View:</span>
-      <TBtn active={viewMode === "unified"}    onClick={() => setViewMode("unified")}>unified</TBtn>
-      <TBtn active={viewMode === "sidebyside"} onClick={() => setViewMode("sidebyside")}>side-by-side</TBtn>
-
-      <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
-
-      {/* Layout */}
-      <span style={{ fontSize: "0.7rem", color: "var(--fg-muted)" }}>Layout:</span>
-      <TBtn
-        active={layout === "stacked"} title="Editors on top, diff on bottom"
-        onClick={() => setLayout("stacked")}
-      >⬛ stacked</TBtn>
-      <TBtn
-        active={layout === "columns"} title="Editors on left, diff on right"
-        onClick={() => setLayout("columns")}
-      >▥ columns</TBtn>
-
-      <div style={{ flex: 1 }} />
-
-      {/* Actions */}
-      <TBtn onClick={swap} title="Swap original ↔ revised">⇄ swap</TBtn>
-      <TBtn active={copied} onClick={copyDiff} title="Copy unified diff to clipboard">
-        {copied ? "✓ copied" : "copy diff"}
-      </TBtn>
-      <input
-        value={patchFile}
-        onChange={(e) => setPatchFile(e.target.value)}
-        aria-label="File name the patch applies to"
-        title="File name the patch applies to (git apply / patch -p1)"
-        spellCheck={false}
-        style={{
-          width: 110, padding: "0.2rem 0.4rem", fontSize: "0.72rem", fontFamily: "var(--font-mono), monospace",
-          background: "var(--surface)", color: "var(--fg)", border: "1px solid var(--border)", borderRadius: 4,
-        }}
-      />
-      <TBtn onClick={downloadPatch} title={`Download a patch for ${patchFile} (git apply)`}>↓ .patch</TBtn>
-    </div>
-  );
-
-  // ── Diff output ───────────────────────────────────────────────────────────
-  const diffOutput = (flex?: string) => (
-    <div style={{
-      flex: flex ?? "1",
-      overflowY: viewMode === "sidebyside" ? "hidden" : "auto",
-      overflowX: "hidden",
-      background: "var(--bg)",
-      minHeight: 0,
-    }}>
-      {viewMode === "sidebyside"
-        ? <SideBySideDiff original={original} revised={revised} mode={diffMode} />
-        : <UnifiedDiff diff={diff} mode={diffMode} />
-      }
-    </div>
-  );
-
-  // ── Mobile layout ─────────────────────────────────────────────────────────
-  if (isMobile) {
-    const tabBtn = (tab: MobileTab): CSSProperties => ({
-      flex: 1, padding: "0.5rem 0.25rem", border: "none", cursor: "pointer",
-      fontSize: "0.78rem", fontWeight: 600,
-      background: mobileTab === tab ? "var(--accent-solid)" : "transparent",
-      color: mobileTab === tab ? "#fff" : "var(--fg-muted)",
-      borderRadius: 0, transition: "background 0.15s",
-    });
-
-    return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-        {/* Tab bar */}
-        <div style={{
-          display: "flex", borderBottom: "1px solid var(--border)",
-          background: "var(--surface2)", flexShrink: 0,
-        }}>
-          <button style={tabBtn("original")} onClick={() => setMobileTab("original")}>
-            <span style={{ color: "#f87171", marginRight: 4 }}>●</span> Original
-          </button>
-          <button style={tabBtn("revised")} onClick={() => setMobileTab("revised")}>
-            <span style={{ color: "#34d399", marginRight: 4 }}>●</span> Revised
-          </button>
-          <button style={tabBtn("diff")} onClick={() => setMobileTab("diff")}>
-            Diff {stats.added > 0 || stats.removed > 0
-              ? <span style={{ fontSize: "0.68rem", opacity: 0.85 }}>+{stats.added}/−{stats.removed}</span>
-              : null}
-          </button>
-        </div>
-
-        {/* Mobile stats + actions bar */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
-          padding: "0.35rem 0.75rem", borderBottom: "1px solid var(--border)",
-          background: "var(--surface)", flexShrink: 0, fontSize: "0.73rem",
-        }}>
-          <span style={{ color: "#34d399", fontWeight: 700 }}>+{stats.added}</span>
-          <span style={{ color: "#f87171", fontWeight: 700 }}>−{stats.removed}</span>
-          <span style={{ color: "var(--fg-muted)" }}>{stats.unchanged} same</span>
-          <div style={{ flex: 1 }} />
-          {/* Diff mode */}
-          {(["lines", "words"] as DiffMode[]).map(m => (
-            <TBtn key={m} active={diffMode === m} onClick={() => setDiffMode(m)}>{m}</TBtn>
-          ))}
-          <TBtn onClick={swap} title="Swap original ↔ revised">⇄</TBtn>
-          <TBtn active={copied} onClick={copyDiff}>{copied ? "✓" : "copy"}</TBtn>
-        </div>
-
-        {/* Content area */}
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          {mobileTab === "original" && (
-            <EditorPane
-              value={original} onChange={setOriginal} onFileName={setPatchFile}
-              label="original.tex" color="#f87171"
-              onClear={() => setOriginal("")}
-            />
-          )}
-          {mobileTab === "revised" && (
-            <EditorPane
-              value={revised} onChange={setRevised} onFileName={setPatchFile}
-              label="revised.tex" color="#34d399"
-              onClear={() => setRevised("")}
-            />
-          )}
-          {mobileTab === "diff" && (
-            <div style={{
-              flex: 1, overflowY: "auto", overflowX: "hidden",
-              background: "var(--bg)",
-            }}>
-              {viewMode === "sidebyside"
-                ? <UnifiedDiff diff={diff} mode={diffMode} /> // sidebyside doesn't fit mobile
-                : <UnifiedDiff diff={diff} mode={diffMode} />
-              }
-            </div>
-          )}
+    <div className="ld-toolbar">
+      <div className="ld-group">
+        <span className="ld-group-label">Compare by</span>
+        <div className="ld-seg">
+          <TBtn active={diffMode === "lines"} onClick={() => setDiffMode("lines")}>Lines</TBtn>
+          <TBtn active={diffMode === "words"} onClick={() => setDiffMode("words")}>Words</TBtn>
         </div>
       </div>
-    );
-  }
 
-  // ── Stacked layout ────────────────────────────────────────────────────────
-  if (layout === "stacked") {
-    return (
-      <div
-        ref={editorDragRef}
-        style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}
-      >
-        {toolbar}
-        {/* Editors row */}
-        <div
-          ref={hSplitDragRef}
-          style={{
-            height: `${editorDrag.pct}%`,
-            display: "flex", flexDirection: "row", flexShrink: 0,
-            borderBottom: "1px solid var(--border)", overflow: "hidden", minHeight: 60,
-          }}
-        >
-          <EditorPane
-            value={original} onChange={setOriginal} onFileName={setPatchFile}
-            label="original.tex" color="#f87171"
-            onClear={() => setOriginal("")}
-          />
-          <DragHandle axis="x" onMouseDown={hSplitDrag.onMouseDown} onDoubleClick={hSplitDrag.reset} />
-          <EditorPane
-            value={revised} onChange={setRevised} onFileName={setPatchFile}
-            label="revised.tex" color="#34d399"
-            onClear={() => setRevised("")}
-          />
-        </div>
-
-        {/* Drag handle: editors ↔ diff */}
-        <DragHandle axis="y" onMouseDown={editorDrag.onMouseDown} onDoubleClick={editorDrag.reset} />
-
-        {/* Diff pane */}
-        {diffOutput()}
-      </div>
-    );
-  }
-
-  // ── Columns layout ────────────────────────────────────────────────────────
-  // Original | Revised | Diff   (3 columns, editors split on left, diff on right)
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      {toolbar}
-      <div
-        ref={hSplitDragRef}
-        style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", minHeight: 0 }}
-      >
-        {/* Left: original editor (hSplitDrag.pct% of total) */}
-        <EditorPane
-          value={original} onChange={setOriginal} onFileName={setPatchFile}
-          label="original.tex" color="#f87171"
-          onClear={() => setOriginal("")}
-        />
-        <DragHandle axis="x" onMouseDown={hSplitDrag.onMouseDown} onDoubleClick={hSplitDrag.reset} />
-        {/* Middle: revised editor */}
-        <EditorPane
-          value={revised} onChange={setRevised} onFileName={setPatchFile}
-          label="revised.tex" color="#34d399"
-          onClear={() => setRevised("")}
-        />
-        {/* Right: diff output — uses editorDrag as a second horiz split */}
-        <div
-          ref={editorDragRef}
-          style={{
-            display: "flex", flexDirection: "row",
-            width: `${100 - editorDrag.pct}%`, minWidth: 120,
-            flexShrink: 0, overflow: "hidden",
-          }}
-        >
-          <DragHandle axis="x" onMouseDown={editorDrag.onMouseDown} onDoubleClick={editorDrag.reset} />
-          <div style={{
-            flex: 1, overflowY: "auto", overflowX: "hidden",
-            background: "var(--bg)", minWidth: 0,
-          }}>
-            <div style={{
-              padding: "0.35rem 0.75rem", borderBottom: "1px solid var(--border)",
-              background: "var(--surface2)", fontSize: "0.75rem",
-              fontWeight: 700, color: "var(--fg-muted)", flexShrink: 0,
-            }}>
-              diff output
-            </div>
-            {viewMode === "sidebyside"
-              ? <SideBySideDiff original={original} revised={revised} mode={diffMode} />
-              : <UnifiedDiff diff={diff} mode={diffMode} />
-            }
+      {!isMobile && (
+        <div className="ld-group">
+          <span className="ld-group-label">View</span>
+          <div className="ld-seg">
+            <TBtn active={viewMode === "unified"} onClick={() => setViewMode("unified")}>Unified</TBtn>
+            <TBtn active={viewMode === "sidebyside"} onClick={() => setViewMode("sidebyside")}>Side by side</TBtn>
           </div>
         </div>
+      )}
+
+      {!isMobile && (
+        <div className="ld-group">
+          <span className="ld-group-label">Layout</span>
+          <div className="ld-seg">
+            <TBtn
+              active={layout === "stacked"} title="Editors on top, diff below"
+              onClick={() => setLayout("stacked")}
+            >Stacked</TBtn>
+            <TBtn
+              active={layout === "columns"} title="Editors on the left, diff on the right"
+              onClick={() => setLayout("columns")}
+            >Columns</TBtn>
+          </div>
+        </div>
+      )}
+
+      <div className="ld-group ld-actions">
+        <button type="button" className="btn btn-sm" onClick={swap} title="Swap original and revised">Swap</button>
+        <button type="button" className="btn btn-sm" onClick={copyDiff} title="Copy unified diff to clipboard">
+          {copied ? "Copied" : "Copy diff"}
+        </button>
+        <input
+          value={patchFile}
+          onChange={(e) => setPatchFile(e.target.value)}
+          aria-label="File name the patch applies to"
+          title="File name the patch applies to (git apply / patch -p1)"
+          spellCheck={false}
+          className="input ld-file"
+        />
+        <button type="button" className="btn btn-sm" onClick={downloadPatch} title={`Download a patch for ${patchFile} (git apply)`}>
+          Download patch
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Panes ─────────────────────────────────────────────────────────────────
+  const originalPane = (
+    <EditorPane
+      value={original} onChange={setOriginal} onFileName={setPatchFile}
+      label="original.tex" side="original"
+      onClear={() => setOriginal("")}
+    />
+  );
+  const revisedPane = (
+    <EditorPane
+      value={revised} onChange={setRevised} onFileName={setPatchFile}
+      label="revised.tex" side="revised"
+      onClear={() => setRevised("")}
+    />
+  );
+
+  const statsLine = (
+    <span className="ld-stats">
+      <span className="ld-tone-added">+{stats.added}</span>
+      <span className="ld-tone-removed">−{stats.removed}</span>
+      <span>{isIdentical ? "identical" : `${stats.unchanged} unchanged`}</span>
+    </span>
+  );
+
+  // Side by side needs the width of a desktop pane; a phone always gets unified.
+  const diffPane = (
+    <div className="ld-diff">
+      <div className="ld-pane-head">
+        <span className="ld-pane-name">Diff</span>
+        {statsLine}
+      </div>
+      <div className="ld-diff-body">
+        {viewMode === "sidebyside" && !isMobile
+          ? <SideBySideDiff original={original} revised={revised} mode={diffMode} />
+          : <UnifiedDiff diff={diff} mode={diffMode} />
+        }
+      </div>
+    </div>
+  );
+
+  // ── Mobile layout: one pane at a time, behind tabs ────────────────────────
+  if (isMobile) {
+    const tab = (id: MobileTab, label: ReactNode) => (
+      <button
+        type="button" role="tab" className="tab"
+        aria-selected={mobileTab === id}
+        onClick={() => setMobileTab(id)}
+      >
+        {label}
+      </button>
+    );
+    return (
+      <div className="ld ld-mobile">
+        {toolbar}
+        <div className="tabs ld-tabs" role="tablist" aria-label="Pane">
+          {tab("original", "Original")}
+          {tab("revised", "Revised")}
+          {tab("diff", stats.added > 0 || stats.removed > 0 ? `Diff (+${stats.added} −${stats.removed})` : "Diff")}
+        </div>
+        {mobileTab === "original" && <div className="ld-editors">{originalPane}</div>}
+        {mobileTab === "revised" && <div className="ld-editors">{revisedPane}</div>}
+        {mobileTab === "diff" && diffPane}
+      </div>
+    );
+  }
+
+  // ── Stacked layout: editors on top, diff below ────────────────────────────
+  if (layout === "stacked") {
+    return (
+      <div className="ld ld-stacked">
+        {toolbar}
+        <div className="ld-editors">
+          {originalPane}
+          {revisedPane}
+        </div>
+        {diffPane}
+      </div>
+    );
+  }
+
+  // ── Columns layout: original | revised | diff ─────────────────────────────
+  return (
+    <div className="ld ld-columns">
+      {toolbar}
+      <div className="ld-cols">
+        {originalPane}
+        {revisedPane}
+        {diffPane}
       </div>
     </div>
   );
