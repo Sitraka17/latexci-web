@@ -54,7 +54,7 @@ export default function NavLinks({ variant }: { variant: "desktop" | "mobile" })
           aria-current={isActive(pathname, "/pricing") ? "page" : undefined}
           onClick={close}
         >
-          ✦ Pricing
+          Pricing
         </Link>
       )}
     </div>

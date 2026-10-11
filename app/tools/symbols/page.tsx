@@ -87,7 +87,7 @@ export default function SymbolsPage() {
               Live{" "}
               <span style={{
                 fontWeight: 600,
-                background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                background: "var(--accent-solid)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}>

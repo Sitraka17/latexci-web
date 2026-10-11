@@ -214,7 +214,7 @@ function CleanTab() {
       {/* Action + stats */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
         <Btn variant="primary" onClick={run} disabled={!input.trim()}>
-          ✦ Clean BibTeX
+          Clean BibTeX
         </Btn>
         {stats && (
           <span style={{ fontSize: "0.82rem", color: "var(--fg-muted)" }}>
@@ -563,11 +563,11 @@ export default function BibTexTool({
   const [tab, setTab] = useState<Tab>(initialTab);
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: "clean",  label: "Clean & Format",  icon: "✦" },
-    { id: "doi",    label: "DOI → BibTeX",    icon: "🔗" },
-    { id: "arxiv",  label: "arXiv → BibTeX",  icon: "📄" },
-    { id: "pmid",   label: "PubMed → BibTeX", icon: "🧬" },
-    { id: "isbn",   label: "ISBN → BibTeX",   icon: "📘" },
+    { id: "clean",  label: "Clean & Format",  icon: "" },
+    { id: "doi",    label: "DOI → BibTeX",    icon: "" },
+    { id: "arxiv",  label: "arXiv → BibTeX",  icon: "" },
+    { id: "pmid",   label: "PubMed → BibTeX", icon: "" },
+    { id: "isbn",   label: "ISBN → BibTeX",   icon: "" },
   ];
 
   return (
@@ -576,7 +576,7 @@ export default function BibTexTool({
       <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
         <h1 style={{
           fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.03em",
-          background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+          background: "var(--accent-solid)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           marginBottom: "0.5rem",
         }}>
@@ -602,7 +602,7 @@ export default function BibTexTool({
             fontSize: "0.88rem", fontWeight: tab === t.id ? 700 : 400,
             cursor: "pointer", marginBottom: -1, transition: "all 0.15s",
           }}>
-            {t.icon} {t.label}
+            {t.label}
           </button>
         ))}
       </div>
@@ -621,7 +621,7 @@ export default function BibTexTool({
         border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
         borderRadius: 8, fontSize: "0.83rem", color: "var(--fg-muted)", lineHeight: 1.7,
       }}>
-        <strong style={{ color: "var(--accent2)" }}>💡 Pro tip:</strong>{" "}
+        <strong style={{ color: "var(--accent2)" }}>Tip.</strong>{" "}
         Clean your .bib file here, then upload it directly to Overleaf via{" "}
         <em>New Project → Upload Project</em>, or paste it into your Overleaf bibliography file.
         The DOI, arXiv, and PubMed lookups give you correctly-formatted entries in one click.

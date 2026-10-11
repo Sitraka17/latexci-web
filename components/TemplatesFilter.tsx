@@ -170,7 +170,7 @@ export default function TemplatesFilter() {
           border: "2px dashed var(--border)", borderRadius: 12,
           color: "var(--fg-muted)", fontSize: "0.9rem",
         }}>
-          <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🔍</p>
+          
           No templates match <strong>&ldquo;{query}&rdquo;</strong> in {active === "All" ? "any category" : active}.
           <br />
           <button
@@ -209,16 +209,11 @@ export default function TemplatesFilter() {
               >
                 {/* Top row: icon + badges */}
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.1rem" }}>
-                  <span style={{ fontSize: "1.6rem", lineHeight: 1 }} aria-hidden="true">{t.icon}</span>
+                  <span />
                   <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
                     {isNew && (
-                      <span style={{
-                        fontSize: "0.6rem", fontWeight: 700, padding: "0.17rem 0.5rem",
-                        borderRadius: 999, background: "rgba(16,185,129,0.12)",
-                        border: "1px solid rgba(16,185,129,0.4)", color: "#10b981",
-                        letterSpacing: "0.06em", textTransform: "uppercase",
-                      }}>
-                        NEW
+                      <span style={{ fontSize: "0.78rem", fontVariant: "small-caps", color: "var(--fg-muted)", padding: "0.1rem 0.2rem" }}>
+                        new
                       </span>
                     )}
                     <span style={{
@@ -258,7 +253,7 @@ export default function TemplatesFilter() {
                       flex: 2,
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       gap: "0.35rem", padding: "0.52rem 0.8rem", borderRadius: 7,
-                      background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+                      background: "var(--accent-solid)",
                       color: "#fff", fontWeight: 600, fontSize: "0.82rem",
                       textDecoration: "none", transition: "opacity 0.15s",
                     }}
@@ -296,7 +291,7 @@ export default function TemplatesFilter() {
         borderRadius: 10,
       }}>
         <h3 style={{ margin: "0 0 0.8rem", fontSize: "0.92rem", fontWeight: 700, color: "var(--fg)" }}>
-          🖼️ How to add a university logo or photo to any template
+          How to add a university logo or photo to any template
         </h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
           {[

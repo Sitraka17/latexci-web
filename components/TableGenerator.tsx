@@ -330,7 +330,7 @@ export default function TableGenerator() {
             border: "1px solid var(--accent)",
             background: copied
               ? "rgba(52,211,153,0.15)"
-              : "linear-gradient(135deg, var(--accent), var(--accent2))",
+              : "var(--accent-solid)",
             color: copied ? "var(--green)" : "#fff",
             fontSize: "0.8rem",
             fontWeight: 600,

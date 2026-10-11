@@ -79,7 +79,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "cv",
     icon: "👤",
-    title: "Academic CV — Elegant (EN)",
+    title: "Academic CV: Elegant (EN)",
     category: "CV",
     desc: "Full academic CV: education, positions, publications (journals/conferences/preprints), grants, teaching, service, and presentations. Classic two-column date layout.",
     source: [
@@ -241,7 +241,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "beamer",
     icon: "📐",
-    title: "Beamer \u2014 Classical",
+    title: "Beamer: Classical",
     category: "Slides",
     desc: "Elegant serif slide deck (Palatino) with a refined title page, navy/gold rules, theorem-style blocks, and clean footline. Compiles with pdflatex.",
     source: [
@@ -401,7 +401,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "beamer-modern",
     icon: "🎞️",
-    title: "Beamer \u2014 Modern",
+    title: "Beamer: Modern",
     category: "Slides",
     desc: "Bold, high-contrast deck: full-colour title slide, sans-serif type, section dividers, a progress bar, and accent callout boxes. Compiles with pdflatex.",
     source: [
@@ -963,7 +963,7 @@ export const TEMPLATES: Template[] = [
     icon: "📚",
     title: "Master's Thesis",
     category: "Thesis",
-    desc: "Streamlined thesis template for MSc/MEng — cleaner than PhD, still professional.",
+    desc: "Streamlined thesis template for MSc/MEng: cleaner than PhD, still professional.",
     source: [
       "\\documentclass[12pt, a4paper]{report}",
       "\\usepackage{lmodern}",
@@ -1055,7 +1055,7 @@ export const TEMPLATES: Template[] = [
     icon: "📡",
     title: "IEEE Conference Paper",
     category: "Research",
-    desc: "Two-column IEEE-style conference paper — standard article class, compiles with any pdflatex install. Swap in IEEEtran.cls for final submission.",
+    desc: "Two-column IEEE-style conference paper: standard article class, compiles with any pdflatex install. Swap in IEEEtran.cls for final submission.",
     source: [
       "% ── IEEE-style conference paper ──────────────────────────────────────────",
       "% Compiles with any standard pdflatex install.",
@@ -1252,7 +1252,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "ec-report",
     icon: "🏛️",
-    title: "Centrale Méditerranée — Rapport de projet",
+    title: "Centrale Méditerranée: Rapport de projet",
     category: "Grande École",
     desc: "Rapport académique avec en-tête Centrale Méditerranée, page de titre, sections bilingues, et mise en forme aux couleurs de l'école.",
     source: [
@@ -1436,7 +1436,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "ec-internship",
     icon: "🏢",
-    title: "Centrale Marseille — Rapport de stage",
+    title: "Centrale Marseille: Rapport de stage",
     category: "Grande École",
     desc: "Rapport de stage officiel : page de titre bilingue, clause de confidentialité, structure complète entreprise + école.",
     source: [
@@ -1595,7 +1595,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "amse-paper",
     icon: "📈",
-    title: "AMSE — Working Paper / Research Note",
+    title: "AMSE: Working Paper / Research Note",
     category: "Grande École",
     desc: "Format papier de recherche pour Aix-Marseille School of Economics : JEL codes, abstract structuré, bibliographie économique.",
     source: [
@@ -1827,7 +1827,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "cv-photo",
     icon: "💼",
-    title: "Industry CV — Modern (EN)",
+    title: "Industry CV: Modern (EN)",
     category: "CV",
     desc: "One-page industry CV: experience with impact metrics, skill tags, projects with tech stack, and optional photo. Designed for software, data, and engineering roles.",
     source: [
@@ -1989,7 +1989,7 @@ export const TEMPLATES: Template[] = [
   {
     id: "beamer-logo",
     icon: "🏫",
-    title: "Beamer — University Presentation",
+    title: "Beamer: University Presentation",
     category: "Slides",
     desc: "Beamer slide deck with university logo slots: \\titlegraphic and \\logo for title slide and every frame. Swap the placeholder with \\includegraphics.",
     source: [

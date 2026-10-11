@@ -238,50 +238,50 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         ? createTheme({
             theme: "light",
             settings: {
-              background: "#faf6f0", foreground: "#2c2018", caret: "#7a5c40",
-              selection: "rgba(180,150,110,0.28)", selectionMatch: "rgba(180,150,110,0.16)",
-              lineHighlight: "#f5efea", gutterBackground: "#f0ebe3",
-              gutterForeground: "#b0a090", gutterBorder: "transparent",
+              background: "#fdfcf9", foreground: "#161616", caret: "#23408e",
+              selection: "rgba(35,64,142,0.16)", selectionMatch: "rgba(35,64,142,0.08)",
+              lineHighlight: "#f6f4ee", gutterBackground: "#f3f1eb",
+              gutterForeground: "#8f8b80", gutterBorder: "transparent",
             },
             styles: [
-              { tag: tags.comment,  color: "#9a8070", fontStyle: "italic" },
-              { tag: tags.keyword,  color: "#6d3fa0", fontWeight: "600" },
-              { tag: tags.operator, color: "#6d3fa0" },
-              { tag: tags.string,   color: "#3d7a50" },
-              { tag: tags.number,   color: "#c06020" },
-              { tag: tags.escape,   color: "#c06020" },
-              { tag: [tags.bracket, tags.paren, tags.brace], color: "#7a5c3c" },
-              { tag: tags.meta,     color: "#a04040" },
-              { tag: tags.tagName,  color: "#6d3fa0" },
+              { tag: tags.comment,  color: "#7d796f", fontStyle: "italic" },
+              { tag: tags.keyword,  color: "#23408e", fontWeight: "600" },
+              { tag: tags.operator, color: "#23408e" },
+              { tag: tags.string,   color: "#2f6b3f" },
+              { tag: tags.number,   color: "#9a4a12" },
+              { tag: tags.escape,   color: "#9a4a12" },
+              { tag: [tags.bracket, tags.paren, tags.brace], color: "#55524a" },
+              { tag: tags.meta,     color: "#8a2d2d" },
+              { tag: tags.tagName,  color: "#23408e" },
               { tag: tags.heading,  fontWeight: "700" },
               { tag: tags.emphasis, fontStyle: "italic" },
               { tag: tags.strong,   fontWeight: "bold" },
-              { tag: [tags.url, tags.link], color: "#3d5fa0" },
+              { tag: [tags.url, tags.link], color: "#23408e" },
               { tag: tags.invalid,  color: "#cc2222" },
             ],
           })
         : createTheme({
             theme: "dark",
             settings: {
-              background: "#13131e", foreground: "#c8c5e0", caret: "#7c6cf8",
-              selection: "rgba(124,108,248,0.22)", selectionMatch: "rgba(124,108,248,0.12)",
-              lineHighlight: "#1c1c2a", gutterBackground: "#0f0f1a",
-              gutterForeground: "#4a4868", gutterBorder: "transparent",
+              background: "#17181c", foreground: "#e2e0da", caret: "#9db2f5",
+              selection: "rgba(157,178,245,0.22)", selectionMatch: "rgba(157,178,245,0.10)",
+              lineHighlight: "#1e2025", gutterBackground: "#131417",
+              gutterForeground: "#5d5b55", gutterBorder: "transparent",
             },
             styles: [
-              { tag: tags.comment,  color: "#5c5a7a", fontStyle: "italic" },
-              { tag: tags.keyword,  color: "#b49ff5", fontWeight: "600" },
-              { tag: tags.operator, color: "#b49ff5" },
+              { tag: tags.comment,  color: "#7d7a72", fontStyle: "italic" },
+              { tag: tags.keyword,  color: "#9db2f5", fontWeight: "600" },
+              { tag: tags.operator, color: "#9db2f5" },
               { tag: tags.string,   color: "#78b08a" },
               { tag: tags.number,   color: "#d4a56a" },
               { tag: tags.escape,   color: "#d4a56a" },
-              { tag: [tags.bracket, tags.paren, tags.brace], color: "#8080b0" },
+              { tag: [tags.bracket, tags.paren, tags.brace], color: "#8d93a6" },
               { tag: tags.meta,     color: "#e07070" },
-              { tag: tags.tagName,  color: "#b49ff5" },
+              { tag: tags.tagName,  color: "#9db2f5" },
               { tag: tags.heading,  fontWeight: "700" },
               { tag: tags.emphasis, fontStyle: "italic" },
               { tag: tags.strong,   fontWeight: "bold" },
-              { tag: [tags.url, tags.link], color: "#6a9fd8" },
+              { tag: [tags.url, tags.link], color: "#9db2f5" },
               { tag: tags.invalid,  color: "#ef4444" },
             ],
           });
@@ -770,11 +770,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         <div className="editor-panel" style={{ flexShrink: 0, background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
           {/* Row 1: filename + pane tabs */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 0.75rem", height: 40 }}>
-            <div style={{ display: "flex", gap: 5, marginRight: 2 }}>
-              {["#ff5f57", "#ffbd2e", "#28c840"].map(c => (
-                <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, display: "inline-block" }} />
-              ))}
-            </div>
             <span style={{
               fontFamily: "var(--font-mono), monospace", fontSize: "0.72rem", color: "var(--fg-muted)", flex: 1,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -796,7 +791,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           </div>
           {/* Row 2: action buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0 0.75rem 0.5rem" }}>
-            <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">⌨</Btn>
+            <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets">Snippets</Btn>
             <Btn active={resetPending} activeColor="#ef4444" onClick={handleReset} title={resetPending ? "Click again to replace with the demo" : "Restore demo"}>{resetPending ? "Sure?" : "Reset"}</Btn>
             <Btn active={clearPending} activeColor="#ef4444" onClick={handleClear} title={clearPending ? "Click again to confirm" : "Clear editor"}>
               {clearPending ? "Sure?" : "Clear"}
@@ -806,7 +801,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               <Btn onClick={saveDoc} title="Save to My documents (kept in this browser)">Save</Btn>
             )}
             <Btn active={shared !== "idle"} activeColor="#10b981" onClick={shareLink} title={shared === "manual" ? "Link is in the address bar" : "Copy shareable URL"}>
-              {shared === "copied" ? "✓" : shared === "manual" ? "URL bar" : "🔗"}
+              {shared === "copied" ? "✓" : shared === "manual" ? "URL bar" : "Share"}
             </Btn>
             {/* PDF export — also available on mobile */}
             <button
@@ -814,8 +809,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               disabled={pdfStatus === "compiling"}
               title={pdfStatus === "error" ? "Compilation failed: check LaTeX syntax" : "Compile & download PDF"}
               style={{
-                background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
-                border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
+                background: pdfStatus === "error" ? "var(--red)" : "var(--accent-solid)",
+                border: "1px solid transparent",
                 borderRadius: 5, color: "#fff",
                 fontSize: "0.72rem", fontWeight: 600,
                 padding: "0.22rem 0.55rem",
@@ -824,7 +819,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                 display: "inline-flex", alignItems: "center", gap: "0.25rem",
               }}
             >
-              {pdfStatus === "compiling" ? "⏳" : pdfStatus === "error" ? "✗" : "↓ PDF"}
+              {pdfStatus === "compiling" ? "PDF…" : pdfStatus === "error" ? "✗" : "↓ PDF"}
             </button>
           </div>
         </div>
@@ -836,11 +831,6 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           background: "var(--surface)", borderBottom: "1px solid var(--border)",
           flexShrink: 0,
         }}>
-          <div style={{ display: "flex", gap: 5, marginRight: 4 }}>
-            {["#ff5f57", "#ffbd2e", "#28c840"].map(c => (
-              <span key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c, display: "inline-block" }} />
-            ))}
-          </div>
           <span style={{ fontFamily: "var(--font-mono), monospace", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
             {docId ? docTitle : "main.tex"}
           </span>
@@ -864,7 +854,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             </span>
           )}
           <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
-          <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">⌨ Snippets</Btn>
+          <Btn active={showSnippets} onClick={() => setShowSnippets(s => !s)} title="Snippets panel">Snippets</Btn>
           <Btn active={resetPending} activeColor="#ef4444" onClick={handleReset} title={resetPending ? "Click again to replace with the demo" : "Restore demo document"}>{resetPending ? "Sure?" : "Reset"}</Btn>
           <Btn active={clearPending} activeColor="#ef4444" onClick={handleClear} title={clearPending ? "Click again to confirm" : "Clear editor"}>
             {clearPending ? "Sure?" : "Clear"}
@@ -874,21 +864,21 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             <Btn onClick={saveDoc} title="Save to My documents (kept in this browser)">Save</Btn>
           )}
           <Btn active={shared !== "idle"} activeColor="#10b981" onClick={shareLink} title="Copy shareable URL">
-            {shared === "copied" ? "✓ Copied!" : shared === "manual" ? "Link in address bar" : "🔗 Share"}
+            {shared === "copied" ? "✓ Copied!" : shared === "manual" ? "Link in address bar" : "Share"}
           </Btn>
           <Btn active={copied} activeColor="#6c63ff" onClick={copyHtml} title="Copy HTML output">
             {copied ? "✓ HTML!" : "Copy HTML"}
           </Btn>
           <Btn onClick={downloadHtml} title="Download as HTML file">↓ HTML</Btn>
           <Btn onClick={downloadMarkdown} title="Download as Markdown (Obsidian / Notion compatible)">↓ MD</Btn>
-          {/* PDF button — always red so it stands out */}
+          {/* PDF button: the one filled control in the toolbar */}
           <button
             onClick={exportPdf}
             disabled={pdfStatus === "compiling"}
             title={pdfStatus === "error" ? "Compilation failed: check your LaTeX syntax" : "Compile & download PDF via YToTech"}
             style={{
-              background: pdfStatus === "error" ? "#7f1d1d" : pdfStatus === "compiling" ? "#7f1d1d" : "#dc2626",
-              border: `1px solid ${pdfStatus === "error" ? "#ef4444" : "#b91c1c"}`,
+              background: pdfStatus === "error" ? "var(--red)" : "var(--accent-solid)",
+              border: "1px solid transparent",
               borderRadius: 5,
               color: "#fff",
               fontSize: "0.75rem",
@@ -901,11 +891,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               alignItems: "center",
               gap: "0.3rem",
             }}
-            onMouseEnter={e => { if (pdfStatus !== "compiling") (e.currentTarget as HTMLButtonElement).style.background = "#b91c1c"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = pdfStatus === "error" ? "#7f1d1d" : "#dc2626"; }}
+            onMouseEnter={e => { if (pdfStatus !== "compiling") (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1.12)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.filter = ""; }}
           >
             {pdfStatus === "compiling" ? (
-              <><span style={{ display: "inline-block", animation: "spin 1s linear infinite", fontSize: "0.7rem" }}>⏳</span> PDF…</>
+              <>Compiling…</>
             ) : pdfStatus === "error" ? (
               <>✗ PDF failed</>
             ) : (

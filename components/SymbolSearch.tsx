@@ -155,7 +155,7 @@ export default function SymbolSearch() {
           position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)",
           color: "var(--fg-muted)", fontSize: "1rem", pointerEvents: "none",
         }}>
-          🔍
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" style={{ display: "block" }}><circle cx="6.5" cy="6.5" r="5" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M10.2 10.2 15 15" stroke="currentColor" strokeWidth="1.4" /></svg>
         </span>
         <input
           ref={inputRef}

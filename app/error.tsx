@@ -9,13 +9,13 @@ import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 
 const TOOLS = [
-  { href: "/tools/preview",       label: "LaTeX Preview",     icon: "⚡" },
-  { href: "/tools/bibtex",        label: "BibTeX Tools",      icon: "📚" },
-  { href: "/tools/diff",          label: "LaTeX Diff",        icon: "↕" },
-  { href: "/tools/word-to-latex", label: "Word → LaTeX",      icon: "↗" },
-  { href: "/tools/symbols",       label: "Symbol Search",     icon: "∑" },
-  { href: "/tools/table",         label: "Table Generator",   icon: "▦" },
-  { href: "/tools/templates",     label: "Templates",         icon: "▤" },
+  { href: "/tools/preview",       label: "LaTeX Preview" },
+  { href: "/tools/bibtex",        label: "BibTeX Tools" },
+  { href: "/tools/diff",          label: "LaTeX Diff" },
+  { href: "/tools/word-to-latex", label: "Word → LaTeX" },
+  { href: "/tools/symbols",       label: "Symbol Search" },
+  { href: "/tools/table",         label: "Table Generator" },
+  { href: "/tools/templates",     label: "Templates" },
 ];
 
 export default function GlobalError({
@@ -115,7 +115,7 @@ export default function GlobalError({
             maxWidth: 560,
           }}
         >
-          {TOOLS.map(({ href, label, icon }) => (
+          {TOOLS.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
@@ -134,7 +134,6 @@ export default function GlobalError({
                 transition: "border-color 0.15s, color 0.15s",
               }}
             >
-              <span style={{ fontSize: "1rem" }}>{icon}</span>
               {label}
             </Link>
           ))}
@@ -146,7 +145,7 @@ export default function GlobalError({
             style={{
               padding: "0.65rem 1.5rem",
               borderRadius: 8,
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+              background: "var(--accent-solid)",
               color: "#fff",
               fontWeight: 700,
               fontSize: "0.9rem",

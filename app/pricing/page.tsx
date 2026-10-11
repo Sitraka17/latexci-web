@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
@@ -56,7 +55,6 @@ const schema = {
   mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 };
 
-const cell: CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid var(--border)", fontSize: "0.9rem", textAlign: "left" };
 
 export default function PricingPage() {
   return (
@@ -64,49 +62,43 @@ export default function PricingPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Pricing", path: "/pricing" })) }} />
       <Navbar />
-      <main style={{ flex: 1, maxWidth: 760, width: "100%", margin: "0 auto", padding: "3rem 1.5rem 4rem", boxSizing: "border-box" }}>
-        <h1 style={{ fontSize: "clamp(1.7rem, 4vw, 2.3rem)", fontWeight: 800, margin: "0 0 0.75rem" }}>latexci is free</h1>
-        <p style={{ fontSize: "1rem", lineHeight: 1.7, color: "var(--fg-muted)", margin: "0 0 2rem" }}>
-          Every tool on this site costs nothing. PDF export and Word to LaTeX ask for a free
-          Google sign-in; everything else works without an account.
+      <main className="paper" style={{ flex: 1, width: "100%", boxSizing: "border-box", paddingBottom: "3.5rem" }}>
+        <header className="titleblock">
+          <h1>latexci is free</h1>
+          <p className="subtitle">Every tool, with no plan to choose and no limit to watch</p>
+        </header>
+        <p>
+          Every tool on this site costs nothing. PDF export and Word to LaTeX ask for a free Google
+          sign-in; everything else works without an account. Table 1 lists what is included.
         </p>
 
-        <div style={{ border: "1px solid var(--border)", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <caption style={{ captionSide: "bottom", textAlign: "left", fontSize: "0.78rem", color: "var(--fg-muted)", padding: "0.5rem 0.75rem" }}>
-              Table 1. What you get, at no cost.
-            </caption>
+        <div style={{ overflowX: "auto", margin: "1.25rem 0 0" }}>
+          <table className="booktabs">
             <thead>
-              <tr>
-                <th style={{ ...cell, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)" }}>Tool</th>
-                <th style={{ ...cell, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)" }}>Included</th>
-              </tr>
+              <tr><th>Tool</th><th>Included</th></tr>
             </thead>
             <tbody>
               {TOOLS.map((t) => (
                 <tr key={t.href}>
-                  <td style={cell}><Link href={t.href} style={{ color: "var(--fg)", fontWeight: 600 }}>{t.name}</Link></td>
-                  <td style={{ ...cell, color: "var(--fg-muted)" }}>{t.note}</td>
+                  <td style={{ whiteSpace: "nowrap" }}><Link href={t.href}>{t.name}</Link></td>
+                  <td>{t.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <p className="caption"><b>Table 1.</b> What you get, at no cost.</p>
 
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "2.5rem 0 0.75rem" }}>Supporting the project</h2>
-        <p style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "var(--fg-muted)", margin: "0 0 1rem" }}>
-          latexci is maintained on spare time. If it saved you an evening of fighting with LaTeX, a coffee helps keep it running.
+        <h2><span className="secnum">1</span>Supporting the project</h2>
+        <p>
+          latexci is maintained on spare time. If it saved you an evening of fighting with LaTeX, a coffee
+          helps keep it running.
         </p>
-        <a
-          href="https://buymeacoffee.com/sitraka"
-          target="_blank"
-          rel="noopener"
-          style={{ display: "inline-block", padding: "0.6rem 1.1rem", background: "#ffdd00", color: "#000", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none", border: "1px solid #e6c700" }}
-        >
-          Buy me a coffee
-        </a>
+        <p style={{ marginTop: "1rem" }}>
+          <a href="https://buymeacoffee.com/sitraka" target="_blank" rel="noopener" className="btn">Buy me a coffee</a>
+        </p>
 
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "2.5rem 0 1rem" }}>Frequently asked questions</h2>
+        <h2>Appendix A&ensp;Questions</h2>
         <Faq items={FAQS} name="pricing-faq" />
       </main>
       <SiteFooter />
