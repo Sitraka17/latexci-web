@@ -7,9 +7,9 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "DOI to BibTeX Converter: Free, via CrossRef",
+  title: "DOI to BibTeX Converter: Paste a DOI, Copy the Entry",
   description:
-    "Paste a DOI (or a doi.org link) and get a clean BibTeX entry in seconds: metadata fetched live from CrossRef, the registry publishers deposit to. Free, no signup.",
+    "Paste a DOI or a doi.org link and copy a BibTeX entry that compiles: publisher metadata from CrossRef, special characters escaped. Free, no account.",
   keywords: [
     "doi to bibtex", "doi to bibtex converter", "doi bibtex generator",
     "crossref bibtex", "get bibtex from doi", "cite doi latex",

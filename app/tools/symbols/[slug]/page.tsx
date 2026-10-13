@@ -74,11 +74,20 @@ function glyphOf(sym: SymbolEntry): string | null {
 
 /** "Delta in LaTeX: \delta (δ)": answer first, glyph last so it reads cleanly. */
 function pageTitle(sym: SymbolEntry): string {
+  // Hand-written for the pages Search Console shows most (lib/symbol-notes.ts).
+  const seo = noteFor(sym.name)?.seo;
+  if (seo) return seo.title;
   const g = glyphOf(sym);
-  return `${displayName(sym)} in LaTeX: ${sym.command}${g ? ` (${g})` : ""}`;
+  const base = `${displayName(sym)} in LaTeX: ${sym.command}${g ? ` (${g})` : ""}`;
+  // Greek letters: name the other case too, the usual reason to open the page.
+  const other = caseCounterpart(sym);
+  const both = other ? `${base} vs ${other.command} (${other.unicode})` : base;
+  return both.length <= 55 ? both : base;
 }
 
 function describe(sym: SymbolEntry): string {
+  const seo = noteFor(sym.name)?.seo;
+  if (seo) return seo.description;
   const where = sym.package === "base" ? "no package needed" : `package ${sym.package}`;
   const note = noteFor(sym.name);
   const alts = note ? note.variants.slice(1).map((v) => v.code).join(", ") : "";
@@ -106,7 +115,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: { canonical: canonPath },
     openGraph: {
       title: pageTitle(sym),
-      description: `LaTeX code for ${sym.name} (${sym.unicode}): ${sym.command}.`,
+      description: noteFor(sym.name)?.seo?.description ?? `LaTeX code for ${sym.name} (${sym.unicode}): ${sym.command}.`,
       url: canonPath,
       type: "website",
     },

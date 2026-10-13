@@ -7,9 +7,9 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "ISBN to BibTeX: @book Entry Generator",
+  title: "ISBN to BibTeX Converter: Paste an ISBN, Copy @book",
   description:
-    "Turn an ISBN into a formatted BibTeX @book entry: title, authors, publisher, and year from Open Library. Cite textbooks and monographs in seconds. Free, no signup.",
+    "Type an ISBN-10 or ISBN-13, hyphens included, and copy a clean @book entry: authors, title, publisher, year, edition. Free, no account, in your browser.",
   keywords: [
     "isbn to bibtex", "isbn bibtex generator", "book bibtex entry",
     "cite book latex", "bibtex book citation", "isbn citation generator",

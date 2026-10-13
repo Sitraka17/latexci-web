@@ -7,9 +7,9 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "PubMed to BibTeX Converter: PMID Lookup",
+  title: "PubMed to BibTeX: Turn a PMID into a Clean @article",
   description:
-    "Convert a PubMed ID (PMID) into a clean BibTeX entry, metadata fetched from NCBI. Built for biomedical and life-science writing. Free, no signup.",
+    "Paste a PMID and copy an @article entry: author names split correctly (particles, Jr, group authors), journal, volume, pages. Free, no account.",
   keywords: [
     "pubmed to bibtex", "pmid to bibtex", "pubmed bibtex generator",
     "cite pubmed article latex", "ncbi bibtex", "pmid citation generator",

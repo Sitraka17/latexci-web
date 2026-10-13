@@ -5,7 +5,7 @@ import { canonicalSymbolSlugs, allTemplateIds } from "@/lib/seo-pages";
 // Date the programmatic per-symbol / per-template pages were created. They are
 // generated from static data, so a single honest creation date is correct until
 // that data changes (bump when lib/symbols.ts or lib/templates.ts changes shape).
-const PROGRAMMATIC_LASTMOD = "2026-10-05";
+const PROGRAMMATIC_LASTMOD = "2026-10-13";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -20,17 +20,17 @@ const LAST_MODIFIED: Record<string, string> = {
   "/": "2026-10-07",
   "/academics": "2026-07-05",
   "/tools/preview": "2026-10-07",
-  "/tools/table": "2026-07-06",
-  "/tools/diff": "2026-07-05",
-  "/tools/word-to-latex": "2026-10-05",
-  "/tools/bibtex": "2026-08-04",
-  "/tools/doi-to-bibtex": "2026-08-04",
-  "/tools/arxiv-to-bibtex": "2026-08-04",
-  "/tools/pubmed-to-bibtex": "2026-08-04",
-  "/tools/isbn-to-bibtex": "2026-08-04",
+  "/tools/table": "2026-10-13",
+  "/tools/diff": "2026-10-13",
+  "/tools/word-to-latex": "2026-10-13",
+  "/tools/bibtex": "2026-10-13",
+  "/tools/doi-to-bibtex": "2026-10-13",
+  "/tools/arxiv-to-bibtex": "2026-10-13",
+  "/tools/pubmed-to-bibtex": "2026-10-13",
+  "/tools/isbn-to-bibtex": "2026-10-13",
   "/tools/symbols": "2026-07-06",
   "/tools/templates": "2026-07-06",
-  "/tools/cv-builder": "2026-10-03",
+  "/tools/cv-builder": "2026-10-13",
   "/after-overleaf": "2026-07-05",
   "/pricing": "2026-10-07",
   "/privacy": "2026-10-07",

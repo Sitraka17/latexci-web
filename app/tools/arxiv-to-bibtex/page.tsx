@@ -7,9 +7,9 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "arXiv to BibTeX Converter: Instant Citations",
+  title: "arXiv to BibTeX: Paste an ID or URL, Copy the Entry",
   description:
-    "Turn any arXiv ID (2301.07041, arxiv:2301.07041, or the abstract URL) into a ready-to-paste BibTeX entry, with metadata straight from the arXiv API. Free, no signup.",
+    "Paste 2301.07041 or an arxiv.org link and copy a BibTeX entry with the full author list, year, eprint and archivePrefix, built from the arXiv API. Free.",
   keywords: [
     "arxiv to bibtex", "arxiv bibtex generator", "cite arxiv paper latex",
     "arxiv citation bibtex", "bibtex from arxiv id", "arxiv preprint citation",
