@@ -34,7 +34,7 @@ describe("search snippets", () => {
       expect(title.length, `${name} title`).toBeLessThanOrEqual(55); // + " | latexci"
       expect(description.length, `${name} description`).toBeGreaterThanOrEqual(110);
       expect(description.length, `${name} description`).toBeLessThanOrEqual(158);
-      expect(title + description, name).not.toContain("—");
+      expect(title + description, name).not.toContain(String.fromCharCode(0x2014)); // em dash
       expect(title.toLowerCase(), `${name} title`).toContain("latex");
     }
   });
