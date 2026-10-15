@@ -244,6 +244,9 @@ function preamble(d: CvData, geometry: string, extra: string[]): string[] {
     "\\usepackage{lmodern}",
     "% Map every glyph to Unicode so the PDF text can be copied and parsed",
     "\\input{glyphtounicode}\\pdfgentounicode=1",
+    // Silence underfull-line warnings: long French titles produced so many
+    // that the compile service behind the PDF export returned a 500.
+    "\\hbadness=10000",
     `\\usepackage[${L.babel}]{babel}`,
     ...(d.lang === "fr" ? ["\\frenchsetup{StandardItemLabels=true}"] : []),
     "\\usepackage{geometry}",
