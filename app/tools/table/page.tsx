@@ -139,7 +139,8 @@ export default function TablePage() {
             </li>
             <li>
               Press Copy LaTeX and paste the result into the body of your document, then replace the placeholder
-              caption and the <code>tab:your-label</code> label.
+              caption and the <code>tab:your-label</code> label. The caption sits above the table, as is
+              the convention for tables, and the float uses <code>[htbp]</code> so LaTeX can place it.
             </li>
           </ol>
 

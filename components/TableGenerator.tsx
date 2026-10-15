@@ -1,7 +1,9 @@
 "use client";
 import { useState, useCallback, useMemo } from "react";
 
-type Align = "l" | "c" | "r";
+import { buildTableLatex, escapeLatex, type Align, type BorderStyle } from "@/lib/table-latex";
+
+export { escapeLatex };
 
 const DEFAULT_ROWS = 4;
 const DEFAULT_COLS = 3;
@@ -16,20 +18,6 @@ const SAMPLE: string[][] = [
 const SAMPLE_ALIGNS: Align[] = ["l", "c", "r"];
 
 const ALIGN_NAME: Record<Align, "left" | "center" | "right"> = { l: "left", c: "center", r: "right" };
-
-// Single pass: escaping in sequence would re-escape the braces of an earlier
-// replacement (\ -> \textbackslash{} -> \textbackslash\{\}).
-const LATEX_ESCAPES: Record<string, string> = {
-  "\\": "\\textbackslash{}",
-  "&": "\\&", "%": "\\%", "$": "\\$", "#": "\\#", "_": "\\_",
-  "{": "\\{", "}": "\\}",
-  "~": "\\textasciitilde{}",
-  "^": "\\textasciicircum{}",
-};
-
-export function escapeLatex(text: string): string {
-  return text.replace(/[\\&%$#_{}~^]/g, (ch) => LATEX_ESCAPES[ch]);
-}
 
 function makeGrid(rows: number, cols: number, old?: string[][]): string[][] {
   return Array.from({ length: rows }, (_, r) =>
@@ -47,7 +35,7 @@ export default function TableGenerator() {
   const [data, setData] = useState(() => makeGrid(DEFAULT_ROWS, DEFAULT_COLS, SAMPLE));
   const [aligns, setAligns] = useState<Align[]>(() => makeAligns(DEFAULT_COLS, SAMPLE_ALIGNS));
   const [headerRow, setHeaderRow] = useState(true);
-  const [borders, setBorders] = useState<"none" | "simple" | "booktabs">("booktabs");
+  const [borders, setBorders] = useState<BorderStyle>("booktabs");
   const [hlines, setHlines] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -85,56 +73,10 @@ export default function TableGenerator() {
   };
 
   // ── Generate LaTeX ─────────────────────────────────────────────────────
-  const latex = useMemo(() => {
-    const colSpec =
-      borders === "simple"
-        ? `|${aligns.join("|")}|`
-        : aligns.join(" ");
-
-    const lines: string[] = [];
-
-    if (borders === "booktabs") {
-      // A comment, not \usepackage: this snippet is pasted into the document
-      // body, where \usepackage is an error ("Can be used only in preamble").
-      lines.push("% Requires \\usepackage{booktabs} in the preamble");
-    }
-
-    lines.push(`\\begin{table}[h]`);
-    lines.push(`  \\centering`);
-    lines.push(`  \\begin{tabular}{${colSpec}}`);
-
-    if (borders === "simple") lines.push("    \\hline");
-    if (borders === "booktabs") lines.push("    \\toprule");
-
-    data.forEach((row, r) => {
-      const cells = row.map((cell) => (cell ? escapeLatex(cell) : " ")).join(" & ");
-      const isHeader = headerRow && r === 0;
-      const isLast = r === data.length - 1;
-
-      if (isHeader) {
-        // Bold header cells (escape content first, then wrap in \textbf{})
-        const boldCells = row.map((cell) =>
-          cell ? `\\textbf{${escapeLatex(cell)}}` : " "
-        ).join(" & ");
-        lines.push(`    ${boldCells} \\\\`);
-        if (borders === "booktabs") lines.push("    \\midrule");
-        else if (borders === "simple" || hlines) lines.push("    \\hline");
-      } else {
-        lines.push(`    ${cells} \\\\`);
-        if (!isLast && (borders === "simple" || hlines)) lines.push("    \\hline");
-      }
-    });
-
-    if (borders === "booktabs") lines.push("    \\bottomrule");
-    else if (borders === "simple") lines.push("    \\hline");
-
-    lines.push("  \\end{tabular}");
-    lines.push("  \\caption{Your caption here}");
-    lines.push("  \\label{tab:your-label}");
-    lines.push("\\end{table}");
-
-    return lines.join("\n");
-  }, [data, aligns, borders, headerRow, hlines]);
+  const latex = useMemo(
+    () => buildTableLatex({ data, aligns, borders, headerRow, hlines }),
+    [data, aligns, borders, headerRow, hlines],
+  );
 
   const copy = () => {
     navigator.clipboard.writeText(latex).then(() => {
@@ -289,6 +231,7 @@ export default function TableGenerator() {
             <h2 className="tg-panel-title">(b) Preview</h2>
             <div className="tg-scroll">
               <div className="tg-preview">
+                <p className="tg-pv-caption" style={{ margin: "0 0 0.7rem" }}>Table 1. Your caption here</p>
                 <table className={`tg-pv tg-pv-${borders}`}>
                   <tbody>
                     {data.map((row, r) => {
@@ -307,7 +250,6 @@ export default function TableGenerator() {
                     })}
                   </tbody>
                 </table>
-                <p className="tg-pv-caption">Table 1. Your caption here</p>
               </div>
             </div>
           </section>
