@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { bibText, normalizeDoi } from "@/lib/bib-escape";
-import { formatEntry, parseBibTeX } from "@/lib/bibtex";
+import { bibText, normalizeDoi, protectTitleCaps } from "@/lib/bib-escape";
+import { formatEntry, parseBibTeX, splitAuthors } from "@/lib/bibtex";
 
 export const runtime = "edge";
 
@@ -11,11 +11,31 @@ const DOI_RE = /^10\.\d{4,}[\w.()/:;-]*\/\S+$/;
 /** Fields that hold identifiers or links: never LaTeX-escaped. */
 const RAW_FIELDS = new Set(["url", "doi", "issn", "isbn", "eprint", "archiveprefix", "file"]);
 
+/** True when a registry `url` only restates the DOI (doi.org / dx.doi.org). */
+function urlDuplicatesDoi(url: string, doi: string): boolean {
+  if (!doi) return false;
+  let u = url.trim();
+  try { u = decodeURIComponent(u); } catch { /* keep as given */ }
+  const target = normalizeDoi(u);
+  return target !== u && target.toLowerCase() === normalizeDoi(doi).toLowerCase();
+}
+
+/** Remove empty names from an author list ("Smith, John and " -> "Smith, John"). */
+function dropEmptyNames(list: string): string {
+  return splitAuthors(list)
+    .map(n => n.trim())
+    .filter(n => n !== "" && n !== "{}" && !/^[,\s]*$/.test(n))
+    .join(" and ");
+}
+
 /**
  * Registry BibTeX is not TeX-safe: CrossRef emits `journal={Computers &amp;
  * Security}` (an XML entity, and a raw `&` once decoded), which stops
  * pdflatex with "Misplaced alignment tab". Decode entities and escape every
  * text field; identifiers and URLs stay raw, bare macros (month=May) stay bare.
+ * CrossRef quirks are fixed on the way: a `url` that only repeats the DOI is
+ * dropped, page ranges use `--`, empty author names are removed, and title
+ * capitals (DNA, COVID-19) are braced.
  */
 function sanitiseRegistryBib(bib: string): string {
   const entries = parseBibTeX(bib);
@@ -26,6 +46,18 @@ function sanitiseRegistryBib(bib: string): string {
       if (bare.has(k) || RAW_FIELDS.has(k)) continue;
       e.fields[k] = bibText(v, { keepMath: true });
     }
+    if (e.fields.title && !bare.has("title")) e.fields.title = protectTitleCaps(e.fields.title);
+    if (e.fields.pages && !bare.has("pages")) {
+      e.fields.pages = e.fields.pages.replace(/\s*[-\u2010-\u2015\u2212]+\s*/g, "--");
+    }
+    for (const k of ["author", "editor"]) {
+      if (e.fields[k] && !bare.has(k)) {
+        const cleaned = dropEmptyNames(e.fields[k]);
+        if (cleaned) e.fields[k] = cleaned;
+        else delete e.fields[k];
+      }
+    }
+    if (e.fields.url && urlDuplicatesDoi(e.fields.url, e.fields.doi ?? "")) delete e.fields.url;
     return formatEntry(e, false, true);
   }).join("\n\n");
 }

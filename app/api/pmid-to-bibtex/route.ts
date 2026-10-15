@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { bibText, pubmedAuthor, safeKeyPart, type PubmedAuthor } from "@/lib/bib-escape";
+import { bibText, protectTitleCaps, pubmedAuthor, safeKeyPart, titleCaseJournal, type PubmedAuthor } from "@/lib/bib-escape";
 
 export const runtime = "edge";
 
@@ -48,8 +48,11 @@ export async function GET(req: NextRequest) {
     // ── Extract fields ────────────────────────────────────────────────────────
     // PubMed titles may carry inline HTML (<i>in vivo</i>) and entities.
     const stripTags = (v: string) => v.replace(/<\/?(?:i|b|u|em|strong|sup|sub|scp)>/gi, "");
-    const title   = bibText(stripTags(article.title as string ?? "").trim().replace(/\.$/, ""));
-    const journal = bibText(article.fulljournalname as string ?? article.source ?? "");
+    const title   = protectTitleCaps(bibText(stripTags(article.title as string ?? "").trim().replace(/\.$/, "")));
+    // NLM full names are sentence case ("The New England journal of medicine").
+    const journal = article.fulljournalname
+      ? bibText(titleCaseJournal(article.fulljournalname as string))
+      : bibText(article.source as string ?? "");
     const volume  = (article.volume as string ?? "").trim();
     const issue   = (article.issue as string ?? "").trim();
     const pages   = (article.pages as string ?? "").trim();

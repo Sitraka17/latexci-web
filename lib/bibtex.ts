@@ -154,6 +154,36 @@ function findEntryEnd(src: string, start: number, close: "}" | ")"): number {
   return src.length;
 }
 
+/**
+ * Raw text of the @preamble and @string blocks, in source order. The parser
+ * expands @string macros into the entries, but a cleaned file must still
+ * carry both (the preamble may define commands the entries use).
+ */
+export function extractSpecialBlocks(src: string): { preambles: string[]; strings: string[] } {
+  const preambles: string[] = [];
+  const strings: string[] = [];
+  const cleaned = src.replace(/^%[^\n]*/gm, "");
+  let i = 0;
+  while (i < cleaned.length) {
+    const at = cleaned.indexOf("@", i);
+    if (at === -1) break;
+    i = at + 1;
+    const typeStart = i;
+    while (i < cleaned.length && /[a-zA-Z]/.test(cleaned[i])) i++;
+    const type = cleaned.slice(typeStart, i).toLowerCase();
+    if (!type) continue;
+    while (i < cleaned.length && /\s/.test(cleaned[i])) i++;
+    const open = cleaned[i];
+    if (open !== "{" && open !== "(") continue;
+    const end = findEntryEnd(cleaned, i + 1, open === "{" ? "}" : ")");
+    const block = cleaned.slice(at, Math.min(end + 1, cleaned.length)).trim();
+    i = end + 1;
+    if (type === "preamble") preambles.push(block);
+    else if (type === "string") strings.push(block);
+  }
+  return { preambles, strings };
+}
+
 export function parseBibTeX(src: string): BibEntry[] {
   const entries: BibEntry[] = [];
   const macros = new Map<string, Macro>();
@@ -265,25 +295,67 @@ function hasTopLevelComma(s: string): boolean {
   return false;
 }
 
-/** Normalize "First von Last" → "von Last, First"; braced names stay intact. */
-function normalizeAuthorName(name: string): string {
-  name = name.trim();
-  if (!name) return name;
-  if (hasTopLevelComma(name)) return name; // already "Last, First"
-  const parts = topLevelTokens(name);
-  if (parts.length < 2) return name;       // single token or one braced group
-  // A lowercase particle (von, van der, de) starts the family name.
+/** Name suffixes BibTeX keeps in the "Jr" part: Jr., Sr., II, III, IV. */
+const NAME_SUFFIX = /^(?:Jr|Sr|Jnr|Snr)\.?$|^(?:II|III|IV|V|VI)$/;
+
+/** Split at commas at brace depth 0. */
+function topLevelCommaParts(s: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const c of s) {
+    if (c === "{") depth++;
+    else if (c === "}") depth = Math.max(0, depth - 1);
+    if (c === "," && depth === 0) { out.push(cur.trim()); cur = ""; } else cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+/** "First von Last" -> { first, last }: a lowercase particle starts the family name. */
+function splitFirstLast(parts: string[]): { first: string; last: string } {
   let lastStart = parts.length - 1;
   for (let k = 1; k < parts.length - 1; k++) {
     if (/^[a-z]/.test(parts[k])) { lastStart = k; break; }
   }
-  const last = parts.slice(lastStart).join(" ");
-  const first = parts.slice(0, lastStart).join(" ");
+  return { first: parts.slice(0, lastStart).join(" "), last: parts.slice(lastStart).join(" ") };
+}
+
+/**
+ * Normalize "First von Last" -> "von Last, First" and "First Last Jr." ->
+ * "Last, Jr., First" (BibTeX's three-part form); braced names stay intact.
+ */
+function normalizeAuthorName(name: string): string {
+  name = name.trim();
+  if (!name) return name;
+  if (hasTopLevelComma(name)) {
+    // "John Smith, Jr." is First Last plus a suffix, not "Last, First".
+    const pieces = topLevelCommaParts(name);
+    if (pieces.length === 2 && NAME_SUFFIX.test(pieces[1])) {
+      const parts = topLevelTokens(pieces[0]);
+      if (parts.length >= 2) {
+        const { first, last } = splitFirstLast(parts);
+        return `${last}, ${pieces[1]}, ${first}`;
+      }
+    }
+    return name; // already "Last, First" or "Last, Jr, First"
+  }
+  const parts = topLevelTokens(name);
+  if (parts.length < 2) return name;       // single token or one braced group
+  if (parts.length >= 3 && NAME_SUFFIX.test(parts[parts.length - 1])) {
+    const suffix = parts.pop()!;
+    const { first, last } = splitFirstLast(parts);
+    return `${last}, ${suffix}, ${first}`;
+  }
+  const { first, last } = splitFirstLast(parts);
   return `${last}, ${first}`;
 }
 
-/** Split an author list on `and` at brace depth 0 only. */
-function splitAuthors(raw: string): string[] {
+/**
+ * Split an author list on `and` at brace depth 0 only. A dangling `and` at
+ * either end yields an empty name, which callers may filter out.
+ */
+export function splitAuthors(raw: string): string[] {
   const out: string[] = [];
   let depth = 0;
   let start = 0;
@@ -292,7 +364,7 @@ function splitAuthors(raw: string): string[] {
     if (c === "{") depth++;
     else if (c === "}") depth = Math.max(0, depth - 1);
     else if (depth === 0 && /\s/.test(c)) {
-      const m = raw.slice(i).match(/^\s+and\s+/i);
+      const m = raw.slice(i).match(/^\s+and(?:\s+|$)/i);
       if (m) {
         out.push(raw.slice(start, i));
         i += m[0].length - 1;
@@ -385,6 +457,10 @@ export function cleanBibTeX(src: string, opts: CleanOptions = {}): CleanResult {
   }
 
   const upper = opts.uppercaseTypes !== false;
-  const output = entries.map(e => formatEntry(e, upper)).join("\n\n");
+  // @preamble first (verbatim), then the @string macros, then the entries.
+  const { preambles, strings } = extractSpecialBlocks(src);
+  const head = [...preambles, ...strings];
+  const body = entries.map(e => formatEntry(e, upper));
+  const output = [...(head.length ? [head.join("\n")] : []), ...body].join("\n\n");
   return { output, stats: { total, removed, fieldsStripped }, warnings };
 }
