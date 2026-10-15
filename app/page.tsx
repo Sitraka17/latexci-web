@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 
 // Figure 1 source, kept verbatim (String.raw: backslashes are LaTeX, not escapes).
 const FIGURE_SOURCE = String.raw`\section{Gaussian integral}
-A beautiful result in analysis:
+The Gaussian integral:
 \[
   \int_{-\infty}^{+\infty} e^{-x^2}\,dx
     = \sqrt{\pi}
@@ -136,7 +136,7 @@ export default function HomePage() {
         <header className="titleblock">
           <h1>The tools Overleaf forgot</h1>
           <p className="subtitle">Free LaTeX utilities for researchers, in the browser</p>
-          <p className="authors">latexci.com &middot; free and open to everyone</p>
+          <p className="authors">Free, in the browser, no installation</p>
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.6rem" }}>
             <Link href="/tools/preview" className="btn btn-primary">Open the live preview</Link>
             <Link href="/tools/bibtex" className="btn">Clean a .bib file</Link>
@@ -160,7 +160,7 @@ export default function HomePage() {
             <pre style={{ margin: 0, fontFamily: "var(--font-tt)", fontSize: "0.88rem", lineHeight: 1.6, whiteSpace: "pre-wrap", color: "var(--fg)" }}>{FIGURE_SOURCE}</pre>
             <div style={{ fontFamily: "var(--font-serif)", color: "var(--fg)" }}>
               <p style={{ margin: "0 0 0.4rem", fontWeight: 700, fontSize: "1.1rem" }}>1&ensp;Gaussian integral</p>
-              <p style={{ margin: 0, fontSize: "1rem" }}>A beautiful result in analysis:</p>
+              <p style={{ margin: 0, fontSize: "1rem" }}>The Gaussian integral:</p>
               <div style={{ fontSize: "1.1rem" }} dangerouslySetInnerHTML={{ __html: HERO_FORMULA }} />
             </div>
           </div>

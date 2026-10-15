@@ -22,7 +22,7 @@ const TOOLS = [
 const LEARN = [
   { label: "Academics hub",  href: "/academics" },
   { label: "Life after Overleaf", href: "/after-overleaf" },
-  { label: "Pricing",        href: "/pricing" },
+  { label: "Free",           href: "/pricing" },
   { label: "GitHub",         href: "https://github.com/Sitraka17/latexci-web", external: true },
 ];
 

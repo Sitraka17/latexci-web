@@ -8,16 +8,30 @@ import "./globals.css";
 // Computer Modern Unicode, the LaTeX typeface with full accent coverage
 // (SIL Open Font License, subset to Latin; see app/fonts/README.txt). Loaded
 // Loaded through next/font for font-display: swap + preload.
+// next/font preloads per call, not per file: the two roman serif weights (the
+// first paint) and the two italics are separate calls sharing one family name,
+// so only the roman files get a <link rel="preload">.
 const cmSerif = localFont({
   src: [
     { path: "./fonts/cmu-serif-500-roman.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/cmu-serif-500-italic.woff2", weight: "400", style: "italic" },
     { path: "./fonts/cmu-serif-700-roman.woff2", weight: "700", style: "normal" },
-    { path: "./fonts/cmu-serif-700-italic.woff2", weight: "700", style: "italic" },
   ],
   variable: "--font-cm-serif",
   display: "swap",
   fallback: ["Times New Roman", "serif"],
+});
+const cmSerifItalic = localFont({
+  src: [
+    { path: "./fonts/cmu-serif-500-italic.woff2", weight: "400", style: "italic" },
+    { path: "./fonts/cmu-serif-700-italic.woff2", weight: "700", style: "italic" },
+  ],
+  // Same family name as the roman call above (next/font names it after the
+  // variable, cmSerif), so italic text picks these faces; checked in the CSS.
+  declarations: [{ prop: "font-family", value: "cmSerif" }],
+  variable: "--font-cm-serif-italic",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
 });
 const cmSans = localFont({
   src: [
@@ -27,6 +41,7 @@ const cmSans = localFont({
   ],
   variable: "--font-cm-sans",
   display: "swap",
+  preload: false,
   fallback: ["Helvetica Neue", "Arial", "sans-serif"],
 });
 const cmTypewriter = localFont({
@@ -119,7 +134,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`h-full ${cmSerif.variable} ${cmSans.variable} ${cmTypewriter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`h-full ${cmSerif.variable} ${cmSerifItalic.variable} ${cmSans.variable} ${cmTypewriter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Anti-flash: read saved theme before first paint — must be synchronous */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('latexci_theme');if(t==='light'||(t==null&&window.matchMedia('(prefers-color-scheme:light)').matches)){document.documentElement.classList.add('light');}}catch(e){}})();` }} />

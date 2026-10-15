@@ -6,7 +6,7 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Pricing: latexci Is Free",
+  title: "latexci Is Free: Every Tool, No Paid Plan",
   description:
     "Every latexci tool is free: live preview, PDF export, Word to LaTeX, BibTeX tools, diff, CV generator and 28 templates. No plan, no limits.",
   alternates: { canonical: "/pricing" },

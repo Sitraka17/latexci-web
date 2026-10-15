@@ -14,3 +14,4 @@
 }
 .sym-dir-link > span { color: var(--fg); }
 .sym-dir-link > code { font-family: var(--font-mono), monospace; }
+.sym-dir-cat-title a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); }

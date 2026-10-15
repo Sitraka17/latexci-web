@@ -6,7 +6,7 @@ import SymbolSearch from "@/components/SymbolSearch";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
 import "./symbols.css";
-import { symbolsByCategory, symbolSlug, canonicalSlug, displayName } from "@/lib/seo-pages";
+import { symbolsByCategory, symbolSlug, canonicalSlug, displayName, categoryHref } from "@/lib/seo-pages";
 
 export const metadata: Metadata = {
   title: "LaTeX Symbol Search: 350+ Symbols with Live Preview",
@@ -161,10 +161,11 @@ export default function SymbolsPage() {
             <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 1.5rem", maxWidth: 640 }}>
               Every symbol has its own page with the command, a rendered preview, the package it needs,
               and related symbols. Handy when you land here from a search like “argmax latex”.
+              Each category heading opens a page with the whole category in one table.
             </p>
             {symbolsByCategory().map(({ category, symbols }) => (
               <div key={category} className="sym-dir-cat">
-                <h3 className="sym-dir-cat-title">{category}</h3>
+                <h3 className="sym-dir-cat-title"><Link href={categoryHref(category)}>{category}</Link></h3>
                 <div className="sym-dir-list">
                   {symbols.map((s) => (
                     <Link

@@ -35,8 +35,10 @@ export default function SignInPrompt({ feature, onClose }: { feature: string; on
           Sign in to use {feature}
         </h2>
         <p style={{ fontSize: "0.88rem", lineHeight: 1.6, color: "var(--fg-muted)", margin: "0 0 1.25rem" }}>
-          It stays free. One click with your Google account, then you come straight back here
-          with your work where you left it.
+          Free, no card, no trial. Google gives us your name and email; we keep them with a count
+          of your sign-ins, PDFs and conversions, stored in the EU. Your documents stay in this
+          browser.{" "}
+          <a href="/privacy" style={{ color: "var(--accent)" }}>Privacy</a>
         </p>
         <a
           ref={btnRef}

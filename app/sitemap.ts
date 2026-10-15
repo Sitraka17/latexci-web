@@ -1,11 +1,16 @@
 export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
-import { canonicalSymbolSlugs, allTemplateIds } from "@/lib/seo-pages";
+import { canonicalSymbolSlugs, allTemplateIds, symbolBySlug, categoryHref } from "@/lib/seo-pages";
+import { noteFor } from "@/lib/symbol-notes";
+import { CATEGORIES } from "@/lib/symbols";
 
 // Date the programmatic per-symbol / per-template pages were created. They are
 // generated from static data, so a single honest creation date is correct until
 // that data changes (bump when lib/symbols.ts or lib/templates.ts changes shape).
 const PROGRAMMATIC_LASTMOD = "2026-10-13";
+// Symbol pages with an editorial note (lib/symbol-notes.ts) and the category
+// hubs were last revised on this date; bump it when the notes change.
+const NOTES_LASTMOD = "2026-10-16";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -28,7 +33,7 @@ const LAST_MODIFIED: Record<string, string> = {
   "/tools/arxiv-to-bibtex": "2026-10-13",
   "/tools/pubmed-to-bibtex": "2026-10-13",
   "/tools/isbn-to-bibtex": "2026-10-13",
-  "/tools/symbols": "2026-07-06",
+  "/tools/symbols": "2026-10-16",
   "/tools/templates": "2026-07-06",
   "/tools/cv-builder": "2026-10-13",
   "/after-overleaf": "2026-07-05",
@@ -79,7 +84,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // still render (200) for generateStaticParams but are not submitted here.
   const symbols: MetadataRoute.Sitemap = canonicalSymbolSlugs().map((slug) => ({
     url: `${BASE_URL}/tools/symbols/${slug}`,
-    lastModified: PROGRAMMATIC_LASTMOD,
+    lastModified: noteFor(symbolBySlug(slug)?.name ?? "") ? NOTES_LASTMOD : PROGRAMMATIC_LASTMOD,
     changeFrequency: "yearly",
     priority: 0.5,
   }));
@@ -90,5 +95,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...core, ...symbols, ...templates];
+  const hubs: MetadataRoute.Sitemap = CATEGORIES.map((c) => ({
+    url: `${BASE_URL}${categoryHref(c)}`,
+    lastModified: NOTES_LASTMOD,
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
+  return [...core, ...hubs, ...symbols, ...templates];
 }
