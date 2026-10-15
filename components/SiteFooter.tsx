@@ -134,7 +134,8 @@ export default function SiteFooter() {
           flexWrap: "wrap", gap: "0.75rem",
         }}>
           <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--fg-muted)" }}>
-            © {YEAR} latexci
+            © {YEAR} latexci. By Sitraka Forler,{" "}
+            <a href="https://sitraka.lu" style={{ color: "var(--fg-muted)" }}>sitraka.lu</a>
           </p>
           <div style={{ display: "flex", gap: "1.25rem" }}>
             {[
