@@ -1,54 +1,6 @@
+// Shown while a tool route streams in. Text-free on purpose: anything typed
+// here precedes the H1 in the streamed HTML, which crawlers read as the page's
+// first words. A plain block of the page colour keeps the layout from jumping.
 export default function ToolLoading() {
-  return (
-    <div
-      style={{
-        height: "calc(100dvh - 54px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--bg)",
-        gap: "0.6rem",
-        flexDirection: "column",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          gap: 5,
-        }}
-      >
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "var(--accent-solid)",
-              display: "inline-block",
-              opacity: 0.3,
-              animation: `dot-pulse 1.2s ${i * 0.2}s ease-in-out infinite`,
-            }}
-          />
-        ))}
-      </div>
-      <span
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--fg-muted)",
-          fontFamily: "var(--font-mono), monospace",
-          letterSpacing: "0.04em",
-        }}
-      >
-        loading tool…
-      </span>
-
-      <style>{`
-        @keyframes dot-pulse {
-          0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
-          40% { opacity: 1; transform: scale(1.25); }
-        }
-      `}</style>
-    </div>
-  );
+  return <div aria-hidden="true" style={{ height: "calc(100dvh - 54px)", background: "var(--bg)" }} />;
 }

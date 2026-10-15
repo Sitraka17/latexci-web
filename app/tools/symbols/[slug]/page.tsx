@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import CopyButton from "@/components/CopyButton";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
-import type { SymbolEntry } from "@/lib/symbols";
+import type { SymbolEntry, SymbolCategory } from "@/lib/symbols";
 import { noteFor } from "@/lib/symbol-notes";
 import { clampDescription } from "@/lib/snippet";
 import {
@@ -18,7 +18,16 @@ import {
   relatedSymbols,
   displayName,
   caseCounterpart,
+  confusedWith,
+  categoryHref,
+  symbolBlurb,
+  symbolPageTitle,
+  previewHref,
+  hubInfo,
 } from "@/lib/seo-pages";
+
+// Date the editorial notes were last revised (TechArticle dateModified).
+const NOTES_MODIFIED = "2026-10-16";
 
 export const dynamicParams = false;
 
@@ -72,18 +81,7 @@ function glyphOf(sym: SymbolEntry): string | null {
   return sym.unicode && [...sym.unicode].length === 1 ? sym.unicode : null;
 }
 
-/** "Delta in LaTeX: \delta (δ)": answer first, glyph last so it reads cleanly. */
-function pageTitle(sym: SymbolEntry): string {
-  // Hand-written for the pages Search Console shows most (lib/symbol-notes.ts).
-  const seo = noteFor(sym.name)?.seo;
-  if (seo) return seo.title;
-  const g = glyphOf(sym);
-  const base = `${displayName(sym)} in LaTeX: ${sym.command}${g ? ` (${g})` : ""}`;
-  // Greek letters: name the other case too, the usual reason to open the page.
-  const other = caseCounterpart(sym);
-  const both = other ? `${base} vs ${other.command} (${other.unicode})` : base;
-  return both.length <= 55 ? both : base;
-}
+const pageTitle = symbolPageTitle;
 
 function describe(sym: SymbolEntry): string {
   const seo = noteFor(sym.name)?.seo;
@@ -170,19 +168,38 @@ export default async function SymbolPage({ params }: Props) {
     },
     ...(note?.pitfall ? [{ q: `What is the most common mistake with ${sym.name} in LaTeX?`, a: note.pitfall }] : []),
   ];
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-  };
+  // FAQPage markup earns no rich result for a site like this one since 2023;
+  // pages with an editorial note declare a TechArticle with its revision date.
+  const articleSchema = note
+    ? {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        headline: pageTitle(sym),
+        description: describe(sym),
+        url: `https://latexci.com/tools/symbols/${canonicalSlug(sym)}`,
+        dateModified: NOTES_MODIFIED,
+        inLanguage: "en",
+        proficiencyLevel: "Beginner",
+        publisher: { "@type": "Organization", name: "latexci", url: "https://latexci.com" },
+      }
+    : null;
   const breadcrumb = breadcrumbSchema(
     { name: "Symbol Search", path: "/tools/symbols" },
+    { name: sym.category, path: categoryHref(sym.category) },
     { name, path: `/tools/symbols/${slug}` },
+  );
+  const confused = confusedWith(sym);
+  const blurb = note ? null : symbolBlurb(sym);
+  const livePreview = previewHref(
+    isText ? (exampleTex ?? sym.command) : `\\[ ${exampleTex ?? sym.command} \\]`,
+    [sym.package, note?.example?.pkg ?? ""],
   );
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      {articleSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <Navbar />
       <main style={{ flex: 1 }}>
@@ -190,6 +207,8 @@ export default async function SymbolPage({ params }: Props) {
           {/* Breadcrumb trail (visible) */}
           <nav aria-label="Breadcrumb" style={{ fontSize: "0.8rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
             <Link href="/tools/symbols" style={{ color: "var(--accent)", textDecoration: "none" }}>LaTeX symbols</Link>
+            <span style={{ margin: "0 0.5rem" }}>›</span>
+            <Link href={categoryHref(sym.category)} style={{ color: "var(--accent)", textDecoration: "none" }}>{sym.category}</Link>
             <span style={{ margin: "0 0.5rem" }}>›</span>
             <span>{name}</span>
           </nav>
@@ -224,12 +243,18 @@ export default async function SymbolPage({ params }: Props) {
                 <CopyButton text={sym.command} label="Copy command" />
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--fg-muted)" }}>
-                <Link href="/tools/symbols" style={{ color: "var(--accent)", textDecoration: "none" }}>{sym.category}</Link>
+                <Link href={categoryHref(sym.category)} style={{ color: "var(--accent)", textDecoration: "none" }}>{sym.category}</Link>
                 {isGlyph ? ` · Unicode ${sym.unicode} (${codepoint})` : ""}
                 {pkg ? ` · needs ${sym.package}` : " · no package needed"}
               </div>
             </div>
           </div>
+
+          <p style={{ ...para, fontSize: "0.88rem", margin: "0.75rem 0 0" }}>
+            Writing a paper? The <Link href="/tools/table" style={{ color: "var(--accent)" }}>table generator</Link> and
+            the <Link href="/tools/bibtex" style={{ color: "var(--accent)" }}>BibTeX cleaner</Link> are one click away,
+            no account.
+          </p>
 
           {/* Curated, compile-verified alternatives for the most-searched symbols */}
           {note && (
@@ -283,9 +308,17 @@ export default async function SymbolPage({ params }: Props) {
               <> This symbol needs the <code style={codeStyle}>{sym.package}</code> package, so add{" "}
                 <code style={codeStyle}>{pkg}</code> to your preamble.</>
             ) : (
-              <> It is part of core LaTeX math, so no extra package is required.</>
+              <> It is part of core LaTeX{isText ? "" : " math"}, so no extra package is required.</>
             )}
           </p>
+          {blurb && (
+            <p style={para}>
+              {/* LaTeX in the generated sentence is set as code, like the rest of the page */}
+              {blurb.split(/(\$[^$]+\$|\\[a-zA-Z]+(?:\{[^}]*\})*|\^\\circ)/g).map((part, i) =>
+                i % 2 ? <code key={i} style={codeStyle}>{part}</code> : part,
+              )}
+            </p>
+          )}
           {exampleHtml && (
             <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "1.25rem 1.5rem", margin: "0 0 1rem" }}>
               <div style={{ fontSize: "0.75rem", color: "var(--fg-muted)", marginBottom: "0.5rem" }}>Example</div>
@@ -296,10 +329,27 @@ export default async function SymbolPage({ params }: Props) {
             </div>
           )}
           <p style={para}>
-            Prefer to see it live? Paste it into the{" "}
-            <Link href="/tools/preview" style={{ color: "var(--accent)" }}>LaTeX preview</Link>{" "}
-            and it renders as you type: no compiler, no signup.
+            <Link href={livePreview} style={{ color: "var(--accent)" }}>Open this example in the live preview</Link>:
+            it renders as you type, with no compiler and no signup.
           </p>
+
+          {confused.length > 0 && (
+            <>
+              <h2 style={h2}>Often confused with</h2>
+              <ul style={{ ...para, paddingLeft: "1.25rem", listStyle: "disc" }}>
+                {confused.map((c) => (
+                  <li key={canonicalSlug(c)}>
+                    <Link href={`/tools/symbols/${canonicalSlug(c)}`} style={{ color: "var(--accent)" }}>
+                      {displayName(c)}
+                    </Link>{" "}
+                    <code style={codeStyle}>{c.command}</code>
+                    {glyphOf(c) ? ` (${c.unicode})` : ""}
+                    {c.description ? `: ${c.description}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {/* Related */}
           {related.length > 0 && (
@@ -324,7 +374,9 @@ export default async function SymbolPage({ params }: Props) {
                 ))}
               </div>
               <p style={{ ...para, marginTop: "1rem" }}>
-                <Link href="/tools/symbols" style={{ color: "var(--accent)" }}>Search all 350+ LaTeX symbols →</Link>
+                <Link href={categoryHref(sym.category)} style={{ color: "var(--accent)" }}>{hubInfo(sym.category as SymbolCategory).h1}: the full table</Link>
+                {" "}or{" "}
+                <Link href="/tools/symbols" style={{ color: "var(--accent)" }}>search all 350+ LaTeX symbols</Link>.
               </p>
             </>
           )}
