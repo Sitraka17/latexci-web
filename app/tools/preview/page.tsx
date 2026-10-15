@@ -38,7 +38,7 @@ const appSchema = {
 const FAQS = [
   {
     q: "Is this a real LaTeX compiler?",
-    a: "No. It's a fast, browser-based preview. Math is rendered with KaTeX and document structure with an HTML renderer, which is what makes it instant. For byte-exact output with full packages, bibliographies, and cross-references, export to PDF or use a full TeX distribution.",
+    a: "No. It's a fast, browser-based preview. Math is rendered with KaTeX and document structure with an HTML renderer, which is what makes it instant. Equation, section, figure, table and theorem numbers and \\ref, \\eqref and \\cref links are worked out in the browser; page layout, packages beyond the common ones, and bibliographies from a .bib file need a real build. For byte-exact output, export to PDF or use a full TeX distribution.",
   },
   {
     q: "Are my files uploaded anywhere?",
@@ -46,7 +46,7 @@ const FAQS = [
   },
   {
     q: "Which math commands are supported?",
-    a: "Everything KaTeX supports (fractions, matrices, aligned environments, big operators, Greek letters, and most AMS-math), plus any macros you define with \\newcommand. Commands that need a full TeX engine or extra packages may not render.",
+    a: "Everything KaTeX supports (fractions, matrices, aligned environments, big operators, Greek letters, and most AMS-math), plus the macros you define with \\newcommand or \\def and the operators you declare with \\DeclareMathOperator, in the preamble or in the body. Quantities written with siunitx (\\qty, \\SI, \\num, \\unit) are shown as plain text. Commands that need a full TeX engine or extra packages may not render.",
   },
   {
     q: "Do I need an account?",
@@ -90,7 +90,7 @@ export default function PreviewPage() {
 
       <Navbar />
 
-      {/* Single top-level heading for the page (visually hidden — the tool itself is the UI). */}
+      {/* Single top-level heading for the page (visually hidden: the tool itself is the UI). */}
       <h1 style={srOnly}>Online LaTeX Preview with KaTeX Math Rendering</h1>
 
       {/* The tool. LatexEditor self-sizes to calc(100dvh - 56px), so it fills the
@@ -108,8 +108,12 @@ export default function PreviewPage() {
             Paste your LaTeX source into the editor and see it rendered beside it, instantly. Math is
             typeset with KaTeX, so equations, fractions, matrices, aligned blocks, Greek letters, and the
             common AMS-math commands update in real time as you type. Document structure is rendered too:
-            sections and subsections, <Code>itemize</Code> and <Code>enumerate</Code> lists, tables, figures
-            with captions, and theorem-style environments. Everything runs locally in your browser: your{" "}
+            numbered chapters and sections, <Code>itemize</Code> and <Code>enumerate</Code> lists (including
+            enumitem labels), <Code>booktabs</Code> tables, figures with captions, and the theorem environments
+            you declare with <Code>{"\\newtheorem"}</Code>, numbered as LaTeX would number them. Equations in{" "}
+            <Code>equation</Code>, <Code>align</Code>, <Code>gather</Code> and <Code>multline</Code> share one
+            counter, each <Code>align</Code> row gets its own number, and <Code>{"\\eqref"}</Code> and{" "}
+            <Code>{"\\cref"}</Code> point to the right row. Everything runs locally in your browser: your{" "}
             <Code>.tex</Code> is never uploaded to a server unless you choose PDF export.
           </p>
 
@@ -117,9 +121,10 @@ export default function PreviewPage() {
           <p style={para}>
             This preview is built for quick checks while you write: does that equation compile, is the table
             shaped right, did the section numbering come out as expected. KaTeX covers the large majority of
-            everyday math, and macros you define with <Code>{"\\newcommand"}</Code> are expanded. It is not a
-            full TeX engine, though: package-specific layout, custom document classes, bibliographies, and
-            references that need multiple compile passes won&rsquo;t match a real build. When you need a final,
+            everyday math, and the macros and operators you define in the preamble are expanded. It is not a
+            full TeX engine, though: page layout, package-specific styling, custom document classes, TikZ
+            pictures, and bibliographies read from a <Code>.bib</Code> file won&rsquo;t match a real build
+            (citations from a <Code>thebibliography</Code> list are numbered). When you need a final,
             publication-ready PDF, export it from here or compile with a full TeX distribution
             such as TeX&nbsp;Live with <Code>latexmk</Code>, or Overleaf.
           </p>

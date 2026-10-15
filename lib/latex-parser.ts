@@ -1,38 +1,53 @@
 /**
- * Client-side LaTeX → HTML converter — two-pass renderer.
+ * Client-side LaTeX to HTML converter, two-pass renderer.
  *
- * Pass 1 (prescan): walk the source in document order to assign
- *   sequential numbers to equations, figures, tables, and bibliography
- *   entries; build labelMap (\\label{key} → display number) and
- *   citeMap (\\bibitem{key} → [N]).
+ * Pre-pass: verbatim material is set aside, comments are dropped, and every
+ *   definition in the WHOLE source (preamble included) is collected:
+ *   \newcommand, \def, \newenvironment, \DeclareMathOperator, \newtheorem,
+ *   \numberwithin. Macros and environments are expanded in the body;
+ *   math operators are returned as KaTeX macros.
  *
- * Pass 2 (render): replace block elements with HTML placeholders,
- *   run processInline() on plain text, split paragraphs, restore.
- *   \\ref / \\eqref / \\cite use the maps from Pass 1.
+ * Pass 1 (prescan): walk the body in document order with one set of LaTeX
+ *   counters to number sections, equations (row by row in align/gather),
+ *   figures, tables, algorithms and theorem-like environments; build the
+ *   label map (key -> number + kind) and the citation map.
+ *
+ * Pass 2 (render): replace block elements with HTML placeholders, run
+ *   processInline() on plain text, split paragraphs, restore. \ref, \eqref,
+ *   \cref and \cite use the maps from Pass 1.
  */
 
 export interface ParseWarning { env: string; reason: string; }
 
-const KNOWN_ENVS = new Set([
-  "document", "abstract", "itemize", "enumerate", "figure", "wrapfigure",
-  "table", "verbatim", "lstlisting", "tabular", "equation", "equation*",
-  "align", "align*", "gather", "gather*", "matrix", "pmatrix", "bmatrix",
-  "vmatrix", "array", "cases", "split", "multline", "multline*",
-  "theorem", "proof", "lemma", "definition", "proposition", "corollary",
-  "remark", "example", "thebibliography",
-  // Layout / formatting environments handled below
-  "center", "flushleft", "flushright", "minipage", "multicols",
-  "tabbing", "quote", "quotation", "verse", "description", "longtable",
-  // CS / algorithms
-  "algorithm", "algorithmic", "algorithm2e", "algorithmicx", "algpseudocode",
-  "lstlisting",
-  // Beamer
-  "frame", "block", "alertblock", "exampleblock", "columns", "column", "onlyenv",
-  // Other common packages
-  "tikzpicture", "pgfpicture", "comment",
+export interface LatexHtmlResult {
+  html: string;
+  warnings: ParseWarning[];
+  /** KaTeX macros collected from the source (\DeclareMathOperator). */
+  macros: Record<string, string>;
+}
+
+// Environments that are not rendered specially but whose content is shown
+// as-is (no warning, no label).
+const TRANSPARENT_ENVS = new Set([
+  "document", "titlepage", "subequations", "sloppypar", "landscape", "samepage",
+  "singlespace", "onehalfspace", "doublespace", "spacing", "otherlanguage", "small",
+  "footnotesize", "scriptsize", "large", "Large", "normalsize", "tabbing", "split",
+  "matrix", "pmatrix", "bmatrix", "vmatrix", "array", "cases", "frontmatter",
+  "mainmatter", "backmatter", "appendices", "refsection", "adjustbox", "threeparttable",
+  "tablenotes", "savenotes", "spacing", "raggedright", "raggedleft", "Center",
 ]);
 
-// Placeholder tokens — cannot appear in valid LaTeX
+// Theorem-like environments rendered even without a \newtheorem declaration
+// (unnumbered, as in a class that predefines them).
+const BUILTIN_THM: Record<string, string> = {
+  theorem: "Theorem", lemma: "Lemma", proposition: "Proposition", corollary: "Corollary",
+  definition: "Definition", remark: "Remark", example: "Example", proof: "Proof",
+  conjecture: "Conjecture", claim: "Claim", assumption: "Assumption", notation: "Notation",
+  exercise: "Exercise", problem: "Problem", solution: "Solution", hypothesis: "Hypothesis",
+  observation: "Observation", fact: "Fact",
+};
+
+// Placeholder tokens: cannot appear in valid LaTeX
 const PH = (n: number) => `\x00B${n}\x00`;
 
 // ── Escaped characters (\% \$ \& \# \_ \{ \}) ─────────────────────────────
@@ -63,7 +78,7 @@ function protectEscapes(src: string): string {
   );
 }
 
-/** Restore protected characters. "html" → display text, "raw" → LaTeX source. */
+/** Restore protected characters. "html" gives display text, "raw" gives LaTeX source. */
 function restoreEscapes(text: string, mode: "html" | "raw"): string {
   return text.replace(ESC_RANGE, (ch) => {
     const code = ch.charCodeAt(0);
@@ -119,221 +134,319 @@ function renderAccents(text: string): string {
     .replace(/\\textasciicircum(?![a-zA-Z])(?:\{\})?/g, lit("^"));
 }
 
-// ── Pass 1: prescan ────────────────────────────────────────────────────────
+// ── Balanced argument readers ─────────────────────────────────────────────
+// Every command argument is read with these instead of `\{([^}]*)\}`, so a
+// caption such as \caption{Effect of $\alpha_{t}$} is not cut at the first }.
 
-interface PrescanResult {
-  labelMap:     Map<string, string>;  // label key → display string ("3", "1.2", …)
-  citeMap:      Map<string, number>;  // bibitem key → reference number
-  citeAuthorMap: Map<string, string>; // bibitem key → "Author et al. (2017)" (natbib)
-  bibHtml:      string;               // pre-rendered bibliography HTML (or "")
+const MAX_ARG = 60_000;
+
+/** Index of the `}` matching the `{` at `i`, or -1. */
+function matchBrace(s: string, i: number): number {
+  if (s[i] !== "{") return -1;
+  let d = 0;
+  const lim = Math.min(s.length, i + MAX_ARG);
+  for (let j = i; j < lim; j++) {
+    const c = s[j];
+    if (c === "{") d++;
+    else if (c === "}") { d--; if (d === 0) return j; }
+  }
+  return -1;
 }
 
-function prescanDocument(body: string): PrescanResult {
-  const labelMap     = new Map<string, string>();
-  const citeMap      = new Map<string, number>();
-  const citeAuthorMap = new Map<string, string>();
-
-  let eqN = 0, figN = 0, tblN = 0, secN = 0, subN = 0, subSubN = 0;
-
-  // Collect all structural elements with their byte offsets,
-  // then sort by offset so we assign numbers in document order.
-  type Event = { pos: number; fn: () => void };
-  const events: Event[] = [];
-
-  const scan = (re: RegExp, fn: (m: RegExpExecArray) => void) => {
-    let m: RegExpExecArray | null;
-    const r = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
-    while ((m = r.exec(body)) !== null) {
-      const captured = m;
-      events.push({ pos: captured.index, fn: () => fn(captured) });
-    }
-  };
-
-  // Numbered equation environments
-  scan(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, m => {
-    const n = ++eqN;
-    const lm = m[1].match(/\\label\{([^}]*)\}/);
-    if (lm) labelMap.set(lm[1].trim(), String(n));
-  });
-  scan(/\\begin\{align\}([\s\S]*?)\\end\{align\}/g, m => {
-    // Count each non-\nonumber line as an equation; assign the block number
-    // to any \label found (simplification: first \label gets the block start)
-    const lines = m[1].split("\\\\").filter(l => !/\\nonumber/.test(l));
-    const blockStart = eqN + 1;
-    eqN += Math.max(lines.length, 1);
-    const lm = m[1].match(/\\label\{([^}]*)\}/);
-    if (lm) labelMap.set(lm[1].trim(), String(blockStart));
-  });
-  scan(/\\begin\{multline\}([\s\S]*?)\\end\{multline\}/g, m => {
-    const n = ++eqN;
-    const lm = m[1].match(/\\label\{([^}]*)\}/);
-    if (lm) labelMap.set(lm[1].trim(), String(n));
-  });
-  scan(/\\begin\{gather\}([\s\S]*?)\\end\{gather\}/g, m => {
-    const lines = m[1].split("\\\\").filter(l => !/\\nonumber/.test(l));
-    const start = eqN + 1;
-    eqN += Math.max(lines.length, 1);
-    const lm = m[1].match(/\\label\{([^}]*)\}/);
-    if (lm) labelMap.set(lm[1].trim(), String(start));
-  });
-
-  // Figures
-  scan(/\\begin\{(?:figure|wrapfigure)\}[\s\S]*?\\end\{(?:figure|wrapfigure)\}/g, m => {
-    const n = ++figN;
-    const lm = m[0].match(/\\label\{([^}]*)\}/);
-    if (lm) labelMap.set(lm[1].trim(), String(n));
-  });
-
-  // Tables (table float, not tabular)
-  scan(/\\begin\{table\}[\s\S]*?\\end\{table\}/g, m => {
-    const n = ++tblN;
-    const lm = m[0].match(/\\label\{([^}]*)\}/);
-    if (lm) labelMap.set(lm[1].trim(), String(n));
-  });
-
-  // Sections (non-starred = numbered)
-  scan(/\\section\{([^}]*)\}(?:[\s\n]*\\label\{([^}]*)\})?/g, m => {
-    secN++; subN = 0; subSubN = 0;
-    if (m[2]) labelMap.set(m[2].trim(), `${secN}`);
-  });
-  scan(/\\subsection\{([^}]*)\}(?:[\s\n]*\\label\{([^}]*)\})?/g, m => {
-    subN++; subSubN = 0;
-    if (m[2]) labelMap.set(m[2].trim(), `${secN}.${subN}`);
-  });
-  scan(/\\subsubsection\{([^}]*)\}(?:[\s\n]*\\label\{([^}]*)\})?/g, m => {
-    subSubN++;
-    if (m[2]) labelMap.set(m[2].trim(), `${secN}.${subN}.${subSubN}`);
-  });
-
-  // Bibliography entries
-  let bibN = 0;
-  const bibBlock = body.match(/\\begin\{thebibliography\}(?:\{[^}]*\})?([\s\S]*?)\\end\{thebibliography\}/);
-  const bibHtmlParts: string[] = [];
-  if (bibBlock) {
-    const bibItems = bibBlock[1].split(/(?=\\bibitem)/);
-    for (const chunk of bibItems) {
-      const km = chunk.match(/\\bibitem(?:\[([^\]]*)\])?\{([^}]*)\}([\s\S]*)/);
-      if (!km) continue;
-      const natbibLabel = km[1]; // e.g. "Jones(2022)" or "Jones et al.(2017)"
-      const key = km[2].trim();
-      const text = km[3].replace(/\n+/g, " ").trim();
-      const n = ++bibN;
-      citeMap.set(key, n);
-      // Convert "Author(year)" → "Author (year)" for natbib citations
-      if (natbibLabel) {
-        const formatted = natbibLabel.trim().replace(/\((\d{4}[a-z]?)\)$/, " ($1)");
-        citeAuthorMap.set(key, formatted);
-      }
-      bibHtmlParts.push(
-        `<div class="bib-entry">` +
-        `<span class="bib-num">[${n}]</span>` +
-        `<span class="bib-text">${processInlineStatic(text)}</span>` +
-        `</div>`
-      );
-    }
+/** Index of the `]` closing the `[` at `i` (braces nest), or -1. */
+function matchBracket(s: string, i: number): number {
+  if (s[i] !== "[") return -1;
+  let d = 0;
+  const lim = Math.min(s.length, i + 4000);
+  for (let j = i + 1; j < lim; j++) {
+    const c = s[j];
+    if (c === "{") d++;
+    else if (c === "}") d--;
+    else if (c === "]" && d <= 0) return j;
+    else if (c === "\n" && s[j + 1] === "\n") return -1;
   }
-  const bibHtml = bibHtmlParts.length
-    ? `<div class="bib-section"><h2 class="bib-heading">References</h2>${bibHtmlParts.join("")}</div>`
-    : "";
-
-  // Run all events in document order
-  events.sort((a, b) => a.pos - b.pos);
-  events.forEach(e => e.fn());
-
-  return { labelMap, citeMap, citeAuthorMap, bibHtml };
+  return -1;
 }
 
-// ── Depth-aware brace skipper ─────────────────────────────────────────────
-/** Skip past the closing `}` of a `{...}` group starting at `pos`.  */
-function skipBraces(src: string, pos: number): number {
-  if (src[pos] !== "{") return pos;
-  let depth = 1;
-  let i = pos + 1;
-  while (i < src.length && depth > 0) {
-    if (src[i] === "{") depth++;
-    else if (src[i] === "}") depth--;
-    i++;
+/** Skip spaces and at most one newline (a blank line ends an argument list). */
+function skipWs(s: string, i: number): number {
+  let nl = false;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === " " || c === "\t" || c === "\r") i++;
+    else if (c === "\n" && !nl) { nl = true; i++; }
+    else break;
   }
-  return i; // points to the character AFTER the closing }
+  return i;
+}
+
+interface CmdMatch {
+  start: number; end: number; name: string; star: boolean;
+  opt: (string | undefined)[]; req: string[];
+}
+
+/** Parse `*`, up to nOpt [..] and exactly nReq {..} arguments after a command name. */
+function parseArgs(s: string, start: number, p: number, name: string, nOpt: number, nReq: number): CmdMatch | null {
+  let star = false;
+  if (s[p] === "*") { star = true; p++; }
+  const opt: (string | undefined)[] = [];
+  for (let k = 0; k < nOpt; k++) {
+    const q = skipWs(s, p);
+    if (s[q] === "[") {
+      const e = matchBracket(s, q);
+      if (e >= 0) { opt.push(s.slice(q + 1, e)); p = e + 1; continue; }
+    }
+    opt.push(undefined);
+  }
+  const req: string[] = [];
+  for (let k = 0; k < nReq; k++) {
+    const q = skipWs(s, p);
+    const e = matchBrace(s, q);
+    if (e < 0) return null;
+    req.push(s.slice(q + 1, e));
+    p = e + 1;
+  }
+  return { start, end: p, name, star, opt, req };
+}
+
+/** All occurrences of \name (alternation allowed) with their arguments. */
+function scanCmds(s: string, names: string, nOpt: number, nReq: number): CmdMatch[] {
+  const re = new RegExp(`\\\\(${names})(?![a-zA-Z])`, "g");
+  const out: CmdMatch[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const c = parseArgs(s, m.index, m.index + m[0].length, m[1], nOpt, nReq);
+    if (c) { out.push(c); re.lastIndex = c.end; }
+  }
+  return out;
 }
 
 /**
- * Expand user-defined \newcommand / \renewcommand / \providecommand macros,
- * then remove the definitions. Without this, custom commands such as a CV's
- * \cventry{dates}{title}{...} render their arguments mashed together because
- * the definition is stripped but the *calls* are never substituted.
- *
- * Supports `\newcommand{\name}[n]{body}`, `\newcommand\name[n]{body}`, and the
- * zero-argument form. Macros with an optional-argument default
- * (`[n][default]`) are too complex to expand safely, so their definition is
- * removed but calls are left as-is. Expansion is bounded (calls can nest).
+ * Replace \name[opt]{req}... with fn(match). Returns null from fn to leave a
+ * match untouched. Runs extra passes so nested calls (\textbf{\textbf{x}})
+ * are all converted, outermost first, which keeps the HTML balanced.
  */
-interface UserMacro { nargs: number; body: string; }
+function replaceCmd(
+  s: string, names: string, nReq: number,
+  fn: (m: CmdMatch) => string | null, nOpt = 0,
+): string {
+  const re = new RegExp(`\\\\(${names})(?![a-zA-Z])`, "g");
+  for (let pass = 0; pass < 12; pass++) {
+    re.lastIndex = 0;
+    let out = "", last = 0, changed = false;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(s)) !== null) {
+      const c = parseArgs(s, m.index, m.index + m[0].length, m[1], nOpt, nReq);
+      if (!c) continue;
+      const r = fn(c);
+      if (r === null) continue;
+      out += s.slice(last, c.start) + r;
+      last = c.end;
+      re.lastIndex = c.end;
+      changed = true;
+    }
+    if (!changed) return s;
+    s = out + s.slice(last);
+  }
+  return s;
+}
 
-function expandUserMacros(src: string): string {
-  const macros = new Map<string, UserMacro>();
-  const defSpans: Array<[number, number]> = [];
-  const defRe = /\\(?:new|renew|provide)command\b\*?\s*/g;
-  let m: RegExpExecArray | null;
-
-  while ((m = defRe.exec(src)) !== null) {
-    let i = m.index + m[0].length;
-    // name: {\foo} or bare \foo
-    let name = "";
-    if (src[i] === "{") {
-      const close = skipBraces(src, i);
-      name = src.slice(i + 1, close - 1).trim();
-      i = close;
-    } else if (src[i] === "\\") {
-      let j = i + 1;
-      while (j < src.length && /[a-zA-Z]/.test(src[j])) j++;
-      name = src.slice(i, j);
-      i = j;
-    } else {
+/** Split at `sep` occurrences that sit outside braces and nested environments. */
+function splitTop(s: string, sep: "\\\\" | "&"): string[] {
+  const parts: string[] = [];
+  let depth = 0, env = 0, last = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === "{") depth++;
+    else if (c === "}") depth--;
+    else if (c === "\\") {
+      if (s.startsWith("\\begin{", i)) { env++; i += 6; continue; }
+      if (s.startsWith("\\end{", i)) { env--; i += 4; continue; }
+      if (s[i + 1] === "\\") {
+        if (sep === "\\\\" && depth === 0 && env <= 0) { parts.push(s.slice(last, i)); last = i + 2; }
+        i++;
+        continue;
+      }
+      if (sep === "\\\\" && depth === 0 && env <= 0 && s.startsWith("\\tabularnewline", i)) {
+        parts.push(s.slice(last, i)); last = i + 15; i += 14; continue;
+      }
+      i++; // skip the escaped character
       continue;
     }
-    while (src[i] === " ") i++;
-    // optional arg count [n]
-    let nargs = 0;
-    if (src[i] === "[") {
-      const e = src.indexOf("]", i);
-      if (e !== -1) { nargs = parseInt(src.slice(i + 1, e), 10) || 0; i = e + 1; }
-    }
-    // optional default value [default] → can't expand safely
-    let hasDefault = false;
-    if (src[i] === "[") {
-      hasDefault = true;
-      const e = src.indexOf("]", i);
-      if (e !== -1) i = e + 1;
-    }
-    while (src[i] === " ") i++;
-    if (src[i] !== "{") continue;
-    const bodyClose = skipBraces(src, i);
-    const body = src.slice(i + 1, bodyClose - 1);
-    defSpans.push([m.index, bodyClose]);
-    if (/^\\[a-zA-Z]+$/.test(name) && !hasDefault) {
-      macros.set(name, { nargs, body });
-    }
-    defRe.lastIndex = bodyClose;
+    else if (sep === "&" && c === "&" && depth === 0 && env <= 0) { parts.push(s.slice(last, i)); last = i + 1; }
   }
+  parts.push(s.slice(last));
+  return parts;
+}
 
-  // Remove all definition spans.
+// ── Definitions (preamble + body) ─────────────────────────────────────────
+
+interface UserMacro { nargs: number; def?: string; body: string; }
+interface UserEnv { nargs: number; def?: string; begin: string; end: string; }
+interface ThmDef { label: string; counter: string | null; within?: string; }
+interface Defs {
+  macros: Map<string, UserMacro>;
+  envs: Map<string, UserEnv>;
+  mathOps: Record<string, string>;
+  theorems: Map<string, ThmDef>;
+  numberWithin: Map<string, string>;
+}
+
+const DEF_RE = /\\(newcommand|renewcommand|providecommand|DeclareRobustCommand|newenvironment|renewenvironment|DeclareMathOperator|newtheorem|def|gdef|numberwithin|counterwithin|theoremstyle|newcolumntype|let)(?![a-zA-Z])(\*?)/g;
+
+/**
+ * Collect every definition in `src` into `d` and return `src` with the
+ * definitions removed. Called on the preamble and on the body, so a macro,
+ * operator or theorem declared before \begin{document} is not lost.
+ */
+function extractDefs(src: string, d: Defs): string {
+  const spans: Array<[number, number]> = [];
+  const re = new RegExp(DEF_RE.source, "g");
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src)) !== null) {
+    const kw = m[1];
+    const star = m[2] === "*";
+    let i = m.index + m[0].length;
+    const readName = (): string | null => {
+      i = skipWs(src, i);
+      if (src[i] === "{") {
+        const e = matchBrace(src, i);
+        if (e < 0) return null;
+        const n = src.slice(i + 1, e).trim();
+        i = e + 1;
+        return n;
+      }
+      if (src[i] === "\\") {
+        let j = i + 1;
+        while (j < src.length && /[a-zA-Z@]/.test(src[j])) j++;
+        if (j === i + 1) j++;
+        const n = src.slice(i, j);
+        i = j;
+        return n;
+      }
+      return null;
+    };
+    const readOpt = (): string | undefined => {
+      const q = skipWs(src, i);
+      if (src[q] !== "[") return undefined;
+      const e = matchBracket(src, q);
+      if (e < 0) return undefined;
+      i = e + 1;
+      return src.slice(q + 1, e);
+    };
+    const readReq = (): string | null => {
+      const q = skipWs(src, i);
+      const e = matchBrace(src, q);
+      if (e < 0) return null;
+      i = e + 1;
+      return src.slice(q + 1, e);
+    };
+
+    let ok = true;
+    switch (kw) {
+      case "newcommand": case "renewcommand": case "providecommand": case "DeclareRobustCommand": {
+        const name = readName();
+        const n = readOpt();
+        const def = readOpt();
+        const body = name ? readReq() : null;
+        if (!name || body === null) { ok = false; break; }
+        if (/^\\[a-zA-Z@]+$/.test(name) && !(kw === "providecommand" && d.macros.has(name))) {
+          d.macros.set(name, { nargs: Math.min(parseInt(n ?? "0", 10) || 0, 9), def, body });
+        }
+        break;
+      }
+      case "newenvironment": case "renewenvironment": {
+        const name = readReq();
+        const n = readOpt();
+        const def = readOpt();
+        const begin = name !== null ? readReq() : null;
+        const end = begin !== null ? readReq() : null;
+        if (name === null || begin === null || end === null) { ok = false; break; }
+        if (/^[a-zA-Z@*]+$/.test(name.trim())) {
+          d.envs.set(name.trim(), { nargs: Math.min(parseInt(n ?? "0", 10) || 0, 9), def, begin, end });
+        }
+        break;
+      }
+      case "DeclareMathOperator": {
+        const name = readName();
+        const body = name ? readReq() : null;
+        if (!name || body === null) { ok = false; break; }
+        if (/^\\[a-zA-Z]+$/.test(name)) d.mathOps[name] = `\\operatorname${star ? "*" : ""}{${body}}`;
+        break;
+      }
+      case "newtheorem": {
+        const name = readReq();
+        const shared = name !== null ? readOpt() : undefined;
+        const label = name !== null ? readReq() : null;
+        if (name === null || label === null) { ok = false; break; }
+        const within = shared === undefined ? readOpt() : undefined;
+        const env = name.trim();
+        d.theorems.set(env, {
+          label: label.trim(),
+          counter: star ? null : (shared?.trim() || env),
+          within: within?.trim(),
+        });
+        break;
+      }
+      case "def": case "gdef": {
+        i = skipWs(src, i);
+        if (src[i] !== "\\") { ok = false; break; }
+        let j = i + 1;
+        while (j < src.length && /[a-zA-Z@]/.test(src[j])) j++;
+        const name = src.slice(i, j);
+        const brace = src.indexOf("{", j);
+        if (brace < 0 || brace - j > 30) { ok = false; break; }
+        const params = src.slice(j, brace);
+        if (!/^(?:#\d)*$/.test(params.replace(/\s/g, ""))) { ok = false; break; }
+        i = brace;
+        const body = readReq();
+        if (body === null || name.length < 2) { ok = false; break; }
+        d.macros.set(name, { nargs: (params.match(/#/g) || []).length, body });
+        break;
+      }
+      case "numberwithin": case "counterwithin": {
+        readOpt();
+        const a = readReq();
+        const b = a !== null ? readReq() : null;
+        if (a === null || b === null) { ok = false; break; }
+        d.numberWithin.set(a.trim(), b.trim());
+        break;
+      }
+      case "theoremstyle": if (readReq() === null) ok = false; break;
+      case "newcolumntype": {
+        if (readName() === null) { ok = false; break; }
+        readOpt();
+        if (readReq() === null) ok = false;
+        break;
+      }
+      case "let": {
+        if (readName() === null) { ok = false; break; }
+        i = skipWs(src, i);
+        if (src[i] === "=") i++;
+        if (readName() === null) ok = false;
+        break;
+      }
+    }
+    if (!ok) continue;
+    spans.push([m.index, i]);
+    re.lastIndex = i;
+  }
   let out = "";
   let last = 0;
-  for (const [s, e] of defSpans) { out += src.slice(last, s); last = e; }
-  out += src.slice(last);
+  for (const [s, e] of spans) { out += src.slice(last, s); last = e; }
+  return out + src.slice(last);
+}
 
-  if (macros.size === 0) return out;
-
-  // Cap total expanded size to defuse expansion bombs: a chain of nested
-  // \newcommand definitions where each macro expands to two of the next
-  // (\a→\b\b, \b→\c\c, …) doubles the string per level (~2^N), which would
-  // otherwise freeze/OOM the browser of anyone viewing the document. If we
-  // exceed the budget, stop expanding and return what we have so far.
+/**
+ * Expand user macros (\newcommand, \def). Longest names first so \cvsect is
+ * matched before \cv; a first argument with a default value ([n][default])
+ * is optional at the call site. Expansion is bounded (calls can nest, and a
+ * chain of doubling macros would otherwise grow ~2^N and freeze the tab).
+ */
+function expandUserMacros(src: string, macros: Map<string, UserMacro>): string {
+  if (macros.size === 0) return src;
+  let out = src;
   const MAX_EXPANDED = Math.max(out.length * 12, 200_000);
-
-  // Expand invocations. Longest names first so \cvsect is matched before \cv.
-  // Bounded passes guard against runaway / mutually-recursive macros.
   const names = [...macros.keys()].sort((a, b) => b.length - a.length);
   for (let pass = 0; pass < 8; pass++) {
     if (out.length > MAX_EXPANDED) break;
@@ -346,30 +459,41 @@ function expandUserMacros(src: string): string {
         if (result.length > MAX_EXPANDED) { result += out.slice(idx); break; }
         const at = out.indexOf(name, idx);
         if (at === -1) { result += out.slice(idx); break; }
-        // Don't match a prefix of a longer command name (e.g. \cv vs \cvsect).
+        // Don't match a prefix of a longer command name (e.g. \cv vs \cvsect),
+        // nor the tail of a line break (\\R is "\\" then "R").
         const after = out[at + name.length];
-        if (after && /[a-zA-Z]/.test(after)) {
+        if ((after && /[a-zA-Z@]/.test(after)) || (at > 0 && out[at - 1] === "\\")) {
           result += out.slice(idx, at + name.length);
           idx = at + name.length;
           continue;
         }
-        // Capture nargs brace groups.
         let p = at + name.length;
         const args: string[] = [];
         let ok = true;
-        for (let k = 0; k < macro.nargs; k++) {
-          while (out[p] === " ") p++;
-          if (out[p] !== "{") { ok = false; break; }
-          const close = skipBraces(out, p);
-          args.push(out.slice(p + 1, close - 1));
-          p = close;
+        let k = 0;
+        if (macro.def !== undefined && macro.nargs > 0) {
+          if (out[p] === "[") {
+            const e = matchBracket(out, p);
+            if (e < 0) ok = false;
+            else { args.push(out.slice(p + 1, e)); p = e + 1; }
+          } else {
+            args.push(macro.def);
+          }
+          k = 1;
         }
-        if (!ok) { // not enough args present — leave call untouched
+        for (; ok && k < macro.nargs; k++) {
+          while (out[p] === " ") p++;
+          const close = matchBrace(out, p);
+          if (close < 0) { ok = false; break; }
+          args.push(out.slice(p + 1, close));
+          p = close + 1;
+        }
+        if (!ok) { // not enough args present: leave call untouched
           result += out.slice(idx, at + name.length);
           idx = at + name.length;
           continue;
         }
-        const expanded = macro.body.replace(/#(\d)/g, (_, d: string) => args[+d - 1] ?? "");
+        const expanded = macro.body.replace(/#(\d)/g, (_, dd: string) => args[+dd - 1] ?? "");
         result += out.slice(idx, at) + expanded;
         idx = p;
         changed = true;
@@ -381,6 +505,607 @@ function expandUserMacros(src: string): string {
   return out;
 }
 
+/** Expand \newenvironment definitions: \begin{x}{a} -> begin code, \end{x} -> end code. */
+function expandUserEnvs(src: string, envs: Map<string, UserEnv>): string {
+  if (envs.size === 0) return src;
+  const MAX = Math.max(src.length * 6, 200_000);
+  for (let pass = 0; pass < 4; pass++) {
+    let changed = false;
+    for (const [name, env] of envs) {
+      const open = `\\begin{${name}}`;
+      const close = `\\end{${name}}`;
+      let idx = 0;
+      let result = "";
+      while (idx < src.length) {
+        const at = src.indexOf(open, idx);
+        if (at < 0) { result += src.slice(idx); break; }
+        let p = at + open.length;
+        const args: string[] = [];
+        let k = 0;
+        if (env.def !== undefined && env.nargs > 0) {
+          if (src[p] === "[") {
+            const e = matchBracket(src, p);
+            if (e >= 0) { args.push(src.slice(p + 1, e)); p = e + 1; } else args.push(env.def);
+          } else args.push(env.def);
+          k = 1;
+        }
+        for (; k < env.nargs; k++) {
+          const q = skipWs(src, p);
+          const e = matchBrace(src, q);
+          if (e < 0) break;
+          args.push(src.slice(q + 1, e));
+          p = e + 1;
+        }
+        result += src.slice(idx, at) + env.begin.replace(/#(\d)/g, (_, dd: string) => args[+dd - 1] ?? "");
+        idx = p;
+        changed = true;
+      }
+      src = result.split(close).join(env.end);
+      if (src.length > MAX) return src;
+    }
+    if (!changed) break;
+  }
+  return src;
+}
+
+// ── Math environments ─────────────────────────────────────────────────────
+
+const MATH_ENV_NAMES = "equation|align|gather|multline|alignat|flalign|eqnarray";
+const MATH_ENVS = new Set(MATH_ENV_NAMES.split("|"));
+const SINGLE_ROW_MATH = new Set(["equation", "multline"]);
+
+interface MathInfo {
+  rows: string[];                 // cleaned rows (no \label / \tag / \nonumber)
+  numbered: boolean[];            // row gets the next equation number
+  custom: (string | null)[];      // \tag{...} given by the author
+  labels: string[][];             // \label keys per row
+  cols: string;                   // alignat column count
+}
+
+/** Shared by prescan and render, so both see exactly the same rows. */
+function analyzeMath(env: string, star: boolean, content: string): MathInfo {
+  let cols = "";
+  if (env === "alignat") {
+    const m = content.match(/^\s*\{(\d+)\}/);
+    if (m) { cols = m[1]; content = content.slice(m[0].length); }
+  }
+  const raw = SINGLE_ROW_MATH.has(env)
+    ? [content]
+    : splitTop(content, "\\\\").filter((r) => r.replace(/\\(?:label|tag)\*?\{[^}]*\}|\\(?:nonumber|notag)\b/g, "").trim() || /\\label\{/.test(r));
+  if (raw.length === 0) raw.push("");
+  const info: MathInfo = { rows: [], numbered: [], custom: [], labels: [], cols: cols || "1" };
+  for (let r of raw) {
+    const labels = [...r.matchAll(/\\label\{([^}]*)\}/g)].map((m) => m[1].trim());
+    const tag = scanCmds(r, "tag", 0, 1)[0];
+    const unnumbered = star || /\\(?:nonumber|notag)(?![a-zA-Z])/.test(r);
+    r = r.replace(/\\label\{[^}]*\}/g, "").replace(/\\(?:nonumber|notag)(?![a-zA-Z])/g, "");
+    if (tag) r = r.slice(0, tag.start) + r.slice(tag.end);
+    if (env === "eqnarray") r = r.replace(/&([^&]*)&/, "&$1");
+    info.rows.push(r.trim());
+    info.numbered.push(!unnumbered && !tag);
+    info.custom.push(tag ? tag.req[0].trim() : null);
+    info.labels.push(labels);
+  }
+  return info;
+}
+
+// ── LaTeX counters ────────────────────────────────────────────────────────
+
+class Counters {
+  vals = new Map<string, number>();
+  parent = new Map<string, string>();
+  appendixTop: string | null = null;
+
+  step(name: string) {
+    this.vals.set(name, (this.vals.get(name) ?? 0) + 1);
+    this.resetChildren(name, new Set([name]));
+  }
+  private resetChildren(name: string, seen: Set<string>) {
+    for (const [child, par] of this.parent) {
+      if (par === name && !seen.has(child)) {
+        seen.add(child);
+        this.vals.set(child, 0);
+        this.resetChildren(child, seen);
+      }
+    }
+  }
+  fmt(name: string, depth = 0): string {
+    const v = this.vals.get(name) ?? 0;
+    const own = this.appendixTop === name ? alphaLabel(v).toUpperCase() : String(v);
+    const p = this.parent.get(name);
+    return p && depth < 6 ? `${this.fmt(p, depth + 1)}.${own}` : own;
+  }
+}
+
+function alphaLabel(n: number): string {
+  let s = "";
+  while (n > 0) { n--; s = String.fromCharCode(97 + (n % 26)) + s; n = Math.floor(n / 26); }
+  return s || "0";
+}
+
+function romanLabel(n: number): string {
+  if (n <= 0 || n > 3999) return String(n);
+  const map: Array<[number, string]> = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
+  let s = "";
+  for (const [v, r] of map) while (n >= v) { s += r; n -= v; }
+  return s;
+}
+
+// ── Pass 1: prescan ────────────────────────────────────────────────────────
+
+interface LabelInfo { num: string; kind: string; }
+
+interface PrescanResult {
+  labels: Map<string, LabelInfo>;
+  citeMap: Map<string, number>;
+  citeAuthorMap: Map<string, string>;
+  bibHtml: string;
+  queues: Map<string, Array<string | null>>;
+  mathQueue: Array<Array<string | null>>;
+  toc: Array<{ level: number; num: string; title: string }>;
+}
+
+const FLOAT_QUEUE: Record<string, { queue: string; counter: string; kind: string }> = {
+  figure: { queue: "figure", counter: "figure", kind: "Figure" },
+  "figure*": { queue: "figure", counter: "figure", kind: "Figure" },
+  wrapfigure: { queue: "figure", counter: "figure", kind: "Figure" },
+  table: { queue: "table", counter: "table", kind: "Table" },
+  "table*": { queue: "table", counter: "table", kind: "Table" },
+  longtable: { queue: "longtable", counter: "table", kind: "Table" },
+  algorithm: { queue: "algorithm", counter: "algorithm", kind: "Algorithm" },
+};
+
+const SEC_LEVEL: Record<string, number> = { chapter: 0, section: 1, subsection: 2, subsubsection: 3 };
+
+function thmInfo(env: string, defs: Defs): ThmDef | null {
+  const d = defs.theorems.get(env);
+  if (d) return d;
+  const b = BUILTIN_THM[env];
+  return b ? { label: b, counter: null } : null;
+}
+
+function prescanDocument(body: string, defs: Defs, hasChapters: boolean): PrescanResult {
+  const labels = new Map<string, LabelInfo>();
+  const queues = new Map<string, Array<string | null>>();
+  const push = (q: string, v: string | null) => {
+    if (!queues.has(q)) queues.set(q, []);
+    queues.get(q)!.push(v);
+  };
+  const mathQueue: Array<Array<string | null>> = [];
+  const toc: PrescanResult["toc"] = [];
+
+  const C = new Counters();
+  if (hasChapters) for (const n of ["section", "equation", "figure", "table", "algorithm"]) C.parent.set(n, "chapter");
+  C.parent.set("subsection", "section");
+  C.parent.set("subsubsection", "subsection");
+  for (const [env, t] of defs.theorems) if (t.counter === env && t.within) C.parent.set(env, t.within);
+  for (const [a, b] of defs.numberWithin) C.parent.set(a, b);
+
+  let current: LabelInfo | null = null;
+  const stack: Array<LabelInfo | null> = [];
+
+  const TOK = /\\(chapter|section|subsection|subsubsection)(?![a-zA-Z])|\\begin\{([^}]+)\}|\\end\{([^}]+)\}|\\label\{([^}]*)\}|\\appendix(?![a-zA-Z])/g;
+  let m: RegExpExecArray | null;
+  while ((m = TOK.exec(body)) !== null) {
+    if (m[1]) {
+      const c = parseArgs(body, m.index, m.index + m[0].length, m[1], 1, 1);
+      if (!c) continue;
+      TOK.lastIndex = c.end;
+      if (c.star) continue;
+      C.step(m[1]);
+      const num = C.fmt(m[1]);
+      push("sec", num);
+      toc.push({ level: SEC_LEVEL[m[1]], num, title: c.opt[0] ?? c.req[0] });
+      const isTop = C.appendixTop === m[1];
+      current = { num, kind: isTop ? "Appendix" : m[1] === "chapter" ? "Chapter" : "Section" };
+    } else if (m[2] !== undefined) {
+      const full = m[2];
+      const star = full.endsWith("*");
+      const base = star ? full.slice(0, -1) : full;
+      const after = m.index + m[0].length;
+      if (MATH_ENVS.has(base)) {
+        const endTag = `\\end{${full}}`;
+        const e = body.indexOf(endTag, after);
+        if (e < 0) continue;
+        const info = analyzeMath(base, star, body.slice(after, e));
+        const tags = info.rows.map((_, r) => {
+          if (info.custom[r] !== null) return info.custom[r];
+          if (!info.numbered[r]) return null;
+          C.step("equation");
+          return C.fmt("equation");
+        });
+        mathQueue.push(tags);
+        info.labels.forEach((keys, r) => {
+          const t = tags[r];
+          if (t) for (const k of keys) labels.set(k, { num: t, kind: "equation" });
+        });
+        TOK.lastIndex = e + endTag.length;
+      } else if (FLOAT_QUEUE[full]) {
+        const f = FLOAT_QUEUE[full];
+        const endTag = `\\end{${full}}`;
+        const e = body.indexOf(endTag, after);
+        if (e < 0) continue;
+        const content = body.slice(after, e);
+        const subs: string[] = [];
+        const main = content.replace(/\\begin\{subfigure\}([\s\S]*?)\\end\{subfigure\}/g, (_, c: string) => { subs.push(c); return ""; });
+        let num: string | null = null;
+        if (/\\caption(?![a-zA-Z])/.test(main)) { C.step(f.counter); num = C.fmt(f.counter); }
+        push(f.queue, num);
+        if (num) {
+          for (const lm of main.matchAll(/\\label\{([^}]*)\}/g)) labels.set(lm[1].trim(), { num, kind: f.kind });
+          subs.forEach((s, k) => {
+            for (const lm of s.matchAll(/\\label\{([^}]*)\}/g)) labels.set(lm[1].trim(), { num: `${num}${alphaLabel(k + 1)}`, kind: f.kind });
+          });
+        }
+        TOK.lastIndex = e + endTag.length;
+      } else {
+        const t = thmInfo(full, defs);
+        if (t) {
+          let num: string | null = null;
+          if (t.counter) { C.step(t.counter); num = C.fmt(t.counter); }
+          push(`thm:${full}`, num);
+          stack.push(current);
+          if (num) current = { num, kind: processInlineStatic(t.label) };
+        }
+      }
+    } else if (m[3] !== undefined) {
+      if (thmInfo(m[3], defs) && stack.length) current = stack.pop() ?? null;
+    } else if (m[4] !== undefined) {
+      if (current) labels.set(m[4].trim(), current);
+    } else {
+      const top = hasChapters ? "chapter" : "section";
+      C.vals.set(top, 0);
+      C.appendixTop = top;
+    }
+  }
+
+  // Bibliography entries
+  const citeMap = new Map<string, number>();
+  const citeAuthorMap = new Map<string, string>();
+  let bibN = 0;
+  const bibBlock = body.match(/\\begin\{thebibliography\}(?:\{[^}]*\})?([\s\S]*?)\\end\{thebibliography\}/);
+  const bibHtmlParts: string[] = [];
+  if (bibBlock) {
+    for (const chunk of bibBlock[1].split(/(?=\\bibitem)/)) {
+      const km = chunk.match(/\\bibitem(?:\[([^\]]*)\])?\{([^}]*)\}([\s\S]*)/);
+      if (!km) continue;
+      const key = km[2].trim();
+      const text = km[3].replace(/\n+/g, " ").trim();
+      const n = ++bibN;
+      citeMap.set(key, n);
+      // natbib label "Jones et al.(2017)" becomes "Jones et al. (2017)"
+      if (km[1]) citeAuthorMap.set(key, processInlineStatic(km[1].trim().replace(/\((\d{4}[a-z]?)\)$/, " ($1)")));
+      bibHtmlParts.push(
+        `<div class="bib-entry"><span class="bib-num">[${n}]</span>` +
+        `<span class="bib-text">${processInlineStatic(text)}</span></div>`
+      );
+    }
+  }
+  const bibHtml = bibHtmlParts.length
+    ? `<div class="bib-section"><h2 class="bib-heading">References</h2>${bibHtmlParts.join("")}</div>`
+    : "";
+
+  return { labels, citeMap, citeAuthorMap, bibHtml, queues, mathQueue, toc };
+}
+
+// ── Tables ────────────────────────────────────────────────────────────────
+
+/** Column alignments from a tabular spec: l c r p{} m{} b{} X S @{} !{} | *{n}{..} >{} <{}. */
+function parseColSpec(spec: string, depth = 0): string[] {
+  const out: string[] = [];
+  let i = 0;
+  const skipGroup = (from: number) => {
+    const q = skipWs(spec, from);
+    const e = matchBrace(spec, q);
+    return e >= 0 ? e + 1 : from;
+  };
+  while (i < spec.length && out.length < 200) {
+    const c = spec[i];
+    if (c === "l" || c === "c" || c === "r") { out.push(c); i++; }
+    else if (c === "p" || c === "m" || c === "b") { out.push("l"); i = skipGroup(i + 1); }
+    else if (c === "X" || c === "L" || c === "J") { out.push("l"); i++; }
+    else if (c === "C") { out.push("c"); i++; }
+    else if (c === "R") { out.push("r"); i++; }
+    else if (c === "S") {
+      out.push("c"); i++;
+      if (spec[i] === "[") { const e = matchBracket(spec, i); i = e >= 0 ? e + 1 : i; }
+    }
+    else if (c === "@" || c === "!" || c === ">" || c === "<") i = Math.max(skipGroup(i + 1), i + 1);
+    else if (c === "*") {
+      const q1 = skipWs(spec, i + 1);
+      const e1 = matchBrace(spec, q1);
+      const q2 = e1 >= 0 ? skipWs(spec, e1 + 1) : -1;
+      const e2 = q2 >= 0 ? matchBrace(spec, q2) : -1;
+      if (e2 < 0) { i++; continue; }
+      const n = Math.min(parseInt(spec.slice(q1 + 1, e1), 10) || 0, 100);
+      const sub = depth < 4 ? parseColSpec(spec.slice(q2 + 1, e2), depth + 1) : [];
+      for (let k = 0; k < n && out.length < 200; k++) out.push(...sub);
+      i = e2 + 1;
+    }
+    else if (c === "\\") {
+      let j = i + 1;
+      while (j < spec.length && /[a-zA-Z]/.test(spec[j])) j++;
+      i = Math.max(j, i + 2);
+    }
+    else if (c === "{") { const e = matchBrace(spec, i); i = e >= 0 ? e + 1 : i + 1; }
+    else i++; // | : spaces
+  }
+  return out;
+}
+
+const RULE_RE = /\\(?:specialrule\s*\{[^}]*\}\s*\{[^}]*\}\s*\{[^}]*\}|(?:cmidrule|cline)(?:\s*\[[^\]]*\])?(?:\s*\([^)]*\))?\s*\{[^}]*\}|hhline\s*\{[^}]*\}|rowcolor(?:\s*\[[^\]]*\])?\s*\{[^}]*\}|noalign\s*\{[^}]*\}|(?:toprule|midrule|bottomrule|hline|hdashline|firsthline|lasthline|addlinespace|morecmidrules)(?![a-zA-Z])(?:\s*\[[^\]]*\])?)/g;
+
+function renderTabular(spec: string, content: string, inline: (s: string) => string): string {
+  const aligns = parseColSpec(spec);
+  const alignStyle = (a: string | undefined) =>
+    a === "c" ? ' style="text-align:center"' : a === "r" ? ' style="text-align:right"' : "";
+
+  type Row = { cells: string[]; ruleBefore: boolean };
+  const rows: Row[] = [];
+  let pendingRule = false;
+  for (const raw of splitTop(content, "\\\\")) {
+    let sawRule = false;
+    const r = raw.replace(RULE_RE, (m) => {
+      if (/^\\(?:midrule|hline|hdashline)/.test(m)) sawRule = true;
+      return "";
+    });
+    if (!r.trim()) { if (sawRule) pendingRule = true; continue; }
+    rows.push({ cells: splitTop(r, "&"), ruleBefore: pendingRule || sawRule });
+    pendingRule = false;
+  }
+  if (rows.length === 0) return "<table></table>";
+
+  // Header = rows above the first rule that follows a content row (booktabs
+  // \midrule or \hline); without one, the first row.
+  let headerCount = 1;
+  const firstRule = rows.findIndex((row, k) => k > 0 && row.ruleBefore);
+  if (firstRule > 0 && firstRule <= 3) headerCount = firstRule;
+
+  const cover: number[] = [];
+  const renderRow = (row: Row, header: boolean) => {
+    const tag = header ? "th" : "td";
+    let col = 0;
+    let html = "";
+    for (const rawCell of row.cells) {
+      const cell = rawCell.trim();
+      if ((cover[col] ?? 0) > 0 && !cell) { col++; continue; }
+      let span = 1;
+      let rowspan = 1;
+      let align = aligns[col];
+      let body = cell;
+      const mc = cell.match(/^\\multicolumn\s*\{(\d+)\}/);
+      if (mc) {
+        const c = parseArgs(cell, 0, "\\multicolumn".length, "multicolumn", 0, 3);
+        if (c) {
+          span = Math.max(1, Math.min(parseInt(c.req[0], 10) || 1, 100));
+          align = parseColSpec(c.req[1])[0] ?? align;
+          body = c.req[2].trim();
+        }
+      }
+      const mr = body.match(/^\\multirow\s*(?:\[[^\]]*\])?\s*\{(-?\d+)\}\s*(?:\[[^\]]*\])?\s*\{[^}]*\}\s*(?:\[[^\]]*\])?\s*/);
+      if (mr) {
+        const e = matchBrace(body, mr[0].length);
+        if (e >= 0) {
+          const nr = parseInt(mr[1], 10) || 1;
+          if (nr > 1) rowspan = Math.min(nr, 50);
+          body = body.slice(mr[0].length + 1, e);
+        }
+      }
+      const attrs = (span > 1 ? ` colspan="${span}"` : "") + (rowspan > 1 ? ` rowspan="${rowspan}"` : "") + alignStyle(align);
+      html += `<${tag}${attrs}>${inline(body)}</${tag}>`;
+      if (rowspan > 1) for (let k = 0; k < span; k++) cover[col + k] = rowspan;
+      col += span;
+    }
+    for (let k = 0; k < cover.length; k++) if (cover[k] > 0) cover[k]--;
+    return `<tr>${html}</tr>`;
+  };
+
+  let tbl = "<table>";
+  const head = rows.slice(0, headerCount).map((r) => renderRow(r, true)).join("");
+  const bodyRows = rows.slice(headerCount).map((r) => renderRow(r, false)).join("");
+  tbl += `<thead>${head}</thead>`;
+  tbl += bodyRows ? `<tbody>${bodyRows}</tbody>` : "";
+  return tbl + "</table>";
+}
+
+// ── siunitx ───────────────────────────────────────────────────────────────
+
+const SI_PREFIX: Record<string, string> = {
+  yocto: "y", zepto: "z", atto: "a", femto: "f", pico: "p", nano: "n", micro: "µ",
+  milli: "m", centi: "c", deci: "d", deca: "da", deka: "da", hecto: "h", kilo: "k",
+  mega: "M", giga: "G", tera: "T", peta: "P", exa: "E",
+};
+const SI_UNIT: Record<string, string> = {
+  metre: "m", meter: "m", second: "s", kilogram: "kg", gram: "g", ampere: "A", kelvin: "K",
+  mole: "mol", candela: "cd", celsius: "°C", degreeCelsius: "°C", percent: "%", hertz: "Hz",
+  newton: "N", pascal: "Pa", joule: "J", watt: "W", coulomb: "C", volt: "V", farad: "F",
+  ohm: "Ω", siemens: "S", weber: "Wb", tesla: "T", henry: "H", lumen: "lm", lux: "lx",
+  becquerel: "Bq", gray: "Gy", sievert: "Sv", katal: "kat", radian: "rad", steradian: "sr",
+  litre: "L", liter: "L", hour: "h", minute: "min", day: "d", degree: "°", arcminute: "′",
+  arcsecond: "″", hectare: "ha", tonne: "t", electronvolt: "eV", dalton: "Da", bel: "B",
+  decibel: "dB", neper: "Np", bar: "bar", angstrom: "Å", byte: "B", bit: "bit",
+  astronomicalunit: "au", atomicmassunit: "u", mmHg: "mmHg", calorie: "cal", year: "yr",
+};
+const SUP_CHARS: Record<string, string> = {
+  "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
+  "-": "⁻", "−": "⁻", "+": "⁺",
+};
+
+function sup(x: string): string {
+  const t = x.trim();
+  if (t && [...t].every((c) => SUP_CHARS[c])) return [...t].map((c) => SUP_CHARS[c]).join("");
+  return `<sup>${t}</sup>`;
+}
+
+function siLiteral(u: string): string {
+  return u
+    .replace(/\^\s*\{([^{}]*)\}|\^\s*(-?\d+|\S)/g, (_, a: string | undefined, b: string | undefined) => sup(a ?? b ?? ""))
+    .replace(/(?<=[^\s\d])[.~](?=[^\s\d])/g, " ")
+    .replace(/[{}]/g, "")
+    .trim();
+}
+
+function siUnit(u: string): string {
+  if (!/\\[a-zA-Z]/.test(u)) return siLiteral(u);
+  const num: string[] = [];
+  const den: string[] = [];
+  let prefix = "", pow = "", per = false;
+  let last: { arr: string[]; idx: number } | null = null;
+  const re = /\\([a-zA-Z]+)\s*(?:\{([^{}]*)\})?|([^\\\s]+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(u)) !== null) {
+    const cmd = m[1];
+    if (cmd) {
+      if (SI_PREFIX[cmd] !== undefined) prefix += SI_PREFIX[cmd];
+      else if (cmd === "per") per = true;
+      else if (cmd === "square") pow = "2";
+      else if (cmd === "cubic") pow = "3";
+      else if (cmd === "raiseto") pow = m[2] ?? "";
+      else if (cmd === "squared" || cmd === "cubed" || cmd === "tothe") {
+        const p = cmd === "squared" ? "2" : cmd === "cubed" ? "3" : (m[2] ?? "");
+        if (last) last.arr[last.idx] += sup(p);
+      }
+      else {
+        const sym = SI_UNIT[cmd] ?? (m[2] !== undefined ? siLiteral(m[2]) : cmd);
+        const arr = per ? den : num;
+        arr.push(prefix + sym + (pow ? sup(pow) : ""));
+        last = { arr, idx: arr.length - 1 };
+        prefix = ""; pow = ""; per = false;
+      }
+    } else if (m[3]) {
+      const arr = per ? den : num;
+      arr.push(prefix + siLiteral(m[3]));
+      last = { arr, idx: arr.length - 1 };
+      prefix = ""; per = false;
+    }
+  }
+  let out = num.join(" ");
+  if (den.length) out = `${out || "1"}/${den.length > 1 ? `(${den.join(" ")})` : den[0]}`;
+  return out;
+}
+
+function groupDigits(d: string): string {
+  return d.length >= 5 ? d.replace(/\B(?=(\d{3})+(?!\d))/g, "\u2009") : d;
+}
+
+function siNum(n: string): string {
+  let t = n.trim().replace(/\s+/g, "");
+  t = t.replace(/\\pm|\+-/g, " ± ").replace(/\\times|x(?=\d)/g, " × ");
+  return t.split(/( [±×] )/).map((part) => {
+    if (/^ [±×] $/.test(part)) return part;
+    const e = part.match(/^([+-]?)(\d*)(?:[.,](\d+))?[eE]([+-]?\d+)$/);
+    const fmt = (sign: string, int: string, frac?: string) =>
+      (sign === "-" ? "−" : sign) + groupDigits(int) + (frac !== undefined ? "." + frac : "");
+    if (e) {
+      const mant = e[2] || e[3] ? fmt(e[1], e[2] || "0", e[3]) : (e[1] === "-" ? "−" : "");
+      return `${mant ? mant + " × " : ""}10${sup(e[4])}`;
+    }
+    const d = part.match(/^([+-]?)(\d+)(?:[.,](\d+))?$/);
+    return d ? fmt(d[1], d[2], d[3]) : part.replace(/^-/, "−");
+  }).join("");
+}
+
+function siJoin(value: string, unit: string): string {
+  if (!unit) return value;
+  return /^[°′″](?!C)/.test(unit) ? value + unit : `${value} ${unit}`;
+}
+
+function renderSiunitx(text: string): string {
+  const wrap = (s: string) => `<span class="si" style="white-space:nowrap">${s}</span>`;
+  const list = (items: string[]) =>
+    items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+  text = replaceCmd(text, "qtyrange|SIrange", 3, (c) => {
+    const u = siUnit(c.req[2]);
+    return wrap(`${siJoin(siNum(c.req[0]), u)} to ${siJoin(siNum(c.req[1]), u)}`);
+  }, 1);
+  text = replaceCmd(text, "qtylist|SIlist", 2, (c) => {
+    const u = siUnit(c.req[1]);
+    return list(c.req[0].split(";").map((v) => siJoin(siNum(v), u)));
+  }, 1);
+  text = replaceCmd(text, "qty|SI", 2, (c) => wrap(siJoin(siNum(c.req[0]), siUnit(c.req[1]))), 1);
+  text = replaceCmd(text, "numrange", 2, (c) => `${siNum(c.req[0])} to ${siNum(c.req[1])}`, 1);
+  text = replaceCmd(text, "numlist", 1, (c) => list(c.req[0].split(";").map(siNum)), 1);
+  text = replaceCmd(text, "unit|si", 1, (c) => wrap(siUnit(c.req[0])), 1);
+  text = replaceCmd(text, "num", 1, (c) => wrap(siNum(c.req[0])), 1);
+  text = replaceCmd(text, "ang", 1, (c) => {
+    const [d, mi, s] = c.req[0].split(";").map((x) => x.trim());
+    return wrap((d ? siNum(d) + "°" : "") + (mi ? siNum(mi) + "′" : "") + (s ? siNum(s) + "″" : ""));
+  }, 1);
+  return text;
+}
+
+// ── Lists ─────────────────────────────────────────────────────────────────
+
+interface ListItem { label?: string; body: string; }
+
+/** Split list content at top-level \item, reading an optional [label]. */
+function splitItems(items: string): ListItem[] {
+  const out: ListItem[] = [];
+  const re = /\\item(?![a-zA-Z])/g;
+  const starts: number[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(items)) !== null) starts.push(m.index);
+  starts.forEach((s, k) => {
+    let p = s + 5;
+    const end = k + 1 < starts.length ? starts[k + 1] : items.length;
+    let label: string | undefined;
+    const q = skipWs(items, p);
+    if (items[q] === "[") {
+      const e = matchBracket(items, q);
+      if (e >= 0 && e < end) { label = items.slice(q + 1, e); p = e + 1; }
+    }
+    out.push({ label, body: items.slice(p, end) });
+  });
+  return out;
+}
+
+/** List label template from enumitem `label=...` or the enumerate package short form. */
+function listTemplate(opts: string | undefined, ordered: boolean): { tpl: string | null; start: number } {
+  if (!opts || !opts.trim()) return { tpl: null, start: 1 };
+  if (/=/.test(opts)) {
+    let tpl: string | null = null;
+    let start = 1;
+    for (const kv of splitTop(opts.replace(/,/g, "&"), "&")) {
+      const eq = kv.indexOf("=");
+      if (eq < 0) continue;
+      const k = kv.slice(0, eq).trim();
+      let v = kv.slice(eq + 1).trim();
+      if (v.startsWith("{") && matchBrace(v, 0) === v.length - 1) v = v.slice(1, -1);
+      if (k === "label") tpl = v;
+      if (k === "start") start = parseInt(v, 10) || 1;
+    }
+    return { tpl, start };
+  }
+  if (!ordered) return { tpl: null, start: 1 };
+  // Short form: [(a)] [i.] [A)] [1.]: the first counter letter outside braces.
+  let depth = 0;
+  for (let i = 0; i < opts.length; i++) {
+    const c = opts[i];
+    if (c === "\\") { while (i + 1 < opts.length && /[a-zA-Z]/.test(opts[i + 1])) i++; continue; }
+    if (c === "{") depth++;
+    else if (c === "}") depth--;
+    else if (depth === 0 && "aAiI1".includes(c)) {
+      const tok = { a: "\\alph*", A: "\\Alph*", i: "\\roman*", I: "\\Roman*", "1": "\\arabic*" }[c]!;
+      return { tpl: opts.slice(0, i) + tok + opts.slice(i + 1), start: 1 };
+    }
+  }
+  return { tpl: null, start: 1 };
+}
+
+function fillTemplate(tpl: string, n: number): string {
+  return tpl
+    .replace(/\\alph\*?/g, alphaLabel(n))
+    .replace(/\\Alph\*?/g, alphaLabel(n).toUpperCase())
+    .replace(/\\roman\*?/g, romanLabel(n))
+    .replace(/\\Roman\*?/g, romanLabel(n).toUpperCase())
+    .replace(/\\arabic\*?/g, String(n));
+}
+
+const labelledLi = (label: string, body: string) =>
+  `<li style="list-style:none;position:relative">` +
+  `<span class="item-label" style="position:absolute;right:calc(100% + 0.45em);white-space:nowrap">${label}</span> ` +
+  `${body}</li>`;
+
 // ── Pass 2: main renderer ─────────────────────────────────────────────────
 
 // Hard ceiling on the source we will parse client-side. The renderer runs
@@ -389,11 +1114,22 @@ function expandUserMacros(src: string): string {
 // PDF-compile cap), so legitimate documents are unaffected.
 const MAX_SOURCE_CHARS = 400_000;
 
-export function latexToHtml(src: string): { html: string; warnings: ParseWarning[] } {
+interface InlineCtx {
+  labels: Map<string, LabelInfo>;
+  citeMap: Map<string, number>;
+  citeAuthorMap: Map<string, string>;
+  footnotes: string[];
+  nextFoot: () => number;
+}
+
+export function latexToHtml(src: string): LatexHtmlResult {
   const warnings: ParseWarning[] = [];
   const blocks = new Map<string, string>();
   let n = 0;
   const block = (html: string) => { const p = PH(n++); blocks.set(p, html); return p; };
+  // Inline tokens (\verb, \lstinline) survive every later rule untouched.
+  const inlineTokens: string[] = [];
+  const inlineTok = (html: string) => { inlineTokens.push(html); return `\x00I${inlineTokens.length - 1}\x00`; };
 
   if (src.length > MAX_SOURCE_CHARS) {
     return {
@@ -402,28 +1138,75 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
         `<p class="preview-notice-sub">This document exceeds ${Math.round(MAX_SOURCE_CHARS / 1000)}k characters. ` +
         `Trim it or use PDF export to compile the full source.</p></div>`,
       warnings: [{ env: "document", reason: "Source exceeds preview size limit" }],
+      macros: {},
     };
   }
 
-  // Extract body
-  const bodyMatch = src.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
   // Protect \% \$ \& ... before any rule can react to the bare character.
-  let body = protectEscapes(bodyMatch ? bodyMatch[1] : src);
+  const all = protectEscapes(src);
+  let preamble = "";
+  let body: string;
+  const bi = all.indexOf("\\begin{document}");
+  if (bi >= 0) {
+    preamble = all.slice(0, bi);
+    const rest = all.slice(bi + "\\begin{document}".length);
+    const ei = rest.indexOf("\\end{document}");
+    body = ei >= 0 ? rest.slice(0, ei) : rest;
+  } else {
+    body = all;
+  }
+
+  // ── Verbatim material first: nothing below may touch it ─────────────────
+  const codeHtml = (c: string) => escapeAttr(escapeHtml(restoreEscapes(c, "raw")));
+  body = body.replace(/\\begin\{(verbatim\*?|Verbatim|lstlisting|minted)\}([\s\S]*?)\\end\{\1\}/g, (_, env: string, c: string) => {
+    let code = c;
+    if (env === "lstlisting" || env === "Verbatim") code = code.replace(/^[ \t]*\[[^\]\n]*\]/, "");
+    if (env === "minted") code = code.replace(/^[ \t]*(?:\[[^\]\n]*\])?[ \t]*\{[^}\n]*\}/, "");
+    return block(`<pre class="verbatim"><code>${codeHtml(code.replace(/^[ \t]*\n/, "").replace(/\n[ \t]*$/, ""))}</code></pre>`);
+  });
+  body = body.replace(/\\verb\*?([^a-zA-Z\s*])([^\n]*?)\1/g, (_, _d: string, c: string) => inlineTok(`<code>${codeHtml(c)}</code>`));
+  body = body.replace(
+    /\\(?:lstinline(?:\[[^\]\n]*\])?|mintinline(?:\[[^\]\n]*\])?\{[^}\n]*\})(?:\{([^}\n]*)\}|([^a-zA-Z\s{[])([^\n]*?)\2)/g,
+    (_, a: string | undefined, _d: string | undefined, b: string | undefined) => inlineTok(`<code>${codeHtml(a ?? b ?? "")}</code>`)
+  );
+
+  // ── Comments (escaped \% was protected, so every bare % starts one) ─────
+  const stripComments = (s: string) => s.replace(/%[^\n]*(?:\n(?![ \t]*\n)[ \t]*)?/g, "");
+  preamble = stripComments(preamble);
+  body = stripComments(body);
+  body = body.replace(/\\begin\{comment\}[\s\S]*?\\end\{comment\}/g, "");
+  body = body.replace(/\\iffalse(?![a-zA-Z])[\s\S]*?\\fi(?![a-zA-Z])/g, "");
+  // Neutralise "\\[<len>]" line breaks. The "\[" inside "\\[1cm]" would
+  // otherwise be misread as a display-math opener.
+  body = body.replace(/\\\\\*?\s*\[[^\]]*\]/g, "\\\\ ");
+
+  // ── Definitions from the whole source ───────────────────────────────────
+  const defs: Defs = { macros: new Map(), envs: new Map(), mathOps: {}, theorems: new Map(), numberWithin: new Map() };
+  extractDefs(preamble, defs);
+  body = extractDefs(body, defs);
+  body = expandUserEnvs(body, defs.envs);
+  body = expandUserMacros(body, defs.macros);
+
+  const hasChapters = /\\chapter\s*(?:\[[^\]]*\]\s*)?\{/.test(body);
 
   // ── Prescan ──────────────────────────────────────────────────────────────
-  const { labelMap, citeMap, citeAuthorMap, bibHtml } = prescanDocument(body);
+  const scan = prescanDocument(body, defs, hasChapters);
+  const { labels, citeMap, citeAuthorMap, bibHtml, queues, mathQueue, toc } = scan;
+  const take = (q: string) => queues.get(q)?.shift() ?? null;
 
-  // Footnote collector (threaded through processInline calls)
+  // Theorem numbers are attached to each \begin{...} now, in document order,
+  // because the innermost-first wrapper loop does not visit them in that order.
+  const thmNums: Array<string | null> = [];
+  body = body.replace(/\\begin\{([^}]+)\}/g, (m, env: string) => {
+    if (!thmInfo(env, defs)) return m;
+    thmNums.push(take(`thm:${env}`));
+    return `${m}\x01${thmNums.length - 1}\x01`;
+  });
+
   let footN = 0;
   const footnoteList: string[] = [];
-
-  // Counters for block rendering (must match prescan order)
-  let eqCounter = 0, figCounter = 0, tblCounter = 0;
-  let secCounter = 0, subCounter = 0, subSubCounter = 0;
-
-  // Inline helper — closure over maps & footnote list
-  const inline = (text: string) =>
-    processInline(text, labelMap, citeMap, citeAuthorMap, footnoteList, () => ++footN);
+  const ctx: InlineCtx = { labels, citeMap, citeAuthorMap, footnotes: footnoteList, nextFoot: () => ++footN };
+  const inline = (text: string) => processInline(text, ctx);
 
   // ── Unsupported document class: Beamer & other slide/poster classes ───────
   // The preview renders article-style LaTeX (text + math). Presentation decks
@@ -437,14 +1220,11 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   if (isPresentation) {
     const label = docClass === "beamer" || docClass === "" ? "Beamer presentation" : `${docClass} presentation`;
-    warnings.push({ env: docClass || "beamer", reason: "Presentation class — preview shows an outline; use ↓ PDF to compile the real slides" });
+    warnings.push({ env: docClass || "beamer", reason: "Presentation class: the preview shows an outline; use PDF export to compile the real slides" });
 
     const slideCount = (body.match(/\\begin\{frame\}/g) || []).length;
-
-    // Title of the title slide (preamble \title, falls back to nothing)
     const deckTitle = extractBracedContent(src, "title");
 
-    // Build a structural outline in document order: sections + frame titles.
     const cleanItem = (t: string) =>
       inline(t.replace(/\\texorpdfstring\{(?:[^{}]|\{[^{}]*\})*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, "$1").trim());
     const items: { kind: "section" | "frame"; text: string }[] = [];
@@ -466,66 +1246,33 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
     const notice =
       `<div class="preview-notice">` +
-        `<div class="preview-notice-head">📊 ${label} detected</div>` +
+        `<div class="preview-notice-head">${label} detected</div>` +
         `<p>The live preview renders <strong>article-style LaTeX</strong> (text &amp; math). ` +
-        `It can't reproduce slides, overlays, TikZ, or tcolorbox — but your document looks valid. ` +
+        `It can't reproduce slides, overlays, TikZ, or tcolorbox, but your document looks valid. ` +
         `Use <strong>↓ PDF</strong> in the toolbar to compile the real ${slideCount} slide${slideCount === 1 ? "" : "s"}.</p>` +
         (deckTitle ? `<p class="preview-notice-sub">“${escapeForDisplay(deckTitle)}”</p>` : "") +
       `</div>` +
       (outline ? `<div class="beamer-outline-head">Deck outline · ${slideCount} slide${slideCount === 1 ? "" : "s"}</div>${outline}` : "");
 
-    return { html: restoreEscapes(notice, "html"), warnings };
+    return { html: restoreEscapes(notice, "html"), warnings, macros: { ...defs.mathOps } };
   }
 
-  // ── Preamble cleanup ─────────────────────────────────────────────────────
-  body = body.replace(
-    /\\(usepackage|documentclass|geometry|setlength|pagestyle|pagenumbering)(\[.*?\])?\{[^}]*\}/g, ""
-  );
-  body = body.replace(/\\(onehalfspacing|doublespacing|singlespacing|maketitle)\b/g, "");
-  // fancyhdr / page-style commands (header & footer setup — not rendered in
-  // preview). Brace pattern tolerates one level of nesting, e.g.
-  // \rhead{\textcolor{gray}{\small Title}}.
-  {
-    const arg = "\\{(?:[^{}]|\\{[^{}]*\\})*\\}";
-    body = body.replace(new RegExp(`\\\\(?:thispagestyle|pagestyle)${arg}`, "g"), "");
-    body = body.replace(new RegExp(`\\\\fancyhf${arg}`, "g"), "");
-    body = body.replace(new RegExp(`\\\\(?:fancyhead|fancyfoot)(?:\\[[^\\]]*\\])?${arg}`, "g"), "");
-    body = body.replace(new RegExp(`\\\\(?:[rlc]head|[rlc]foot)${arg}`, "g"), "");
-    body = body.replace(new RegExp(`\\\\renewcommand\\{\\\\(?:headrulewidth|footrulewidth)\\}${arg}`, "g"), "");
-  }
-  // Expand user macros (\newcommand …) then drop their definitions, so custom
-  // commands like a CV's \cventry{…}{…} render their arguments properly.
-  body = expandUserMacros(body);
-  body = body.replace(/\\(setcounter|counterwithin|numberwithin)\{[^}]*\}\{[^}]*\}/g, "");
-  // Commands that are valid LaTeX but produce no visible output in preview
-  body = body.replace(/\\bibliographystyle\{[^}]*\}/g, "");
-  body = body.replace(/\\addcontentsline\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
-  body = body.replace(/\\(?:linenumbers|nolinenumbers|lineno|resetlinenumber)\b/g, "");
-  body = body.replace(/\\selectlanguage\{[^}]*\}/g, "");
-  body = body.replace(/\\(?:appendix|frontmatter|mainmatter|backmatter)\b/g, "");
-
-  // Collect \newtheorem{envname}[optional]{Label} BEFORE stripping them so
-  // user-defined envs like \begin{thm} render as proper theorem boxes.
-  const extraThmEnvs: Array<[string, string]> = []; // [envname, label]
-  body = body.replace(
-    /\\newtheorem\{([^}]+)\}(?:\[[^\]]*\])?\{([^}]+)\}/g,
-    (_, envName: string, label: string) => { extraThmEnvs.push([envName, label]); return ""; }
-  );
-  body = body.replace(/\\newtheorem\*?\{[^}]*\}(\[[^\]]*\])?\{[^}]*\}/g, "");
-  // Color definitions (\definecolor{name}{model}{spec})
-  body = body.replace(/\\definecolor\{[^}]*\}\{[^}]*\}\{[^}]*\}/g, "");
-  body = body.replace(/\\colorlet\{[^}]*\}\{[^}]*\}/g, "");
-  // hypersetup / hyperref config block
-  body = body.replace(/\\hypersetup\{[\s\S]*?\}/g, "");
-  // Strip \title{}, \author{}, \date{} if they appear inside the document body
-  // (standard LaTeX puts them in the preamble, but some templates don't)
-  body = body.replace(/\\(?:title|author|date)\{(?:[^{}]|\{[^{}]*\})*\}/g, "");
-
-  // Neutralise "\\[<len>]" line breaks BEFORE math parsing. The "\[" inside
-  // "\\[1cm]" would otherwise be misread as a display-math opener and swallow
-  // everything up to the next "\]" (mangling title pages full of \\[..]).
-  // Real "\[ ... \]" display math (single backslash) is untouched.
-  body = body.replace(/\\\\\*?\s*\[[^\]]*\]/g, "\\\\ ");
+  // ── Preamble-style commands that produce no visible output ───────────────
+  const drop = (names: string, nOpt: number, nReq: number) => {
+    body = replaceCmd(body, names, nReq, () => "", nOpt);
+  };
+  drop("usepackage|RequirePackage|documentclass|geometry|pagestyle|thispagestyle|pagenumbering|selectlanguage|" +
+    "bibliographystyle|addbibresource|nocite|graphicspath|sisetup|hypersetup|lstset|tikzset|pgfplotsset|" +
+    "usetikzlibrary|newcounter|stepcounter|refstepcounter|fancyhf|fancyhead|fancyfoot|lhead|chead|rhead|" +
+    "lfoot|cfoot|rfoot|captionsetup|setlist|setmainfont|setsansfont|setmonofont|urlstyle|linespread|" +
+    "setstretch|hyphenation|newlength|DeclareGraphicsExtensions|counterwithout", 1, 1);
+  drop("setlength|addtolength|setcounter|addtocounter|colorlet", 1, 2);
+  drop("definecolor|addcontentsline|crefname|Crefname", 1, 3);
+  body = body.replace(/\\(?:setlength|addtolength)\\[a-zA-Z]+\s*\{[^}]*\}/g, "");
+  body = body.replace(/\\(?:onehalfspacing|doublespacing|singlespacing|maketitle|linenumbers|nolinenumbers|resetlinenumber|appendix|frontmatter|mainmatter|backmatter|allowdisplaybreaks|raggedbottom|flushbottom|sloppy|fussy|makeatletter|makeatother|protect)(?![a-zA-Z])/g, "");
+  // \title{}, \author{}, \date{} inside the body (standard LaTeX puts them in
+  // the preamble, but some templates don't): rendered in the header instead.
+  drop("title|author|date", 1, 1);
 
   // ── Title metadata ───────────────────────────────────────────────────────
   const rawTitle  = extractBracedContent(src, "title");
@@ -544,428 +1291,385 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
 
   // ── Phase 1: block-level placeholders ────────────────────────────────────
 
-  // Abstract
-  body = body.replace(/\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}/g, (_, c) =>
-    block(`<div class="abstract"><strong>Abstract.</strong> ${inline(c.trim())}</div>`)
-  );
+  // Display math \[ ... \] and $$ ... $$ (not numbered)
+  body = body.replace(/\\\[([\s\S]*?)\\\]/g, (_, m: string) => block(mathBlock(cleanMath(m))));
+  body = body.replace(/\$\$([\s\S]*?)\$\$/g, (_, m: string) => block(mathBlock(cleanMath(m))));
 
-  // Display math \[ ... \]  (not numbered)
-  body = body.replace(/\\\[([\s\S]*?)\\\]/g, (_, m) =>
-    block(`<div class="math-block" data-math="${encodeMath(m)}"></div>`)
-  );
-
-  // Display math $$...$$ — treat as block so KaTeX renders in displayMode
-  body = body.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) =>
-    block(`<div class="math-block" data-math="${encodeMath(m.trim())}"></div>`)
-  );
-
-  // Starred equation environments (no number)
-  body = body.replace(/\\begin\{equation\*\}([\s\S]*?)\\end\{equation\*\}/g, (_, m) =>
-    block(`<div class="math-block" data-math="${encodeMath(cleanMath(m))}"></div>`)
-  );
-  body = body.replace(/\\begin\{align\*\}([\s\S]*?)\\end\{align\*\}/g, (_, m) =>
-    block(`<div class="math-block" data-math="${encodeMath("\\begin{aligned}" + cleanMath(m) + "\\end{aligned}")}"></div>`)
-  );
-  body = body.replace(/\\begin\{gather\*\}([\s\S]*?)\\end\{gather\*\}/g, (_, m) =>
-    block(`<div class="math-block" data-math="${encodeMath(cleanMath(m))}"></div>`)
-  );
-  body = body.replace(/\\begin\{multline\*\}([\s\S]*?)\\end\{multline\*\}/g, (_, m) =>
-    block(`<div class="math-block" data-math="${encodeMath(cleanMath(m))}"></div>`)
-  );
-
-  // Numbered equation
-  body = body.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, (_, m) => {
-    const num = ++eqCounter;
-    return block(numberedMathBlock(cleanMath(m), num));
-  });
-
-  // Numbered align  (whole block gets one number if it has ≤ 1 label)
-  body = body.replace(/\\begin\{align\}([\s\S]*?)\\end\{align\}/g, (_, m) => {
-    // filter(Boolean) removes the empty string created by a trailing \\
-    const lines = m.split("\\\\").filter(Boolean);
-    const nonNumbered = lines.filter((l: string) => /\\nonumber/.test(l));
-    const numLines = lines.length - nonNumbered.length;
-    // Build aligned math, strip \nonumber
-    const cleanedLines = lines.map((l: string) =>
-      l.replace(/\\nonumber/g, "").trimEnd()
-    ).join("\\\\");
-    if (numLines <= 1) {
-      const num = ++eqCounter;
-      return block(numberedMathBlock("\\begin{aligned}" + cleanMath(cleanedLines) + "\\end{aligned}", num));
-    } else {
-      // Multi-line: show as aligned without individual numbers (too complex for browser)
-      eqCounter += numLines;
-      return block(`<div class="math-block" data-math="${encodeMath("\\begin{aligned}" + cleanMath(cleanedLines) + "\\end{aligned}")}"></div>`);
-    }
-  });
-
-  // Numbered gather
-  body = body.replace(/\\begin\{gather\}([\s\S]*?)\\end\{gather\}/g, (_, m) => {
-    const num = ++eqCounter;
-    return block(numberedMathBlock(cleanMath(m), num));
-  });
-
-  // Numbered multline
-  body = body.replace(/\\begin\{multline\}([\s\S]*?)\\end\{multline\}/g, (_, m) => {
-    const num = ++eqCounter;
-    return block(numberedMathBlock(cleanMath(m), num));
-  });
-
-  // Verbatim / lstlisting
-  body = body.replace(/\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/g, (_, c) =>
-    block(`<pre class="verbatim"><code>${escapeHtml(restoreEscapes(c, "raw"))}</code></pre>`)
-  );
-  body = body.replace(/\\begin\{lstlisting\}(\[.*?\])?([\s\S]*?)\\end\{lstlisting\}/g, (_, _opts, c) =>
-    block(`<pre class="verbatim"><code>${escapeHtml(restoreEscapes(c, "raw"))}</code></pre>`)
-  );
-
-  // Theorem-like environments (built-in + user-defined via \newtheorem)
-  const builtinThmEnvs: Array<[string, string]> = [
-    ["theorem","Theorem"], ["lemma","Lemma"], ["proposition","Proposition"],
-    ["corollary","Corollary"], ["definition","Definition"], ["remark","Remark"],
-    ["example","Example"], ["proof","Proof"],
-  ];
-  for (const [env, label] of [...builtinThmEnvs, ...extraThmEnvs]) {
-    body = body.replace(
-      new RegExp(`\\\\begin\\{${env}\\}(?:\\[([^\\]]*)\\])?(\\s*)([\\s\\S]*?)\\\\end\\{${env}\\}`, "g"),
-      (_, opt, _ws, c) => block(
-        `<div class="thm-box thm-${env}"><span class="thm-label">${label}${opt ? ` (${opt})` : ""}.</span> ${inline(c.trim())}</div>`
-      )
-    );
-  }
-
-  // Figure / wrapfigure
-  body = body.replace(/\\begin\{(?:figure|wrapfigure)\}([\s\S]*?)\\end\{(?:figure|wrapfigure)\}/g, (match) => {
-    const num = ++figCounter;
-    const captionMatch = match.match(/\\caption(?:\[[^\]]*\])?\{([^}]*)\}/);
-    const caption = captionMatch ? captionMatch[1] : "";
-    const imgMatch = match.match(/\\includegraphics(?:\[.*?\])?\{([^}]*)\}/);
-    const imgSrc = imgMatch ? imgMatch[1] : "";
-    return block(
-      `<figure class="fig-block">` +
-      `<div class="fig-placeholder">🖼 ${escapeHtml(imgSrc || "figure")}</div>` +
-      (caption
-        ? `<figcaption><strong>Figure ${num}:</strong> ${inline(caption)}</figcaption>`
-        : `<figcaption><strong>Figure ${num}</strong></figcaption>`) +
-      `</figure>`
-    );
-  });
-
-  // Table float — render caption as a block placeholder, then pass inner
-  // LaTeX (the \begin{tabular}…\end{tabular}) back into `body` so the
-  // tabular handler below can process it normally.
-  body = body.replace(/\\begin\{table\}(?:\[[^\]]*\])?([\s\S]*?)\\end\{table\}/g, (_, inner) => {
-    const num = ++tblCounter;
-    const captionMatch = inner.match(/\\caption(?:\[[^\]]*\])?\{([^}]*)\}/);
-    const caption = captionMatch ? captionMatch[1] : "";
-    // Strip caption, label, position specs — keep only tabular LaTeX
-    const tabularBody = inner
-      .replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}/g, "")
-      .replace(/\\label\{[^}]*\}/g, "")
-      .replace(/\\centering\b/g, "")
-      .trim();
-    const captionBlock = caption
-      ? block(`<div class="table-caption"><strong>Table ${num}:</strong> ${inline(caption)}</div>`)
-      : block(`<div class="table-caption"><strong>Table ${num}</strong></div>`);
-    // Return caption placeholder + raw tabular LaTeX — tabular handler runs next
-    return captionBlock + "\n" + tabularBody;
-  });
-
-  // Tabular (standalone or inside already-block table)
-  body = body.replace(/\\begin\{tabular\}(\{[^}]*\})([\s\S]*?)\\end\{tabular\}/g, (_, _spec, content) => {
-    const rows = content.split("\\\\").map((r: string) => r.trim()).filter(Boolean);
-    let tbl = `<table>`;
-    let firstDataRow = true;
-    rows.forEach((row: string) => {
-      if (/^\\hline\s*$/.test(row) || /^\\(top|mid|bottom)rule\s*$/.test(row)) return;
-      const clean = row.replace(/\\hline/g, "").replace(/\\(top|mid|bottom)rule/g, "").trim();
-      if (!clean) return;
-      const renderCell = (raw: string, isHeader: boolean) => {
-        const mc = raw.trim().match(/^\\multicolumn\{(\d+)\}\{[^}]*\}\{([\s\S]*)\}$/);
-        if (mc) {
-          const span = mc[1];
-          const content = inline(mc[2].trim());
-          return isHeader ? `<th colspan="${span}">${content}</th>` : `<td colspan="${span}">${content}</td>`;
-        }
-        const content = inline(raw.trim());
-        return isHeader ? `<th>${content}</th>` : `<td>${content}</td>`;
-      };
-      const cells = clean.split("&");
-      if (firstDataRow) {
-        tbl += `<thead><tr>${cells.map(c => renderCell(c, true)).join("")}</tr></thead><tbody>`;
-        firstDataRow = false;
-      } else {
-        tbl += `<tr>${cells.map(c => renderCell(c, false)).join("")}</tr>`;
+  // Numbered and starred math environments, ONE pass in document order so the
+  // equation numbers come from the prescan queue in the same order.
+  body = body.replace(
+    new RegExp(`\\\\begin\\{(${MATH_ENV_NAMES})(\\*?)\\}([\\s\\S]*?)\\\\end\\{\\1\\2\\}`, "g"),
+    (_, env: string, star: string, content: string) => {
+      const tags = mathQueue.shift() ?? [];
+      const info = analyzeMath(env, star === "*", content);
+      if (SINGLE_ROW_MATH.has(env)) {
+        const tag = tags[0] ?? null;
+        return block(tag ? numberedMathBlock(info.rows[0], tag) : mathBlock(info.rows[0]));
       }
-    });
-    // Guard: if no data rows were processed (e.g. table had only \hline rows),
-    // close only <table> to avoid orphaned </tbody></table>.
-    tbl += firstDataRow ? `</table>` : `</tbody></table>`;
-    return block(tbl);
+      const rows = info.rows.map((r, i) => (tags[i] ? `${r} \\tag{${tags[i]}}` : r));
+      const [open, close] = env === "gather"
+        ? ["\\begin{gather*}", "\\end{gather*}"]
+        : env === "alignat"
+          ? [`\\begin{alignat*}{${info.cols}}`, "\\end{alignat*}"]
+          : ["\\begin{align*}", "\\end{align*}"];
+      return block(mathBlock(`${open}${rows.join(" \\\\\n")}${close}`));
+    }
+  );
+
+  // Pictures the browser cannot draw
+  body = body.replace(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g, () =>
+    block(`<div class="fig-placeholder">TikZ picture: drawn when you compile to PDF</div>`)
+  );
+  body = body.replace(/\\begin\{pgfpicture\}[\s\S]*?\\end\{pgfpicture\}/g, () =>
+    block(`<div class="fig-placeholder">PGF picture: drawn when you compile to PDF</div>`)
+  );
+
+  const tableCaption = (num: string | null, cap: string) =>
+    `<strong>Table${num ? " " + num : ""}:</strong> ${inline(cap)}`;
+
+  // longtable: caption becomes a numbered table caption, the rest a tabular
+  body = body.replace(/\\begin\{longtable\}(\[[^\]]*\])?/g, "\\begin{longtable}");
+  body = body.replace(/\\begin\{longtable\}([\s\S]*?)\\end\{longtable\}/g, (_, inner: string) => {
+    const num = take("longtable");
+    const specEnd = matchBrace(inner, skipWs(inner, 0));
+    if (specEnd < 0) return inner;
+    const specStart = skipWs(inner, 0);
+    const spec = inner.slice(specStart, specEnd + 1);
+    let content = inner.slice(specEnd + 1);
+    const cap = scanCmds(content, "caption", 1, 1)[0];
+    let capHtml = "";
+    if (cap) {
+      capHtml = block(`<div class="table-caption" style="display:block">${tableCaption(num, cap.req[0])}</div>`);
+      content = content.slice(0, cap.start) + content.slice(cap.end).replace(/^\s*\\\\/, "");
+    }
+    content = content
+      .replace(/\\(?:endhead|endfirsthead|endfoot|endlastfoot)(?![a-zA-Z])/g, "")
+      .replace(/\\label\{[^}]*\}/g, "");
+    return `${capHtml}\n\\begin{tabular}${spec}${content}\\end{tabular}`;
   });
 
-  // Itemize + Enumerate — processed in a loop so nested lists work correctly.
-  // Each pass converts the INNERMOST remaining list (non-greedy regex).
-  // After conversion the inner list is a placeholder; the outer list then
-  // sees only a single placeholder token inside its \item text, which
-  // is restored correctly when placeholders are expanded in Phase 4.
+  // Tabular family, innermost first (a tabular may sit inside a cell)
   {
-    let prev = "";
-    while (prev !== body) {
-      prev = body;
-      // Match only lists with no nested \begin{itemize|enumerate} inside,
-      // i.e. the innermost ones — outer lists are converted on later passes.
-      // Optional list arguments (\begin{itemize}[leftmargin=*,…]) and custom
-      // item labels (\item[•]) are consumed so they don't leak as literal text.
-      const toItems = (items: string) =>
-        items.split(/\\item\b\s*/).filter((s: string) => s.trim())
-          .map((s: string) => `<li>${inline(s.replace(/^\[[^\]]*\]\s*/, "").trim())}</li>`).join("");
-      body = body.replace(/\\begin\{itemize\}(?:\[[^\]]*\])?((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{itemize\}/g,
-        (_, items) => block(`<ul>${toItems(items)}</ul>`));
-      body = body.replace(/\\begin\{enumerate\}(?:\[[^\]]*\])?((?:(?!\\begin\{(?:itemize|enumerate)\})[\s\S])*?)\\end\{enumerate\}/g,
-        (_, items) => block(`<ol>${toItems(items)}</ol>`));
+    const OPEN = /\\begin\{(tabular\*?|tabularx|tabulary|tabu)\}/g;
+    for (let guard = 0; guard < 500; guard++) {
+      let lastM: RegExpExecArray | null = null;
+      let mm: RegExpExecArray | null;
+      OPEN.lastIndex = 0;
+      while ((mm = OPEN.exec(body)) !== null) lastM = mm;
+      if (!lastM) break;
+      const env = lastM[1];
+      const endTag = `\\end{${env}}`;
+      const e = body.indexOf(endTag, lastM.index);
+      if (e < 0) { body = body.slice(0, lastM.index) + body.slice(lastM.index + lastM[0].length); continue; }
+      let p = lastM.index + lastM[0].length;
+      const readGroup = () => {
+        const q = skipWs(body, p);
+        const ce = matchBrace(body, q);
+        if (ce < 0 || ce > e) return null;
+        p = ce + 1;
+        return body.slice(q + 1, ce);
+      };
+      if (env !== "tabular" && env !== "tabu") readGroup(); // width
+      const q = skipWs(body, p);
+      if (body[q] === "[") { const be = matchBracket(body, q); if (be >= 0 && be < e) p = be + 1; }
+      const spec = readGroup() ?? "";
+      const html = renderTabular(spec, body.slice(p, e), inline);
+      body = body.slice(0, lastM.index) + block(html) + body.slice(e + endTag.length);
     }
   }
 
-  // Bibliography block — use pre-rendered HTML from prescan
-  body = body.replace(/\\begin\{thebibliography\}[\s\S]*?\\end\{thebibliography\}/g, () =>
-    block(bibHtml || "")
-  );
-
-  // ── Multi-file: \input / \include warning ────────────────────────────────
-  // These cannot be resolved in a single-file browser preview.
-  // Surface a clear yellow notice instead of silently losing content.
-  body = body.replace(/\\(?:input|include|subfile)\{([^}]*)\}/g, (_, fname: string) => {
-    warnings.push({ env: "\\input", reason: `Multi-file document: "${fname}" not loaded` });
-    return block(
-      `<div class="unknown-env" style="border-color:#f59e0b;color:#f59e0b">` +
-      `⚠ <code>\\input{${escapeHtml(fname)}}</code> — multi-file document. ` +
-      `Paste the contents of <em>${escapeHtml(fname)}</em> here to preview it.` +
-      `</div>`
-    );
+  // Figure / figure* / wrapfigure (with subfigures)
+  const imgPlaceholder = (file: string) =>
+    `<div class="fig-placeholder">Figure: ${escapeHtml(file.trim()) || "image"}</div>`;
+  body = body.replace(/\\begin\{(figure\*?|wrapfigure)\}([\s\S]*?)\\end\{\1\}/g, (_, env: string, inner: string) => {
+    const num = take("figure");
+    inner = env === "wrapfigure"
+      ? inner.replace(/^\s*(?:\[[^\]]*\])?\s*\{[^}]*\}\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/, "")
+      : inner.replace(/^\s*\[[^\]]*\]/, "");
+    const subs: string[] = [];
+    inner = inner.replace(/\\begin\{subfigure\}(?:\[[^\]]*\])?(?:\{[^}]*\})?([\s\S]*?)\\end\{subfigure\}/g, (__, c: string) => {
+      const letter = alphaLabel(subs.length + 1);
+      const sc = scanCmds(c, "caption", 1, 1)[0];
+      const imgs = scanCmds(c, "includegraphics", 1, 1).map((g) => imgPlaceholder(g.req[0])).join("");
+      subs.push(
+        `<div style="flex:1;min-width:10rem">${imgs || imgPlaceholder("subfigure")}` +
+        `<figcaption>(${letter})${sc ? " " + inline(sc.req[0]) : ""}</figcaption></div>`
+      );
+      return "";
+    });
+    const cap = scanCmds(inner, "caption", 1, 1)[0];
+    const imgs = scanCmds(inner, "includegraphics", 1, 1).map((g) => imgPlaceholder(g.req[0])).join("");
+    const others = (inner.match(/\x00B\d+\x00/g) ?? []).join("");
+    const subHtml = subs.length
+      ? `<div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center">${subs.join("")}</div>`
+      : "";
+    const content = imgs + others + subHtml || (cap ? "" : imgPlaceholder("figure"));
+    const caption = cap
+      ? `<figcaption><strong>Figure ${num ?? ""}:</strong> ${inline(cap.req[0])}</figcaption>`
+      : "";
+    return block(`<figure class="fig-block">${content}${caption}</figure>`);
   });
 
-  // ── Algorithm / pseudocode environments ──────────────────────────────────
-  // Render as a styled code block. Translates common algorithmic commands.
-  function renderAlgorithm(content: string): string {
-    const c = content
-      // strip \caption and \label
-      .replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}/g, "")
+  // Table float: numbered caption where the author put it, then the tabular
+  body = body.replace(/\\begin\{(table\*?)\}([\s\S]*?)\\end\{\1\}/g, (_, _env: string, inner: string) => {
+    const num = take("table");
+    inner = inner.replace(/^\s*\[[^\]]*\]/, "");
+    const cap = scanCmds(inner, "caption", 1, 1)[0];
+    if (cap) {
+      const capHtml = block(`<div class="table-caption" style="display:block">${tableCaption(num, cap.req[0])}</div>`);
+      inner = inner.slice(0, cap.start) + `\n${capHtml}\n` + inner.slice(cap.end);
+    }
+    inner = inner.replace(/\\label\{[^}]*\}/g, "").replace(/\\centering(?![a-zA-Z])/g, "");
+    return block(`<div class="table-float">${splitParagraphs(inline(inner.trim()))}</div>`);
+  });
+
+  // Itemize / enumerate / description: innermost first so nesting works.
+  {
+    const LIST_RE = /\\begin\{(itemize|enumerate|description)\}((?:(?!\\begin\{(?:itemize|enumerate|description)\})[\s\S])*?)\\end\{\1\}/g;
+    let prev = "";
+    for (let guard = 0; guard < 60 && prev !== body; guard++) {
+      prev = body;
+      body = body.replace(LIST_RE, (_, kind: string, content: string) => {
+        let opts: string | undefined;
+        const q = skipWs(content, 0);
+        if (content[q] === "[") {
+          const e = matchBracket(content, q);
+          if (e >= 0) { opts = content.slice(q + 1, e); content = content.slice(e + 1); }
+        }
+        const items = splitItems(content);
+        if (kind === "description") {
+          const dls = items.map((it) =>
+            (it.label !== undefined ? `<dt><strong>${inline(it.label)}</strong></dt>` : "") + `<dd>${inline(it.body.trim())}</dd>`
+          ).join("");
+          return block(`<dl style="margin:0.75rem 0 0.75rem 1.5rem">${dls}</dl>`);
+        }
+        const ordered = kind === "enumerate";
+        const { tpl, start } = listTemplate(opts, ordered);
+        let count = start;
+        const lis = items.map((it) => {
+          const bodyHtml = inline(it.body.trim());
+          if (it.label !== undefined) return labelledLi(inline(it.label), bodyHtml);
+          const k = count++;
+          if (tpl) return labelledLi(inline(fillTemplate(tpl, k)), bodyHtml);
+          return `<li>${bodyHtml}</li>`;
+        }).join("");
+        const tag = ordered ? "ol" : "ul";
+        const startAttr = ordered && start !== 1 && !tpl ? ` start="${start}"` : "";
+        return block(`<${tag}${startAttr}>${lis}</${tag}>`);
+      });
+    }
+  }
+
+  // Algorithm float + algorithmic bodies
+  const renderAlgorithm = (content: string, num: string | null) => {
+    const cap = scanCmds(content, "caption", 1, 1)[0];
+    if (cap) content = content.slice(0, cap.start) + content.slice(cap.end);
+    const c = escapeHtml(content)
       .replace(/\\label\{[^}]*\}/g, "")
-      // algorithmic state — bold keywords
-      .replace(/\\(State|Procedure|Function|Return|If|ElsIf|Else|EndIf|For|EndFor|While|EndWhile|Loop|EndLoop|Require|Ensure|Input|Output)\b\s*/g,
-        (_: string, kw: string) => `<strong>${kw}</strong> `)
-      // \COMMENT{text}
+      .replace(/\\(?:begin|end)\{[^}]*\}(?:\[[^\]]*\])?/g, "")
+      .replace(/\\(State|Statex|Procedure|EndProcedure|Function|EndFunction|Return|If|ElsIf|Else|EndIf|For|ForAll|EndFor|While|EndWhile|Repeat|Until|Loop|EndLoop|Require|Ensure|Input|Output|KwIn|KwOut|KwData|KwResult)(?![a-zA-Z])\s*/g,
+        (_: string, kw: string) => `<strong>${kw.replace(/^Kw/, "").replace(/^Statex$/, "")}</strong> `)
       .replace(/\\(?:Comment|COMMENT)\{([^}]*)\}/g, '<em style="opacity:0.6"> ▷ $1</em>')
-      // \State, \gets
-      .replace(/\\gets\b/g, "←")
+      .replace(/\\gets(?![a-zA-Z])/g, "←")
       .replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>")
       .replace(/\\emph\{([^}]*)\}/g, "<em>$1</em>")
-      // inline math
-      .replace(/\$([^$\n]+?)\$/g, (_, m) =>
-        `<span class="math-inline" data-math="${encodeMath(m)}"></span>`)
-      // strip remaining LaTeX commands
+      .replace(/\$([^$\n]+?)\$/g, (_, mth: string) => `<span class="math-inline" data-math="${encodeMath(mth)}"></span>`)
       .replace(/\\[a-zA-Z]+\*?\{([^}]*)\}/g, "$1")
-      .replace(/\\[a-zA-Z]+\*?\b/g, "")
+      .replace(/\\[a-zA-Z]+\*?/g, "")
       .replace(/\{([^}]*)\}/g, "$1")
       .trim();
+    const title = num || cap
+      ? `Algorithm${num ? " " + num : ""}${cap ? ": " + inline(cap.req[0]) : ""}`
+      : "Algorithm";
     return (
       `<div class="thm-box" style="font-family:'JetBrains Mono',monospace;font-size:0.85em">` +
-      `<span class="thm-label">Algorithm</span><br>` +
+      `<span class="thm-label">${title}</span><br>` +
       `<div style="white-space:pre-wrap;margin-top:0.5rem">${c}</div>` +
       `</div>`
     );
-  }
+  };
+  body = body.replace(/\\begin\{algorithm\}(?:\[[^\]]*\])?([\s\S]*?)\\end\{algorithm\}/g, (_, c: string) =>
+    block(renderAlgorithm(c, take("algorithm")))
+  );
+  body = body.replace(/\\begin\{(algorithmic|algorithm2e|algorithmicx|algpseudocode)\}(?:\[[^\]]*\])?([\s\S]*?)\\end\{\1\}/g, (_, _e: string, c: string) =>
+    block(renderAlgorithm(c, null))
+  );
 
-  const algoEnvs = [
-    "algorithm", "algorithmic", "algorithm2e", "algorithmicx", "algpseudocode",
-  ];
-  for (const env of algoEnvs) {
-    body = body.replace(
-      new RegExp(`\\\\begin\\{${env}\\}(?:\\[[^\\]]*\\])?(\\s*[\\s\\S]*?)\\\\end\\{${env}\\}`, "g"),
-      (_, content: string) => block(renderAlgorithm(content))
+  // Bibliographies
+  body = body.replace(/\\begin\{thebibliography\}[\s\S]*?\\end\{thebibliography\}/g, () => block(bibHtml || ""));
+  body = replaceCmd(body, "bibliography", 1, (c) => {
+    const files = c.req[0].split(",").map((f) => f.trim()).filter(Boolean)
+      .map((f) => escapeHtml(f.endsWith(".bib") ? f : `${f}.bib`)).join(", ");
+    return block(
+      `<div class="bib-section"><h2 class="bib-heading">References</h2>` +
+      `<p class="bib-note" style="font-size:0.85em;font-style:italic">Bibliography from ${files}: the entries are formatted when you compile to PDF.</p></div>`
     );
-  }
-
-  // ── Beamer frame environments ─────────────────────────────────────────────
-  // Render each frame as a styled card with its title (frametitle).
-  body = body.replace(
-    /\\begin\{frame\}(\[[^\]]*\])?(?:\{([^}]*)\})?([\s\S]*?)\\end\{frame\}/g,
-    (_, _opts, title: string | undefined, content: string) => {
-      const titleHtml = title
-        ? `<div style="font-weight:700;font-size:1rem;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)">${inline(title)}</div>`
-        : "";
-      const frametitle = content.match(/\\frametitle\{([^}]*)\}/);
-      const ftHtml = frametitle
-        ? `<div style="font-weight:700;font-size:1rem;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)">${inline(frametitle[1])}</div>`
-        : "";
-      const cleaned = content
-        .replace(/\\frametitle\{[^}]*\}/g, "")
-        .replace(/\\framesubtitle\{[^}]*\}/g, "");
-      return block(
-        `<div class="thm-box" style="border-left:3px solid var(--accent);margin:0.75rem 0">` +
-        (ftHtml || titleHtml) +
-        `${inline(cleaned.trim())}</div>`
-      );
-    }
-  );
-
-  // Beamer block environments
-  body = body.replace(/\\begin\{block\}\{([^}]*)\}([\s\S]*?)\\end\{block\}/g, (_, title, c) =>
-    block(`<div class="thm-box"><span class="thm-label">${inline(title)}</span> ${inline(c.trim())}</div>`)
-  );
-  body = body.replace(/\\begin\{alertblock\}\{([^}]*)\}([\s\S]*?)\\end\{alertblock\}/g, (_, title, c) =>
-    block(`<div class="thm-box" style="border-color:#f87171"><span class="thm-label" style="color:#f87171">${inline(title)}</span> ${inline(c.trim())}</div>`)
-  );
-  body = body.replace(/\\begin\{exampleblock\}\{([^}]*)\}([\s\S]*?)\\end\{exampleblock\}/g, (_, title, c) =>
-    block(`<div class="thm-box" style="border-color:#34d399"><span class="thm-label" style="color:#34d399">${inline(title)}</span> ${inline(c.trim())}</div>`)
-  );
-
-  // Beamer columns layout — render each column inline
-  body = body.replace(/\\begin\{columns\}([\s\S]*?)\\end\{columns\}/g, (_, content) => {
-    const cols = [...content.matchAll(/\\begin\{column\}(?:\[[^\]]*\])?\{[^}]*\}([\s\S]*?)\\end\{column\}/g)]
-      .map(m => `<div style="flex:1;min-width:0">${inline(m[1].trim())}</div>`)
-      .join("");
-    return block(`<div style="display:flex;gap:1.5rem;align-items:flex-start">${cols}</div>`);
   });
-
-  // ── Suppress non-renderable environments gracefully ───────────────────────
-  // tikz, pgf, comment — remove silently (can't render in browser)
-  body = body.replace(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g, () =>
-    block(`<div class="fig-placeholder">🔷 TikZ figure (not rendered in browser preview — compile to PDF)</div>`)
-  );
-  body = body.replace(/\\begin\{pgfpicture\}[\s\S]*?\\end\{pgfpicture\}/g, () =>
-    block(`<div class="fig-placeholder">🔷 PGF figure (not rendered in browser preview)</div>`)
-  );
-  body = body.replace(/\\begin\{comment\}[\s\S]*?\\end\{comment\}/g, "");
-
-  // \printbibliography placeholder
   body = body.replace(/\\printbibliography(?:\[[^\]]*\])?/g, () =>
     block(`<div class="bib-section"><h2 class="bib-heading">References</h2>` +
-      `<div class="unknown-env" style="border-color:#6366f1;color:#6366f1;font-size:0.82em">` +
-      `📚 <code>\\printbibliography</code> — compile with <strong>biber</strong> to generate the reference list.</div></div>`)
+      `<p class="bib-note" style="font-size:0.85em;font-style:italic">Bibliography: <code>\\printbibliography</code> is filled by biber when you compile to PDF.</p></div>`)
   );
 
-  // ── Layout / formatting environments ─────────────────────────────────────
+  // ── Multi-file: \input / \include warning ────────────────────────────────
+  body = replaceCmd(body, "input|include|subfile", 1, (c) => {
+    const fname = c.req[0];
+    warnings.push({ env: "\\input", reason: `Multi-file document: "${fname}" not loaded` });
+    return block(
+      `<div class="unknown-env">Note: <code>\\${c.name}{${escapeHtml(fname)}}</code> is a separate file. ` +
+      `Paste the contents of <em>${escapeHtml(fname)}</em> here to preview it.</div>`
+    );
+  });
 
-  // titlepage — unwrap so its content (minipages, rules, \\[len], super-
-  // scripts) flows through the normal pipeline instead of being dumped raw
-  // as an "unknown environment". Must run before the minipage handler below.
-  body = body.replace(/\\begin\{titlepage\}([\s\S]*?)\\end\{titlepage\}/g, (_, c) => `\n${c}\n`);
-
-  // center / flushleft / flushright
-  body = body.replace(/\\begin\{center\}([\s\S]*?)\\end\{center\}/g, (_, c) =>
-    block(`<div style="text-align:center">${inline(c.trim())}</div>`)
-  );
-  body = body.replace(/\\begin\{flushleft\}([\s\S]*?)\\end\{flushleft\}/g, (_, c) =>
-    block(`<div style="text-align:left">${inline(c.trim())}</div>`)
-  );
-  body = body.replace(/\\begin\{flushright\}([\s\S]*?)\\end\{flushright\}/g, (_, c) =>
-    block(`<div style="text-align:right">${inline(c.trim())}</div>`)
-  );
-
-  // minipage — strip position/width args, pass content through
-  body = body.replace(
-    /\\begin\{minipage\}(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{[^}]*\}([\s\S]*?)\\end\{minipage\}/g,
-    (_, c) => inline(c.trim()) + " "
-  );
-
-  // multicols — strip column arg, pass content through
-  body = body.replace(/\\begin\{multicols\}\{[^}]*\}([\s\S]*?)\\end\{multicols\}/g, (_, c) =>
-    block(`<div style="column-count:2;gap:2em">${inline(c.trim())}</div>`)
-  );
-
-  // quote / quotation / verse
-  body = body.replace(/\\begin\{(?:quote|quotation)\}([\s\S]*?)\\end\{(?:quote|quotation)\}/g, (_, c) =>
-    block(`<blockquote style="margin:1rem 2rem;font-style:italic">${inline(c.trim())}</blockquote>`)
-  );
-  body = body.replace(/\\begin\{verse\}([\s\S]*?)\\end\{verse\}/g, (_, c) =>
-    block(`<div style="margin:1rem 2rem;font-style:italic;white-space:pre-line">${inline(c.trim())}</div>`)
-  );
-
-  // description (labelled list like <dl>)
-  body = body.replace(/\\begin\{description\}([\s\S]*?)\\end\{description\}/g, (_, content) => {
-    const items = content.split(/\\item\s*/).filter((s: string) => s.trim());
-    const dls = items.map((s: string) => {
-      const labelM = s.match(/^\[([^\]]*)\]\s*/);
-      if (labelM) {
-        const label = labelM[1];
-        const rest  = s.slice(labelM[0].length).trim();
-        return `<dt><strong>${inline(label)}</strong></dt><dd>${inline(rest)}</dd>`;
+  // ── Sections: one pass in document order (numbers come from the prescan) ─
+  body = replaceCmd(body, "part|chapter|section|subsection|subsubsection|paragraph|subparagraph", 1, (c) => {
+    const t = inline(c.req[0]);
+    const numbered = !c.star && c.name in SEC_LEVEL;
+    const num = numbered ? take("sec") : null;
+    switch (c.name) {
+      case "part":
+        return block(`<h1 class="chapter">${t}</h1>`);
+      case "chapter": {
+        const word = num && /^[A-Z]$/.test(num) ? "Appendix" : "Chapter";
+        const head = num ? `<span class="sec-num" style="display:block;font-size:0.7em;font-weight:400;margin-bottom:0.35rem">${word} ${num}</span>` : "";
+        return block(`<h1 class="chapter">${head}${t}</h1>`);
       }
-      return `<dd>${inline(s.trim())}</dd>`;
-    }).join("");
-    return block(`<dl style="margin:0.75rem 0 0.75rem 1.5rem">${dls}</dl>`);
-  });
-
-  // longtable — treat same as tabular but drop caption that might appear mid-body
-  body = body.replace(/\\begin\{longtable\}(\{[^}]*\})([\s\S]*?)\\end\{longtable\}/g, (_, spec, content) => {
-    // Strip longtable-specific commands
-    const clean = content
-      .replace(/\\(?:endhead|endfirsthead|endfoot|endlastfoot)\b/g, "")
-      .replace(/\\caption(?:\[[^\]]*\])?\{[^}]*\}(?:\\\\)?/g, "")
-      .replace(/\\label\{[^}]*\}/g, "");
-    // Reuse tabular renderer by prepending \begin{tabular}
-    const fakeTabular = `\\begin{tabular}${spec}${clean}\\end{tabular}`;
-    return fakeTabular;
-  });
-
-  // Remaining unknown envs
-  body = body.replace(/\\begin\{([^}]+)\}([\s\S]*?)\\end\{\1\}/g, (_, env: string, content: string) => {
-    if (!KNOWN_ENVS.has(env)) {
-      if (!warnings.find(w => w.env === env))
-        warnings.push({ env, reason: "Not supported in browser preview" });
-      return block(`<div class="unknown-env"><em>[${env}]</em></div>`);
+      case "section": return block(`<h2>${num ? `<span class="sec-num">${num}</span> ` : ""}${t}</h2>`);
+      case "subsection": return block(`<h3>${num ? `<span class="sec-num">${num}</span> ` : ""}${t}</h3>`);
+      case "subsubsection": return block(`<h4>${num ? `<span class="sec-num">${num}</span> ` : ""}${t}</h4>`);
+      default: return block(`<p style="margin-top:0.75rem"><strong>${t}</strong></p>`);
     }
-    return content;
-  });
+  }, 1);
 
-  // Sections — single combined pass to preserve document order.
-  // Three separate body.replace() calls would process ALL sections before
-  // ANY subsections, making secCounter stale by the time subsections run.
-  body = body.replace(/\\(chapter|(?:sub){0,2}section|(?:sub)?paragraph)(\*?)\{([^}]*)\}/g, (_, cmd, star, t) => {
-    const starred = star === "*";
-    if (cmd === "chapter") {
-      return block(`<h1 class="chapter">${inline(t)}</h1>`);
-    } else if (cmd === "section") {
-      if (!starred) { secCounter++; subCounter = 0; subSubCounter = 0; }
-      const num = starred ? "" : `<span class="sec-num">${secCounter}</span> `;
-      return block(`<h2>${num}${inline(t)}</h2>`);
-    } else if (cmd === "subsection") {
-      if (!starred) { subCounter++; subSubCounter = 0; }
-      const num = starred ? "" : `<span class="sec-num">${secCounter}.${subCounter}</span> `;
-      return block(`<h3>${num}${inline(t)}</h3>`);
-    } else if (cmd === "subsubsection") {
-      if (!starred) subSubCounter++;
-      const num = starred ? "" : `<span class="sec-num">${secCounter}.${subCounter}.${subSubCounter}</span> `;
-      return block(`<h4>${num}${inline(t)}</h4>`);
-    } else { // paragraph / subparagraph
-      return block(`<p style="margin-top:0.75rem"><strong>${inline(t)}</strong></p>`);
-    }
+  // Table of contents from the prescan headings
+  body = body.replace(/\\tableofcontents(?![a-zA-Z])/g, () => {
+    if (!toc.length) return block(`<div class="toc-placeholder"><em>[Table of Contents]</em></div>`);
+    const rows = toc.filter((e) => e.level <= 2).map((e) =>
+      `<div style="margin-left:${(e.level - (hasChapters ? 0 : 1)) * 1.5}em${e.level === 0 ? ";font-weight:700;margin-top:0.4rem" : ""}">` +
+      `<span class="sec-num">${e.num}</span> ${inline(e.title)}</div>`
+    ).join("");
+    return block(`<div class="toc"><h2>Contents</h2>${rows}</div>`);
   });
-
-  // TOC / list placeholders
-  body = body.replace(/\\tableofcontents/g, () =>
-    block(`<div class="toc-placeholder"><em>[Table of Contents]</em></div>`)
-  );
-  body = body.replace(/\\(listoffigures|listoftables)/g, () =>
+  body = body.replace(/\\(listoffigures|listoftables)(?![a-zA-Z])/g, () =>
     block(`<div class="toc-placeholder"><em>[List of Figures/Tables]</em></div>`)
   );
 
-  // Appendix
-  body = body.replace(/\\appendix\b/g, () =>
-    block(`<div class="appendix-marker"><strong>Appendices</strong></div>`)
-  );
+  // ── Wrapper environments, innermost first ────────────────────────────────
+  const paras = (content: string) => splitParagraphs(inline(content.trim()));
+  const withLead = (lead: string, content: string) => {
+    const html = paras(content);
+    if (/^<p>/.test(html) && html.indexOf("<p>", 3) < 0 && /<\/p>$/.test(html) && !/\x00B/.test(html)) {
+      return `${lead} ${html.slice(3, -4)}`;
+    }
+    if (!html) return lead;
+    return /^<p>/.test(html) ? `<p>${lead} ${html.slice(3)}` : `<p>${lead}</p>${html}`;
+  };
+  const stripLeadOpt = (content: string): [string | undefined, string] => {
+    const q = skipWs(content, 0);
+    if (content[q] !== "[") return [undefined, content];
+    const e = matchBracket(content, q);
+    return e < 0 ? [undefined, content] : [content.slice(q + 1, e), content.slice(e + 1)];
+  };
+  const stripLeadGroup = (content: string): [string | undefined, string] => {
+    const q = skipWs(content, 0);
+    const e = matchBrace(content, q);
+    return e < 0 ? [undefined, content] : [content.slice(q + 1, e), content.slice(e + 1)];
+  };
+
+  const renderWrapper = (_m: string, env: string, content: string): string => {
+    const thm = thmInfo(env, defs);
+    if (thm) {
+      const mk = content.match(/^\x01(\d+)\x01/);
+      const num = mk ? thmNums[+mk[1]] : null;
+      if (mk) content = content.slice(mk[0].length);
+      const [opt, rest] = stripLeadOpt(content);
+      const cls = env.replace(/[^a-zA-Z0-9_-]/g, "");
+      if (env === "proof") {
+        const lead = `<span class="thm-label">${opt ? inline(opt) : "Proof"}.</span>`;
+        return block(`<div class="thm-box thm-proof">${withLead(lead, rest)}<span style="float:right">∎</span></div>`);
+      }
+      const lead = `<span class="thm-label">${inline(thm.label)}${num ? " " + num : ""}${opt ? ` (${inline(opt)})` : ""}.</span>`;
+      return block(`<div class="thm-box thm-${cls}">${withLead(lead, rest)}</div>`);
+    }
+    switch (env) {
+      case "abstract":
+        return block(`<div class="abstract">${withLead("<strong>Abstract.</strong>", content)}</div>`);
+      case "center": case "flushleft": case "flushright": {
+        const align = env === "center" ? "center" : env === "flushleft" ? "left" : "right";
+        return block(`<div style="text-align:${align}">${paras(content)}</div>`);
+      }
+      case "minipage": {
+        let c = content;
+        for (let k = 0; k < 3; k++) c = stripLeadOpt(c)[1];
+        c = stripLeadGroup(c)[1];
+        return block(`<div class="minipage" style="display:inline-block;vertical-align:top;max-width:100%">${paras(c)}</div>`);
+      }
+      case "multicols": case "multicols*":
+        return block(`<div style="column-count:2;gap:2em">${paras(stripLeadGroup(content)[1])}</div>`);
+      case "quote": case "quotation":
+        return block(`<blockquote style="margin:1rem 2rem;font-style:italic">${paras(content)}</blockquote>`);
+      case "verse":
+        return block(`<div style="margin:1rem 2rem;font-style:italic;white-space:pre-line">${inline(content.trim())}</div>`);
+      case "block": case "alertblock": case "exampleblock": {
+        const [title, rest] = stripLeadGroup(content);
+        return block(`<div class="thm-box"><span class="thm-label">${inline(title ?? "")}</span> ${paras(rest)}</div>`);
+      }
+    }
+    if (TRANSPARENT_ENVS.has(env)) {
+      // Drop the leading arguments of envs that take one ({max width=...}, {english}).
+      const c = /^(?:adjustbox|spacing|otherlanguage)$/.test(env) ? stripLeadGroup(content)[1] : content;
+      return `\n${c}\n`;
+    }
+    // Unknown environment: never drop its content; show it under a small label.
+    if (!warnings.find((w) => w.env === env)) warnings.push({ env, reason: "Not supported in browser preview" });
+    const [, rest] = stripLeadOpt(content);
+    return block(
+      `<div class="env-unknown" style="margin:0.9rem 0">` +
+      `<div class="unknown-env" style="display:inline-block;font-size:0.72em;padding:0.05rem 0.45rem;margin-bottom:0.3rem">${escapeHtml(env)}</div>` +
+      `${paras(rest)}</div>`
+    );
+  };
+  {
+    const WRAP_RE = /\\begin\{([^}]+)\}((?:(?!\\begin\{)[\s\S])*?)\\end\{\1\}/g;
+    for (let guard = 0; guard < 60; guard++) {
+      const next = body.replace(WRAP_RE, renderWrapper);
+      if (next === body) break;
+      body = next;
+    }
+  }
+  body = body.replace(/\x01\d+\x01/g, "");
 
   // ── Phase 2: inline on remaining plain text ──────────────────────────────
-  // LaTeX comments. Escaped \% was protected up front, so every bare % here
-  // starts a comment (including the one in "\\% note" after a line break).
-  body = body.replace(/%[^\n]*/gm, "");
   body = inline(body);
 
   // ── Phase 3: paragraph splitting ─────────────────────────────────────────
-  body = body
-    .split(/\n{2,}/)
+  body = splitParagraphs(body);
+
+  // ── Phase 4: restore placeholders ───────────────────────────────────────
+  // Reverse insertion order: inner placeholders (inserted first) are resolved
+  // after the outer html that embeds them.
+  for (const [ph, html] of [...blocks].reverse()) {
+    body = body.split(ph).join(html);
+  }
+
+  // ── Phase 5: append footnotes ────────────────────────────────────────────
+  if (footnoteList.length > 0) {
+    const footHtml = footnoteList
+      .map((txt, i) => `<div class="footnote-item"><sup class="footnote-num">${i + 1}</sup> ${txt}</div>`)
+      .join("");
+    body += `<div class="footnote-bar"><hr class="footnote-rule"/>${footHtml}</div>`;
+  }
+
+  let html = restoreEscapes(header + body, "html");
+  html = html.replace(/\x00I(\d+)\x00/g, (_, k: string) => inlineTokens[+k] ?? "");
+  // Placeholders whose html was dropped (e.g. inside a stripped command)
+  html = html.replace(/\x00B\d+\x00/g, "");
+  return { html, warnings, macros: { ...defs.mathOps } };
+}
+
+// ── Helper: paragraphs around block placeholders ─────────────────────────────
+function splitParagraphs(body: string): string {
+  return body
+    .split(/\n[ \t]*\n/)
     .map((chunk) => {
       const t = chunk.trim();
       if (!t) return "";
@@ -985,31 +1689,14 @@ export function latexToHtml(src: string): { html: string; warnings: ParseWarning
     })
     .filter(Boolean)
     .join("\n");
-
-  // ── Phase 4: restore placeholders ───────────────────────────────────────
-  // IMPORTANT: iterate in REVERSE insertion order so that inner placeholders
-  // (which were inserted first) are resolved after outer ones embed them.
-  // e.g. nested \begin{itemize} — inner list ph appears inside outer list html;
-  // processing outer first puts inner ph into body, then inner resolves it.
-  for (const [ph, html] of [...blocks].reverse()) {
-    body = body.split(ph).join(html);
-  }
-
-  // ── Phase 5: append footnotes ────────────────────────────────────────────
-  if (footnoteList.length > 0) {
-    const footHtml = footnoteList
-      .map((txt, i) =>
-        `<div class="footnote-item"><sup class="footnote-num">${i + 1}</sup> ${txt}</div>`
-      )
-      .join("");
-    body += `<div class="footnote-bar"><hr class="footnote-rule"/>${footHtml}</div>`;
-  }
-
-  return { html: restoreEscapes(header + body, "html"), warnings };
 }
 
-// ── Helper: numbered math block HTML ─────────────────────────────────────────
-function numberedMathBlock(math: string, num: number): string {
+// ── Helper: math block HTML ──────────────────────────────────────────────────
+function mathBlock(math: string): string {
+  return `<div class="math-block" data-math="${encodeMath(math)}"></div>`;
+}
+
+function numberedMathBlock(math: string, num: string): string {
   return (
     `<div class="math-numbered">` +
     `<div class="math-block math-numbered__inner" data-math="${encodeMath(math)}"></div>` +
@@ -1024,31 +1711,97 @@ function cleanMath(math: string): string {
 }
 
 // ── Helper: translate packages that KaTeX doesn't support natively ────────────
-// Called on math content BEFORE encodeMath so KaTeX can render correctly.
 function sanitizeMathForKaTeX(math: string): string {
-  return math
-    // bm package: \bm{x} → \boldsymbol{x}  (KaTeX supports boldsymbol, not bm)
-    .replace(/\\bm\{/g, "\\boldsymbol{")
-    // \operatorname* (starred) → \operatorname (KaTeX doesn't support *)
-    .replace(/\\operatorname\*/g, "\\operatorname");
+  // bm package: \bm{x} -> \boldsymbol{x}  (KaTeX supports boldsymbol, not bm)
+  return math.replace(/\\bm\{/g, "\\boldsymbol{");
 }
 
 // ── Inline processing ─────────────────────────────────────────────────────────
 
-/** Static version (no footnote collection) — used in prescan bibitem text */
+const TEXT_SYMBOLS: Record<string, string> = {
+  textbullet: "•", textdagger: "†", textdaggerdbl: "‡", dag: "†", ddag: "‡", S: "§", P: "¶",
+  textsection: "§", textparagraph: "¶", copyright: "©", textcopyright: "©", textregistered: "®",
+  texttrademark: "™", textdegree: "°", pounds: "£", textsterling: "£", euro: "€", texteuro: "€",
+  textellipsis: "…", checkmark: "✓", textendash: "\u2013", textemdash: "\u2014", textquoteleft: "‘",
+  textquoteright: "’", textquotedblleft: "“", textquotedblright: "”", guillemotleft: "«",
+  guillemotright: "»", textless: "&lt;", textgreater: "&gt;", textbar: "|", textperiodcentered: "·",
+  textmu: "µ", textonehalf: "½", textonequarter: "¼", textthreequarters: "¾", texttimes: "×",
+};
+
+const CITE_NAMES = "cite|citep|citet|citealt|citealp|citeauthor|citeyear|citeyearpar|citenum|parencite|textcite|autocite|footcite|supercite|Cite|Citep|Citet|Parencite|Textcite|Autocite|Citeauthor";
+
+/** Static version (no labels, no footnote collection): bibliography text, labels */
 function processInlineStatic(text: string, preEscaped = false): string {
-  return processInline(text, new Map(), new Map(), new Map(), [], () => 0, preEscaped);
+  return processInline(text, {
+    labels: new Map(), citeMap: new Map(), citeAuthorMap: new Map(), footnotes: [], nextFoot: () => 0,
+  }, preEscaped);
 }
 
-function processInline(
-  text: string,
-  labelMap: Map<string, string>,
-  citeMap: Map<string, number>,
-  citeAuthorMap: Map<string, string>,
-  footnoteList: string[],
-  nextFootN: () => number,
-  preEscaped = false,
-): string {
+const mathSpan = (m: string) => `<span class="math-inline" data-math="${encodeMath(m)}"></span>`;
+
+function renderCite(c: CmdMatch, ctx: InlineCtx, rec: (s: string) => string): string {
+  const keys = c.req[0].split(",").map((k) => k.trim()).filter(Boolean);
+  const [o1, o2] = c.opt;
+  const pre = o2 !== undefined ? o1 : undefined;
+  const post = o2 !== undefined ? o2 : o1;
+  const preH = pre?.trim() ? `${rec(pre.trim())} ` : "";
+  const postH = post?.trim() ? `, ${rec(post.trim())}` : "";
+  const num = (k: string) => { const v = ctx.citeMap.get(k); return v !== undefined ? String(v) : k; };
+  const numeric = () => `<cite class="ref">[${preH}${keys.map(num).join(", ")}${postH}]</cite>`;
+  const ay = keys.map((k) => ctx.citeAuthorMap.get(k));
+  const allAy = keys.length > 0 && ay.every(Boolean);
+  const split = (s: string): [string, string] => {
+    const m = s.match(/^(.*?)\s*\(([^()]*)\)$/);
+    return m ? [m[1], m[2]] : [s, ""];
+  };
+  const name = c.name.toLowerCase();
+  if (!allAy) return numeric();
+  const parts = ay.map((s) => split(s!));
+  switch (name) {
+    case "citep": case "parencite": case "autocite":
+      return `<cite class="ref">(${preH}${parts.map(([a, y]) => (y ? `${a}, ${y}` : a)).join("; ")}${postH})</cite>`;
+    case "citealt":
+      return `<cite class="ref">${preH}${parts.map(([a, y]) => `${a} ${y}`.trim()).join("; ")}${postH}</cite>`;
+    case "citealp":
+      return `<cite class="ref">${preH}${parts.map(([a, y]) => (y ? `${a}, ${y}` : a)).join("; ")}${postH}</cite>`;
+    case "citeauthor":
+      return `<cite class="ref">${parts.map(([a]) => a).join("; ")}</cite>`;
+    case "citeyear":
+      return `<cite class="ref">${parts.map(([, y]) => y).join("; ")}</cite>`;
+    case "citeyearpar":
+      return `<cite class="ref">(${parts.map(([, y]) => y).join("; ")})</cite>`;
+    case "citenum": case "supercite": case "footcite":
+      return numeric();
+    default: // cite, citet, textcite: author (year) in author-year mode
+      return `<cite class="ref">${parts.map(([a, y], i) =>
+        y ? `${a} (${i === 0 ? preH : ""}${y}${i === parts.length - 1 ? postH : ""})` : a
+      ).join("; ")}</cite>`;
+  }
+}
+
+function renderRef(c: CmdMatch, ctx: InlineCtx): string {
+  const keys = c.req[0].split(",").map((k) => k.trim()).filter(Boolean);
+  const unresolved = (k: string) => `<span class="ref unresolved" title="Unresolved: ${escapeAttr(k)}">??</span>`;
+  const one = (k: string) => {
+    const L = ctx.labels.get(k);
+    if (!L) return unresolved(k);
+    switch (c.name) {
+      case "ref": case "labelcref": case "nameref":
+        return `<span class="ref">${L.num}</span>`;
+      case "eqref":
+        return `<span class="ref">(${L.num})</span>`;
+      case "pageref":
+        return `<span class="ref" title="Page numbers are set when the PDF is compiled">?</span>`;
+      default: // cref, Cref, autoref, vref
+        return `<span class="ref">${L.kind === "equation" ? `Eq. (${L.num})` : `${L.kind} ${L.num}`}</span>`;
+    }
+  };
+  const parts = keys.map(one);
+  if (parts.length <= 1) return parts.join("") || unresolved("");
+  return parts.length === 2 ? `${parts[0]} and ${parts[1]}` : `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
+function processInline(text: string, ctx: InlineCtx, preEscaped = false): string {
   // ── Security: neutralize literal HTML from the (untrusted) document source ──
   // The rendered output is injected via dangerouslySetInnerHTML, so any raw
   // `<`, `>`, `&` in prose OR inside a command argument (e.g. \textbf{<script>})
@@ -1059,111 +1812,88 @@ function processInline(
   // is handled at each of those sinks. `preEscaped` avoids double-escaping when
   // a caller (e.g. the \footnote handler) passes already-escaped content.
   if (!preEscaped) text = escapeHtml(text);
+  const rec = (t: string) => processInline(t, ctx, true);
 
-  // Inline math: $...$ only ($$...$$ is handled as block in Phase 1)
-  text = text.replace(/\$([^$\n]+?)\$/g, (_, m) =>
-    `<span class="math-inline" data-math="${encodeMath(sanitizeMathForKaTeX(m))}"></span>`
-  );
+  // Inline math: $...$ and \( ... \)  ($$...$$ is handled as block in Phase 1)
+  text = text.replace(/\$([^$\n]+?)\$/g, (_, m: string) => mathSpan(m));
+  text = text.replace(/(?<!\\)\\\(([\s\S]+?)\\\)/g, (_, m: string) => mathSpan(m));
+  text = replaceCmd(text, "ensuremath", 1, (c) => mathSpan(c.req[0]));
+
+  // ── Footnotes, before any other rule so the note gets the full treatment ──
+  text = replaceCmd(text, "footnote", 1, (c) => {
+    const nf = ctx.nextFoot();
+    // content is already HTML-escaped (escape-first); don't re-escape it.
+    const note = rec(c.req[0]);
+    ctx.footnotes.push(note);
+    // Tooltip: the note as plain text (tags and placeholder tokens removed).
+    const title = note.replace(/<[^>]*>/g, "").replace(/\x00[BI]\d+\x00/g, "").replace(/\s+/g, " ").trim();
+    return `<sup class="footnote" title="${escapeAttr(title)}">${nf}</sup>`;
+  }, 1);
+
+  // siunitx before accents and typography (units contain ^ and ~)
+  text = renderSiunitx(text);
 
   // Accents (\'e, \c{c}, \ss{} ...) before the typography rules eat ' and ~
   text = renderAccents(text);
+  text = text.replace(/\\([a-zA-Z]+)(?![a-zA-Z])(?:\{\})?/g, (m, w: string) => TEXT_SYMBOLS[w] ?? m);
 
-  // Text formatting
-  text = text.replace(/\\textbf\{([^}]*)\}/g, "<strong>$1</strong>");
-  text = text.replace(/\\textit\{([^}]*)\}/g, "<em>$1</em>");
-  text = text.replace(/\\emph\{([^}]*)\}/g, "<em>$1</em>");
-  text = text.replace(/\\underline\{([^}]*)\}/g, "<u>$1</u>");
-  text = text.replace(/\\texttt\{([^}]*)\}/g, "<code>$1</code>");
-  text = text.replace(/\\text\{([^}]*)\}/g, "$1");
-  text = text.replace(/\\textsc\{([^}]*)\}/g, '<span style="font-variant:small-caps">$1</span>');
-  text = text.replace(/\\textsuperscript\{([^}]*)\}/g, "<sup>$1</sup>");
-  text = text.replace(/\\textsubscript\{([^}]*)\}/g, "<sub>$1</sub>");
-  // \parbox[pos][height][inner]{width}{content} → content (drop the box sizing
+  // Text formatting: balanced arguments, outermost first, so nesting is kept.
+  const wrap = (names: string, open: string, close: string) => {
+    text = replaceCmd(text, names, 1, (c) => open + c.req[0] + close);
+  };
+  wrap("textbf", "<strong>", "</strong>");
+  wrap("textit|emph|textsl", "<em>", "</em>");
+  wrap("underline|uline", "<u>", "</u>");
+  wrap("sout|st", "<s>", "</s>");
+  wrap("texttt", "<code>", "</code>");
+  wrap("textsc", '<span style="font-variant:small-caps">', "</span>");
+  wrap("textsuperscript", "<sup>", "</sup>");
+  wrap("textsubscript", "<sub>", "</sub>");
+  wrap("textrm|textsf|textup|textnormal|textmd|text|mbox|fbox|hbox|shortstack|hl|mark", "", "");
+  text = replaceCmd(text, "makecell", 1, (c) => c.req[0], 1);
+  text = replaceCmd(text, "texorpdfstring", 2, (c) => c.req[0]);
+  // \parbox[pos][height][inner]{width}{content} -> content (drop the box sizing
   // args, which otherwise leak as literal "[2.8cm]" text in photo-CV templates).
-  text = text.replace(/\\parbox(?:\[[^\]]*\]){0,3}\{[^{}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, "$1");
-  // \fbox / \framebox / \mbox / \makebox → content
-  text = text.replace(/\\(?:fbox|framebox|mbox|makebox)(?:\[[^\]]*\])*\{((?:[^{}]|\{[^{}]*\})*)\}/g, "$1");
+  text = replaceCmd(text, "parbox", 2, (c) => c.req[1], 3);
+  text = replaceCmd(text, "makebox|framebox", 1, (c) => c.req[0], 2);
+  text = replaceCmd(text, "resizebox", 3, (c) => c.req[2]);
+  text = replaceCmd(text, "scalebox", 2, (c) => c.req[1]);
 
-  // ── Citations \\cite{key} or \\cite{key1,key2} ──────────────────────────
-  text = text.replace(/\\cite(?:\[[^\]]*\])?\{([^}]*)\}/g, (_, keys: string) => {
-    const nums = keys.split(",").map(k => {
-      const n = citeMap.get(k.trim());
-      return n !== undefined ? String(n) : k.trim();
-    });
-    return `<cite class="ref">[${nums.join(", ")}]</cite>`;
-  });
-
-  // ── natbib author-year citations ──────────────────────────────────────────
-  // \citet{key} → Author (2022) ;  \citet*{key} → all authors
-  text = text.replace(/\\citet\*?(?:\[[^\]]*\])*\{([^}]*)\}/g, (_, keys: string) => {
-    const parts = keys.split(",").map(k => {
-      const ay = citeAuthorMap.get(k.trim());
-      if (ay) return ay;
-      const n = citeMap.get(k.trim());
-      return n !== undefined ? `[${n}]` : k.trim();
-    });
-    return `<cite class="ref">${parts.join("; ")}</cite>`;
-  });
-  // \citep{key} → (Author, 2022) ;  \citep{k1,k2} → (Author, 2022; Author2, 2018)
-  text = text.replace(/\\citep\*?(?:\[[^\]]*\])*\{([^}]*)\}/g, (_, keys: string) => {
-    const parts = keys.split(",").map(k => {
-      const ay = citeAuthorMap.get(k.trim());
-      if (ay) return ay.replace(/^(.*?)\s*\((\d{4}[a-z]?)\)$/, "$1, $2");
-      const n = citeMap.get(k.trim());
-      return n !== undefined ? String(n) : k.trim();
-    });
-    return `<cite class="ref">(${parts.join("; ")})</cite>`;
-  });
-  // \citeauthor / \citeyear / \citealt / \citealp — simplified fallbacks
-  text = text.replace(/\\cite(?:author|year|alt|alp)\*?\{([^}]*)\}/g, (_, key: string) => {
-    const ay = citeAuthorMap.get(key.trim());
-    if (ay) return `<cite class="ref">${ay}</cite>`;
-    const n = citeMap.get(key.trim());
-    return n !== undefined ? `<cite class="ref">[${n}]</cite>` : `<cite class="ref">[?]</cite>`;
-  });
+  // ── Citations ──────────────────────────────────────────────────────────────
+  text = replaceCmd(text, CITE_NAMES, 1, (c) => renderCite(c, ctx, rec), 2);
 
   // ── Cross-references ──────────────────────────────────────────────────────
-  text = text.replace(/\\eqref\{([^}]*)\}/g, (_, key: string) => {
-    const n = labelMap.get(key.trim());
-    return n !== undefined
-      ? `<span class="ref">(${n})</span>`
-      : `<span class="ref unresolved" title="Unresolved: ${escapeAttr(key)}">(??)</span>`;
+  text = replaceCmd(text, "crefrange|Crefrange", 2, (c) => {
+    const a = ctx.labels.get(c.req[0].trim());
+    const b = ctx.labels.get(c.req[1].trim());
+    if (!a || !b) return `<span class="ref unresolved">??</span>`;
+    return a.kind === "equation"
+      ? `<span class="ref">Eqs. (${a.num}) to (${b.num})</span>`
+      : `<span class="ref">${a.kind} ${a.num} to ${b.num}</span>`;
   });
-  text = text.replace(/\\ref\{([^}]*)\}/g, (_, key: string) => {
-    const n = labelMap.get(key.trim());
-    return n !== undefined
-      ? `<span class="ref">${n}</span>`
-      : `<span class="ref unresolved" title="Unresolved: ${escapeAttr(key)}">??</span>`;
-  });
+  text = replaceCmd(text, "ref|eqref|cref|Cref|autoref|Autoref|vref|Vref|labelcref|nameref|pageref", 1, (c) => renderRef(c, ctx));
   text = text.replace(/\\label\{[^}]*\}/g, "");  // consume (already in map)
 
-  // ── Footnotes ─────────────────────────────────────────────────────────────
-  text = text.replace(/\\footnote\{([^}]*)\}/g, (_, content: string) => {
-    const n = nextFootN();
-    // content is already HTML-escaped (escape-first); don't re-escape it.
-    footnoteList.push(processInlineStatic(content, true));
-    return `<sup class="footnote" title="${escapeAttr(content)}">${n}</sup>`;
-  });
-
-  // URLs and hrefs — safeHref blocks javascript:/data: schemes and any value that
+  // URLs and hrefs: safeHref blocks javascript:/data: schemes and any value that
   // could break out of the href="" attribute. u/label are already escaped for
   // `<>&` (escape-first); the visible label is safe HTML text as-is.
-  text = text.replace(/\\url\{([^}]*)\}/g, (_, u) => {
-    const href = safeHref(u);
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${u}</a>`;
-  });
-  text = text.replace(/\\href\{([^}]*)\}\{([^}]*)\}/g, (_, u, label) => {
-    const href = safeHref(u);
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-  });
+  text = replaceCmd(text, "url|nolinkurl", 1, (c) =>
+    `<a href="${safeHref(c.req[0])}" target="_blank" rel="noopener noreferrer">${c.req[0]}</a>`);
+  text = replaceCmd(text, "href", 2, (c) =>
+    `<a href="${safeHref(c.req[0])}" target="_blank" rel="noopener noreferrer">${c.req[1]}</a>`);
+
+  // Images outside a figure
+  text = replaceCmd(text, "includegraphics", 1, (c) =>
+    `<span class="fig-placeholder" style="display:inline-block;padding:0.5rem 0.9rem">Figure: ${c.req[0].trim()}</span>`, 1);
 
   // Author lists
-  text = text.replace(/\\and\b/g, " &amp; ");
+  text = text.replace(/\\and(?![a-zA-Z])/g, " &amp; ");
 
   // Special symbols
-  text = text.replace(/\\LaTeX\b/g, "L<sup>a</sup>T<sub>e</sub>X");
-  text = text.replace(/\\TeX\b/g, "T<sub>e</sub>X");
-  text = text.replace(/\\BibTeX\b/g, "B<sub>IB</sub>T<sub>E</sub>X");
+  text = text.replace(/\\LaTeX(?![a-zA-Z])(?:\{\})?/g, "L<sup>a</sup>T<sub>e</sub>X");
+  text = text.replace(/\\TeX(?![a-zA-Z])(?:\{\})?/g, "T<sub>e</sub>X");
+  text = text.replace(/\\BibTeX(?![a-zA-Z])(?:\{\})?/g, "B<sub>IB</sub>T<sub>E</sub>X");
+  text = text.replace(/\\today(?![a-zA-Z])/g, new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
 
   // Typography
   text = text.replace(/---/g, "—");
@@ -1172,111 +1902,69 @@ function processInline(
   text = text.replace(/''/g, "”");
   text = text.replace(/`/g, "‘");
   text = text.replace(/(?<![a-zA-Z])'/g, "’");
-  text = text.replace(/\\ldots\b/g, "…");
-  text = text.replace(/\\dots\b/g, "…");
+  text = text.replace(/\\(?:ldots|dots|textellipsis)(?![a-zA-Z])(?:\{\})?/g, "…");
 
-  // Spacing / line breaks — consume the optional \\[length] / \\* spacing arg
-  // (otherwise "[1em]", "[0.5em]" leak into the output as literal text).
+  // Spacing / line breaks: consume the optional \\[length] / \\* spacing arg
   text = text.replace(/\\\\\*?(?:\s*\[[^\]]*\])?/g, "<br>");
-  text = text.replace(/\\newline\b/g, "<br>");
-  text = text.replace(/\\~/g, " ");
-  text = text.replace(/~/g, " ");
-  text = text.replace(/\\(vspace|hspace|kern|mspace)\*?\{[^}]*\}/g, " ");
-  text = text.replace(/\\(bigskip|medskip|smallskip|noindent|indent|centering)\b/g, "");
-  text = text.replace(/\\(newpage|clearpage|pagebreak)\b/g, "");
-  text = text.replace(/\\par\b/g, "");
+  text = text.replace(/\\(?:newline|linebreak)(?![a-zA-Z])/g, "<br>");
+  text = text.replace(/\\,/g, "\u2009");
+  text = text.replace(/\\[;:> ]/g, " ");
+  text = text.replace(/\\[!/@-]/g, "");
+  text = text.replace(/~/g, " ");
+  text = replaceCmd(text, "vspace|hspace", 1, () => " ");
+  text = text.replace(/\\(kern|mspace)\*?\{[^}]*\}/g, " ");
+  text = text.replace(/\\(?:bigskip|medskip|smallskip|noindent|indent|centering|newpage|clearpage|cleardoublepage|pagebreak|nopagebreak|par|vfill|hfill|null|strut|quad|qquad)(?![a-zA-Z])/g, (m) =>
+    /quad/.test(m) ? " " : "");
 
-  // Horizontal rules
-  text = text.replace(/\\hrulefill\b/g, "<hr>");
-  text = text.replace(/\\rule\{[^}]*\}\{[^}]*\}/g, "<hr>");
+  // Rules
+  text = replaceCmd(text, "rule", 2, () => "<hr>", 1);
+  text = text.replace(/\\hrule(?:\s+height\s+[0-9.]+\s*[a-z]*)?(?![a-zA-Z])/g, "<hr>");
 
   // Thanks
-  text = text.replace(/\\thanks\{([^}]*)\}/g, "<sup>*</sup>");
+  text = replaceCmd(text, "thanks", 1, () => "<sup>*</sup>");
 
-  // ── \boxed{} — highlight result (very common in physics/math) ────────────
-  // Wrap in KaTeX \boxed so it renders with a box
-  text = text.replace(/\\boxed\{([^}]*)\}/g, (_, inner) =>
-    `<span class="math-inline" data-math="${encodeMath("\\boxed{" + inner + "}")}"></span>`
-  );
+  // \boxed{}, \bm{}, \substack{} in text mode: hand to KaTeX
+  text = replaceCmd(text, "boxed", 1, (c) => mathSpan(`\\boxed{${c.req[0]}}`));
+  text = replaceCmd(text, "bm", 1, (c) => mathSpan(`\\boldsymbol{${c.req[0]}}`));
+  text = replaceCmd(text, "substack", 1, (c) => mathSpan(`\\substack{${c.req[0]}}`));
 
-  // ── \bm{} — bold math (bm package, standard in ML papers) ────────────────
-  // Map to \boldsymbol which KaTeX understands
-  text = text.replace(/\\bm\{([^}]*)\}/g, (_, inner) =>
-    `<span class="math-inline" data-math="${encodeMath("\\boldsymbol{" + inner + "}")}"></span>`
-  );
+  // ── Colour commands ────────────────────────────────────────────────────────
+  text = replaceCmd(text, "textcolor", 2, (c) => c.req[1], 1);
+  text = replaceCmd(text, "fcolorbox", 3, (c) =>
+    `<span style="border:1px solid var(--border);padding:0.1em 0.35em;border-radius:4px;font-size:0.82em">${c.req[2]}</span>`, 1);
+  text = replaceCmd(text, "colorbox", 2, (c) => c.req[1], 1);
+  text = replaceCmd(text, "color|pagecolor", 1, () => "", 1);
+  text = text.replace(/\\normalcolor(?![a-zA-Z])/g, "");
 
-  // ── siunitx: \SI{value}{unit} / \si{unit} / \num{number} ─────────────────
-  text = text.replace(/\\SI\{([^}]*)\}\{([^}]*)\}/g, (_, val, unit) => {
-    // Simplify unit: \meter → m, \per → /, \squared → ², etc.
-    const u = unit
-      .replace(/\\per\b/g, "/").replace(/\\kilo\b/g, "k").replace(/\\mega\b/g, "M")
-      .replace(/\\meter\b/g, "m").replace(/\\metre\b/g, "m")
-      .replace(/\\second\b/g, "s").replace(/\\kilogram\b/g, "kg")
-      .replace(/\\newton\b/g, "N").replace(/\\joule\b/g, "J")
-      .replace(/\\watt\b/g, "W").replace(/\\hertz\b/g, "Hz")
-      .replace(/\\pascal\b/g, "Pa").replace(/\\kelvin\b/g, "K")
-      .replace(/\\celsius\b/g, "°C").replace(/\\degree\b/g, "°")
-      .replace(/\\squared\b/g, "²").replace(/\\cubed\b/g, "³")
-      .replace(/\\\\|\s*\.\s*/g, "").replace(/\{|\}/g, "").trim();
-    return `${val} ${u}`;
-  });
-  text = text.replace(/\\si\{([^}]*)\}/g, (_, unit) =>
-    unit.replace(/\\[a-zA-Z]+/g, (m: string) => m.slice(1)).replace(/[{}]/g, "")
-  );
-  text = text.replace(/\\num\{([^}]*)\}/g, "$1");
-
-  // ── \substack — multi-line subscript/superscript ──────────────────────────
-  // Already handled by KaTeX if inside math — this is a fallback for text mode
-  text = text.replace(/\\substack\{([^}]*)\}/g, (_, inner) =>
-    `<span class="math-inline" data-math="${encodeMath("\\substack{" + inner + "}")}"></span>`
-  );
-
-  // ── \color commands ────────────────────────────────────────────────────────
-  // \textcolor{color}{text} — keep text, drop color
-  text = text.replace(/\\textcolor\{[^}]*\}\{([^}]*)\}/g, "$1");
-  // \fcolorbox{border}{fill}{text} — render as a labeled tag/badge
+  // ── Font size / weight / shape / alignment switches ──────────────────────
   text = text.replace(
-    /\\fcolorbox\{[^}]*\}\{[^}]*\}\{((?:[^{}]|\{[^{}]*\})*)\}/g,
-    (_, content) =>
-      `<span style="border:1px solid var(--border);padding:0.1em 0.35em;border-radius:4px;font-size:0.82em">${content}</span>`
-  );
-  // \colorbox{color}{text} — keep text
-  text = text.replace(/\\colorbox\{[^}]*\}\{([^}]*)\}/g, "$1");
-  // \color{...} — drop entirely (don't emit color name)
-  text = text.replace(/\\color\{[^}]*\}/g, "");
-  // \pagecolor, \normalcolor, etc. — drop
-  text = text.replace(/\\(?:pagecolor|normalcolor|textcolor)\{[^}]*\}/g, "");
-
-  // ── Font size / weight / shape shortcuts ─────────────────────────────────
-  text = text.replace(
-    /\\(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge)\b/g, ""
-  );
-  text = text.replace(
-    /\\(?:bfseries|itshape|upshape|slshape|scshape|mdseries|rmfamily|sffamily|ttfamily|normalfont)\b/g, ""
+    /\\(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge|bfseries|itshape|upshape|slshape|scshape|mdseries|rmfamily|sffamily|ttfamily|normalfont|em|bf|it|rm|sf|tt|sc|raggedright|raggedleft|justifying)(?![a-zA-Z])/g, ""
   );
 
-  // ── Alignment directives ──────────────────────────────────────────────────
-  text = text.replace(/\\(?:raggedright|raggedleft|centering|justifying)\b/g, "");
+  // ── Fill commands ─────────────────────────────────────────────────────────
+  text = text.replace(/\\dotfill(?![a-zA-Z])/g, '<span style="letter-spacing:0.15em">⋯⋯⋯⋯⋯⋯⋯⋯</span>');
+  text = text.replace(/\\hrulefill(?![a-zA-Z])/g, '<span style="display:inline-block;flex:1;border-bottom:1px solid currentColor;min-width:2rem;margin:0 0.25rem;vertical-align:middle"></span>');
 
-  // ── Spacing / fill commands ──────────────────────────────────────────────
-  // \dotfill — fill remaining space with dots (render as a dotted ellipsis)
-  text = text.replace(/\\dotfill\b/g, '<span style="letter-spacing:0.15em">⋯⋯⋯⋯⋯⋯⋯⋯</span>');
-  // \hrulefill — render as a thin hr-like span
-  text = text.replace(/\\hrulefill\b/g, '<span style="display:inline-block;flex:1;border-bottom:1px solid currentColor;min-width:2rem;margin:0 0.25rem;vertical-align:middle"></span>');
+  // Stray environment markers (unclosed environments) and list items
+  text = text.replace(/\\(?:begin|end)\{[^}]*\}/g, "");
+  text = text.replace(/\\item(?![a-zA-Z])(?:\s*\[[^\]]*\])?/g, "");
 
-  // ── Horizontal rules ──────────────────────────────────────────────────────
-  // \hrule and \hrule height 0.6pt — render as <hr>
-  text = text.replace(/\\hrule(?:\s+height\s+[0-9.]+\s*[a-z]*)?\b/g, "<hr>");
-
-  // ── Argument placeholders (#1, #2, …) left over from un-stripped commands ──
+  // ── Argument placeholders (#1, #2, ...) left over from un-stripped commands ──
   text = text.replace(/#\d/g, "");
 
-  // Generic \cmd{arg} → arg  (last-resort)
-  text = text.replace(/\\[a-zA-Z]+\*?\{([^}]*)\}/g, "$1");
-  text = text.replace(/\\[a-zA-Z]+\*?\b/g, "");
-  text = text.replace(/\{([^}]*)\}/g, "$1");
-
-  return text;
+  // Generic \cmd{arg} -> arg (last resort), innermost groups first
+  for (let k = 0; k < 8; k++) {
+    const next = text.replace(/\\[a-zA-Z]+\*?\{([^{}]*)\}/g, "$1");
+    if (next === text) break;
+    text = next;
+  }
+  text = text.replace(/\\[a-zA-Z]+\*?/g, "");
+  for (let k = 0; k < 8; k++) {
+    const next = text.replace(/\{([^{}]*)\}/g, "$1");
+    if (next === text) break;
+    text = next;
+  }
+  return text.replace(/[{}]/g, "");
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -1285,7 +1973,7 @@ function encodeMath(math: string): string {
   // Math may have been HTML-escaped upstream (escape-first in processInline);
   // KaTeX needs the raw characters, so reverse the entity encoding here. This
   // is a no-op for block-phase math (which is never escaped).
-  const raw = restoreEscapes(math, "raw")
+  const raw = restoreEscapes(sanitizeMathForKaTeX(math), "raw")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
@@ -1311,7 +1999,7 @@ function escapeHtml(text: string): string {
 /**
  * Escape a value for an HTML attribute context. Assumes `<>&` are already
  * escaped (escape-first) and only neutralizes the quote characters that could
- * otherwise terminate a `title="…"` / `href="…"` attribute.
+ * otherwise terminate a `title="..."` / `href="..."` attribute.
  */
 function escapeAttr(text: string): string {
   return text.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
