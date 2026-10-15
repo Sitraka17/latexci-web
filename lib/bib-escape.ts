@@ -201,3 +201,108 @@ export function pubmedAuthor(a: PubmedAuthor): { bib: string; family: string } {
   // No recognisable initials: keep the name verbatim as one unit.
   return { bib: `{${escapeLatex(name)}}`, family: tokens[0] };
 }
+
+// ── Title capitals ───────────────────────────────────────────────────────────
+
+/** Two or more capitals, or a capital plus a digit: DNA, mRNA, COVID-19, GPU. */
+function needsProtection(word: string): boolean {
+  const caps = (word.match(/\p{Lu}/gu) ?? []).length;
+  return caps >= 2 || (caps >= 1 && /\p{N}/u.test(word));
+}
+
+/**
+ * Brace the words of an (already escaped) title whose capitals a BibTeX style
+ * would lowercase: `DNA` -> `{DNA}`, `BNT162b2` -> `{BNT162b2}`. Text already
+ * inside braces, `$...$` math and TeX command names are left alone, so the
+ * function never double-wraps and is idempotent.
+ */
+export function protectTitleCaps(title: string): string {
+  let out = "";
+  let depth = 0;
+  let inMath = false;
+  let i = 0;
+  while (i < title.length) {
+    const c = title[i];
+    if (c === "\\") {
+      // Copy a control word (\LaTeX) or a control symbol (\&) verbatim.
+      const cmd = title.slice(i).match(/^\\(?:[A-Za-z]+|[\s\S])/)?.[0] ?? c;
+      out += cmd;
+      i += cmd.length;
+      continue;
+    }
+    if (c === "$") { inMath = !inMath; out += c; i++; continue; }
+    if (!inMath && c === "{") { depth++; out += c; i++; continue; }
+    if (!inMath && c === "}") { depth = Math.max(0, depth - 1); out += c; i++; continue; }
+    if (inMath || depth > 0) { out += c; i++; continue; }
+    const w = title.slice(i).match(/^[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/u)?.[0];
+    if (w) {
+      out += needsProtection(w) ? `{${w}}` : w;
+      i += w.length;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+// ── Journal names ────────────────────────────────────────────────────────────
+
+const SMALL_WORDS = new Set([
+  "a", "an", "the", "and", "or", "nor", "but", "of", "in", "on", "at", "to",
+  "for", "by", "with", "from", "as", "per", "via", "vs", "de", "des", "du",
+  "la", "le", "les", "et", "für", "und", "der", "die", "das",
+]);
+
+/**
+ * NLM writes full journal names in sentence case ("The New England journal
+ * of medicine"). Capitalise every word except small ones, which stay
+ * lowercase unless they come first or after a colon, period or parenthesis.
+ * Existing capitals are kept (JAMA, BMJ).
+ */
+export function titleCaseJournal(name: string): string {
+  let first = true;
+  return name.replace(/\p{L}[\p{L}'’]*|[:.(]/gu, (w) => {
+    if (w === ":" || w === "." || w === "(") { first = true; return w; }
+    const small = !first && SMALL_WORDS.has(w.toLowerCase());
+    first = false;
+    if (small) return w.toLowerCase();
+    return w[0].toUpperCase() + w.slice(1);
+  });
+}
+
+// ── Book editions ────────────────────────────────────────────────────────────
+
+const ORDINAL_WORDS = [
+  "", "First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh",
+  "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth",
+];
+
+/**
+ * Normalise an edition statement for BibTeX, whose styles print
+ * "<edition> edition": "2nd ed." -> "Second", "3rd edition" -> "Third",
+ * "Revised edition" -> "Revised". Anything else is kept as given.
+ */
+export function normalizeEdition(raw: string): string {
+  const s = raw.replace(/\s+/g, " ").trim().replace(/[.,;:]+$/, "");
+  if (!s) return "";
+  const num = s.match(/^(\d{1,3})(?:st|nd|rd|th|e|ème|\.)?(?=$|[\s.,])/i);
+  if (num) {
+    const n = Number(num[1]);
+    return ORDINAL_WORDS[n] ?? `${n}th`;
+  }
+  const word = s.match(/^(\p{L}+)\s+(?:ed\.?|edition|édition)$/iu);
+  if (word) return word[1][0].toUpperCase() + word[1].slice(1).toLowerCase();
+  return s;
+}
+
+/**
+ * Edition statement embedded in a title or subtitle ("Second Edition",
+ * "3rd ed."), normalised, or "" when there is none.
+ */
+export function editionFromText(text: string): string {
+  const m = text.match(
+    /\b(?:\d{1,3}(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|revised|updated|expanded)\s+(?:ed\.|edition)(?=$|[\s,;:)])/i,
+  );
+  return m ? normalizeEdition(m[0]) : "";
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { arxivAuthors, bibText, decodeXmlEntities, escapeLatex, safeKeyPart } from "@/lib/bib-escape";
+import { arxivAuthors, bibText, decodeXmlEntities, escapeLatex, protectTitleCaps, safeKeyPart } from "@/lib/bib-escape";
 
 export const runtime = "edge";
 
@@ -63,10 +63,14 @@ export async function GET(req: NextRequest) {
     // arXiv titles and abstracts are author-written TeX: keep balanced $...$
     // math, escape the rest. The abstract is kept whole (a fixed-length cut
     // could split a brace group or a math span and break the entry).
-    const title    = bibText(rawTitle, { keepMath: true });
+    const title    = protectTitleCaps(bibText(rawTitle, { keepMath: true }));
     const abstract = bibText(xmlText(entry, "summary"), { keepMath: true });
     // arXiv namespaces the DOI as <arxiv:doi> — try both spellings.
     const doi    = decodeXmlEntities(xmlText(entry, "arxiv:doi") || xmlText(entry, "doi") || "");
+    // <arxiv:primary_category term="cs.CL" .../> is self-closing: read the
+    // attribute. The strict charset keeps registry text out of the field.
+    const primaryTerm = entry.match(/<arxiv:primary_category\b[^>]*\bterm="([^"]*)"/i)?.[1] ?? "";
+    const primaryClass = /^[A-Za-z][A-Za-z.-]{0,30}$/.test(primaryTerm) ? primaryTerm : "";
 
     const authorNames = arxivAuthors(entry);
     const authors = authorNames.map(n => escapeLatex(n)).join(" and ");
@@ -81,21 +85,22 @@ export async function GET(req: NextRequest) {
       "07":"jul","08":"aug","09":"sep","10":"oct","11":"nov","12":"dec",
     };
 
+    // The biblatex / natbib convention for preprints: @misc with eprint,
+    // archivePrefix and primaryClass (rendered as "arXiv:ID [cs.CL]").
     const lines: string[] = [
-      `  author       = {${authors}}`,
-      `  title        = {${title}}`,
-      `  year         = {${year}}`,
-      month ? `  month        = ${monthNames[month] ?? month}` : "", // bare macro
-      `  journal      = {arXiv preprint}`,
-      `  howpublished = {\\url{https://arxiv.org/abs/${id}}}`,
-      `  eprint       = {${id}}`,
-      `  archivePrefix= {arXiv}`,
-      doi ? `  doi          = {${doi}}` : "",
-      `  note         = {arXiv:${id}}`,
-      abstract ? `  abstract     = {${abstract}}` : "",
+      `  author        = {${authors}}`,
+      `  title         = {${title}}`,
+      `  year          = {${year}}`,
+      month ? `  month         = ${monthNames[month] ?? month}` : "", // bare macro
+      `  eprint        = {${id}}`,
+      `  archivePrefix = {arXiv}`,
+      primaryClass ? `  primaryClass  = {${primaryClass}}` : "",
+      doi ? `  doi           = {${doi}}` : "",
+      `  url           = {https://arxiv.org/abs/${id}}`,
+      abstract ? `  abstract      = {${abstract}}` : "",
     ].filter(Boolean);
 
-    const bibtex = `@article{${citeKey},\n${lines.join(",\n")}\n}`;
+    const bibtex = `@misc{${citeKey},\n${lines.join(",\n")}\n}`;
 
     return new NextResponse(bibtex, {
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" },

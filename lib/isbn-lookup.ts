@@ -4,7 +4,7 @@
  * from the browser first, because Open Library (CORS: *) refuses requests from
  * Vercel's IP ranges (403) while answering visitors normally.
  */
-import { bibText, parseIsbn, safeKeyPart } from "@/lib/bib-escape";
+import { bibText, editionFromText, normalizeEdition, parseIsbn, protectTitleCaps, safeKeyPart } from "@/lib/bib-escape";
 
 export type IsbnResult = { ok: true; bibtex: string } | { ok: false; status: number; error: string };
 
@@ -29,7 +29,14 @@ interface BookRecord {
 
 /** Same BibTeX shape whatever the source: escaped text, key Lastname+Year_isbn... */
 function buildBookBibtex(isbn: string, b: BookRecord): string {
-  const fullTitle = b.subtitle ? `${b.title}: ${b.subtitle}` : b.title;
+  // An edition statement found in the record (edition_name) wins; otherwise
+  // one embedded in the title or subtitle ("Second Edition") is used, and a
+  // subtitle that is only that statement is dropped from the title.
+  const edition = normalizeEdition(b.edition) || editionFromText(`${b.title} ${b.subtitle}`);
+  const subtitleIsEdition = b.subtitle !== "" && editionFromText(b.subtitle) !== ""
+    && /^\s*\S+\s+(?:ed\.|edition)\s*$/i.test(b.subtitle);
+  const subtitle = subtitleIsEdition ? "" : b.subtitle;
+  const fullTitle = subtitle ? `${b.title}: ${subtitle}` : b.title;
   const authors = b.authorNames.map(n => bibText(n)).join(" and ");
   const first = b.authorNames[0] ?? "";
   const firstAuthorLast = safeKeyPart(
@@ -39,11 +46,11 @@ function buildBookBibtex(isbn: string, b: BookRecord): string {
 
   const lines: string[] = [
     authors     ? `  author    = {${authors}}`             : "",
-    `  title     = {${bibText(fullTitle)}}`,
+    `  title     = {${protectTitleCaps(bibText(fullTitle))}}`,
     b.publisher ? `  publisher = {${bibText(b.publisher)}}` : "",
     b.place     ? `  address   = {${bibText(b.place)}}`     : "",
     b.year      ? `  year      = {${b.year}}`               : "",
-    b.edition   ? `  edition   = {${bibText(b.edition)}}`   : "",
+    edition     ? `  edition   = {${bibText(edition)}}`     : "",
     b.pages     ? `  pages     = {${b.pages}}`              : "",
     b.series    ? `  series    = {${bibText(b.series)}}`    : "",
     `  isbn      = {${isbn}}`,
@@ -129,7 +136,9 @@ async function fromGoogleBooks(isbn: string, openLibraryProblem: string): Promis
     year: yearOf(info.publishedDate),
     publisher: str(info.publisher),
     place: "",
-    edition: "",
+    // Google Books has no documented edition field; read one if present,
+    // else buildBookBibtex finds "Second Edition" in the title or subtitle.
+    edition: str(info.edition),
     pages: pageCount.replace(/[^0-9]/g, ""),
     series: "",
     note: "",
