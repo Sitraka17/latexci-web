@@ -846,12 +846,13 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
 
   const downloadHtml = useCallback(() => {
     const full = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>latexci export</title>` +
-      `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">` +
-      `<style>body{max-width:700px;margin:3rem auto;font-family:Georgia,serif;line-height:1.75;padding:1rem;color:#111}` +
-      `h1{font-size:1.8rem;border-bottom:1px solid #ccc;padding-bottom:.4rem}` +
-      `h2{font-size:1.3rem;color:#333;margin-top:2rem}` +
+      `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">` +
+      `<style>body{max-width:700px;margin:3rem auto;font-family:"CMU Serif","Latin Modern Roman",Georgia,serif;line-height:1.6;padding:1rem;color:#111}` +
+      `h1{font-size:1.8rem;font-weight:400;text-align:center}h2{font-size:1.3rem;margin-top:2rem}` +
       `.math-block{text-align:center;margin:1.5rem 0}` +
-      `table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:.5rem .75rem}</style></head>` +
+      `table{border-collapse:collapse;margin:1rem auto;border-top:1.5px solid #111;border-bottom:1.5px solid #111}` +
+      `th{font-weight:400;border-bottom:.75px solid #111}th,td{padding:.25rem .9rem}` +
+      `.thm-box{margin:.9rem 0;font-style:italic}.thm-upright,.thm-proof{font-style:normal}.thm-label{font-weight:700;font-style:normal}</style></head>` +
       `<body>${html}</body></html>`;
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([full], { type: "text/html" })),

@@ -15,6 +15,8 @@ export const metadata: Metadata = {
     description: "Every tool, PDF export included. No plan, no limits.",
     url: "/pricing",
     type: "website",
+    // /pricing/:rest+ redirects, so the page reuses the site card.
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: { card: "summary_large_image", title: "latexci is free" },
 };

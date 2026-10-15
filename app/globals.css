@@ -277,9 +277,11 @@ html.light .cm-gutters { border-right: 1px solid #d6d1c4 !important; }
 }
 .latex-preview ul, .latex-preview ol { margin: 0.7rem 0; padding-left: 1.6rem; }
 .latex-preview li { margin: 0.25rem 0; }
-.latex-preview table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.91em; }
-.latex-preview th { background: var(--surface2); border: 1px solid var(--border); padding: 0.45rem 0.75rem; font-weight: 600; text-align: left; color: var(--paper-fg); }
-.latex-preview td { border: 1px solid var(--border); padding: 0.45rem 0.75rem; }
+/* booktabs: heavy top and bottom rules, a light rule under the header, no
+   vertical rules, the table as wide as its content and centred. */
+.latex-preview table { border-collapse: collapse; margin: 1.1rem auto; font-size: 0.93em; border-top: 1.5px solid var(--paper-fg); border-bottom: 1.5px solid var(--paper-fg); }
+.latex-preview th { padding: 0.3rem 0.9rem; font-weight: 400; text-align: left; color: var(--paper-fg); border-bottom: 0.75px solid var(--paper-fg); }
+.latex-preview td { padding: 0.25rem 0.9rem; }
 .latex-preview .math-block  { margin: 1.4rem 0; text-align: center; overflow-x: auto; }
 .latex-preview .doc-title   { font-size: 1.75rem; font-weight: 400; line-height: 1.25; text-align: center; margin: 1rem 0 1.1rem; color: var(--paper-fg); }
 .latex-preview .doc-author  { text-align: center; color: var(--paper-fg); font-size: 1.05rem; margin: 0.3rem 0; }
@@ -287,11 +289,12 @@ html.light .cm-gutters { border-right: 1px solid #d6d1c4 !important; }
 .latex-preview .doc-rule    { display: none; }
 /* As \begin{abstract} sets it: centred bold title, narrower block, smaller type. */
 .latex-preview .abstract    { margin: 1.2rem 2.5rem 1.6rem; font-size: 0.92em; color: var(--paper-fg); background: none; border: 0; padding: 0; }
-.latex-preview .thm-box     {
-  border: 1px solid var(--border); border-radius: 4px;
-  padding: 0.75rem 1rem; margin: 1rem 0; background: var(--surface2);
-}
-.latex-preview .thm-label   { font-weight: 700; font-style: italic; color: var(--accent); }
+/* amsthm: run-in bold label, italic body (plain style), no frame. */
+.latex-preview .thm-box     { margin: 0.9rem 0; font-style: italic; }
+.latex-preview .thm-upright { font-style: normal; }
+.latex-preview .thm-label   { font-weight: 700; font-style: normal; color: var(--paper-fg); }
+.latex-preview .thm-proof   { font-style: normal; }
+.latex-preview .thm-proof .thm-label { font-weight: 400; font-style: italic; }
 .latex-preview .fig-block   { text-align: center; margin: 1.5rem 0; }
 .latex-preview .fig-placeholder {
   background: var(--surface2); border: 1px dashed var(--border);
@@ -345,8 +348,6 @@ html.light .latex-preview h4 { color: #111; }
 
 html.light .latex-preview code { background: #f0ede5; color: #3c2c1c; }
 html.light .latex-preview pre { background: #f5f1ea; border-color: #d9d4c9; }
-html.light .latex-preview th { background: #f0ece5; border-color: #cec9c0; color: #111; }
-html.light .latex-preview td { border-color: #cec9c0; }
 html.light .latex-preview .doc-title  { color: #111; }
 html.light .latex-preview .doc-author { color: #555; }
 html.light .latex-preview .doc-date   { color: #888; }
@@ -354,8 +355,6 @@ html.light .latex-preview .doc-rule   { border-top-color: #ccc; }
 html.light .latex-preview .abstract   { background: none; color: var(--paper-fg); }
 /* amsart-style run-in label: "Abstract." in small caps. */
 .latex-preview .abstract strong:first-child { font-variant: small-caps; font-weight: 400; letter-spacing: 0.03em; }
-html.light .latex-preview .thm-box    { border-color: #cec9c0; background: #faf7f1; }
-html.light .latex-preview .thm-label  { color: #3a3028; }
 html.light .latex-preview .fig-placeholder { background: #f0ede5; border-color: #c5c0b8; color: #8a8078; }
 html.light .latex-preview figcaption  { color: #666; }
 html.light .latex-preview .ref        { color: #23408e; }

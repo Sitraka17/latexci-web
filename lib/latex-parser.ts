@@ -1588,7 +1588,10 @@ export function latexToHtml(src: string): LatexHtmlResult {
         return block(`<div class="thm-box thm-proof">${withLead(lead, rest)}<span style="float:right">∎</span></div>`);
       }
       const lead = `<span class="thm-label">${inline(thm.label)}${num ? " " + num : ""}${opt ? ` (${inline(opt)})` : ""}.</span>`;
-      return block(`<div class="thm-box thm-${cls}">${withLead(lead, rest)}</div>`);
+      // amsthm "plain" style sets the body in italic; definitions, examples
+      // and remarks ("definition"/"remark" styles) stay upright.
+      const upright = /definition|example|remark|note|notation|exercise|problem|question|case|solution/i.test(thm.label) ? " thm-upright" : "";
+      return block(`<div class="thm-box thm-${cls}${upright}">${withLead(lead, rest)}</div>`);
     }
     switch (env) {
       case "abstract":
