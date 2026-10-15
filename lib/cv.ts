@@ -461,7 +461,7 @@ function industry(d: CvData): string {
     `  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} ${tex(d.name) || "Your Name"}}\\\\[0.3em]`,
   ];
   if (d.headline.trim()) out.push(`  {\\large ${tex(d.headline)}}\\\\[0.35em]`);
-  if (contactItems(d).length) out.push(`  \\small ${contactLines(d, " \\quad\\textbar\\quad ")}`);
+  if (contactItems(d).length) out.push(`  \\small ${contactLines(d, " \\enspace\\textbar\\enspace ")}`);
   out.push("\\end{minipage}");
   if (d.photo) {
     out.push(
