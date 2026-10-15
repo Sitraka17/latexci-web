@@ -1,17 +1,16 @@
 "use client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  generateCv, unsupportedChars, EXAMPLE_CV, EMPTY_ENTRY, EMPTY_PUB,
-  type CvData, type CvEntry, type CvPublication,
+  generateCv, unsupportedChars, lengthWarning, normalizeCv, exampleFor, EXAMPLE_CV, EMPTY_CV, EMPTY_ENTRY, EMPTY_PUB,
+  type CvData, type CvEntry, type CvLang, type CvPublication, type PubType,
 } from "@/lib/cv";
 
 const STORAGE_KEY = "latexci_cv";
 
-const EMPTY_CV: CvData = {
-  ...EXAMPLE_CV,
-  name: "", headline: "", email: "", phone: "", location: "", website: "", linkedin: "", orcid: "",
-  summary: "", education: [{ ...EMPTY_ENTRY }], experience: [{ ...EMPTY_ENTRY }], publications: [],
-  skills: "", languages: "",
+const DATE_PLACEHOLDER: Record<CvLang, string> = { en: "Sept. 2021 – June 2024", fr: "sept. 2021 – juin 2024" };
+const BULLET_PLACEHOLDER: Record<CvLang, string> = {
+  en: "Cut processing time by 38% by … (verb + result + figure)",
+  fr: "Réduit le délai de traitement de 38 % en … (verbe + résultat + chiffre)",
 };
 
 // ── Small form primitives ─────────────────────────────────────────────────────
@@ -40,7 +39,9 @@ function Section({ title, children, n }: { title: string; children: ReactNode; n
   );
 }
 
-function EntryList({ items, onChange, kind }: { items: CvEntry[]; onChange: (v: CvEntry[]) => void; kind: "education" | "experience" }) {
+function EntryList({ items, onChange, kind, lang }: {
+  items: CvEntry[]; onChange: (v: CvEntry[]) => void; kind: "education" | "experience"; lang: CvLang;
+}) {
   const set = (i: number, patch: Partial<CvEntry>) => onChange(items.map((e, j) => (j === i ? { ...e, ...patch } : e)));
   return (
     <>
@@ -52,11 +53,14 @@ function EntryList({ items, onChange, kind }: { items: CvEntry[]; onChange: (v: 
           </div>
           <div className="cvb-cols">
             <Field label={kind === "education" ? "Degree" : "Job title"} value={e.title} onChange={(v) => set(i, { title: v })} />
-            <Field label="Dates" value={e.dates} onChange={(v) => set(i, { dates: v })} placeholder="2021--2024" />
+            <Field label="Dates" value={e.dates} onChange={(v) => set(i, { dates: v })} placeholder={DATE_PLACEHOLDER[lang]} />
             <Field label={kind === "education" ? "Institution" : "Organisation"} value={e.org} onChange={(v) => set(i, { org: v })} />
             <Field label="Location" value={e.location} onChange={(v) => set(i, { location: v })} />
           </div>
-          <Field label="Details (one line per bullet)" value={e.details} onChange={(v) => set(i, { details: v })} multiline rows={2} />
+          <Field
+            label="Details (one line per bullet)" value={e.details} onChange={(v) => set(i, { details: v })} multiline rows={2}
+            placeholder={kind === "experience" ? BULLET_PLACEHOLDER[lang] : undefined}
+          />
         </div>
       ))}
       <div className="cvb-add"><button type="button" className="btn btn-sm" onClick={() => onChange([...items, { ...EMPTY_ENTRY }])}>Add {kind === "education" ? "a degree" : "a position"}</button></div>
@@ -64,7 +68,11 @@ function EntryList({ items, onChange, kind }: { items: CvEntry[]; onChange: (v: 
   );
 }
 
-function PubList({ items, onChange }: { items: CvPublication[]; onChange: (v: CvPublication[]) => void }) {
+const PUB_TYPES: { v: PubType; label: string }[] = [
+  { v: "", label: "Not set" }, { v: "journal", label: "Journal" }, { v: "conference", label: "Conference" }, { v: "preprint", label: "Preprint" },
+];
+
+function PubList({ items, onChange, lang }: { items: CvPublication[]; onChange: (v: CvPublication[]) => void; lang: CvLang }) {
   const set = (i: number, patch: Partial<CvPublication>) => onChange(items.map((p, j) => (j === i ? { ...p, ...patch } : p)));
   return (
     <>
@@ -80,13 +88,37 @@ function PubList({ items, onChange }: { items: CvPublication[]; onChange: (v: Cv
             <Field label="Journal or venue" value={p.venue} onChange={(v) => set(i, { venue: v })} />
             <Field label="Year" value={p.year} onChange={(v) => set(i, { year: v })} />
             <Field label="DOI" value={p.doi} onChange={(v) => set(i, { doi: v })} placeholder="10.1234/abcd" />
+            <label className="field">
+              <span className="field-label">Type</span>
+              <select value={p.type ?? ""} onChange={(e) => set(i, { type: e.target.value as PubType })}>
+                {PUB_TYPES.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}
+              </select>
+            </label>
           </div>
+          {lang === "fr" && (
+            <span className="cvb-options">
+              <label>
+                <input type="checkbox" checked={!!p.english} onChange={(e) => set(i, { english: e.target.checked })} />
+                Title in English
+              </label>
+              <span className="cvb-hint">French typography adds a space before colons; this keeps English titles as they are.</span>
+            </span>
+          )}
         </div>
       ))}
       <div className="cvb-add"><button type="button" className="btn btn-sm" onClick={() => onChange([...items, { ...EMPTY_PUB }])}>Add a publication</button></div>
     </>
   );
 }
+
+const EXTRA_FIELDS: { key: "grants" | "teaching" | "talks" | "awards" | "service" | "references"; label: string; placeholder: string }[] = [
+  { key: "grants", label: "Grants and fellowships", placeholder: "2023 – 2025: Marie Skłodowska-Curie Fellowship (EUR 215,000)" },
+  { key: "teaching", label: "Teaching and supervision", placeholder: "2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)" },
+  { key: "talks", label: "Invited talks", placeholder: "2024: Gatsby Computational Neuroscience Unit, London" },
+  { key: "awards", label: "Awards", placeholder: "2023: Best Thesis Prize" },
+  { key: "service", label: "Service", placeholder: "Reviewer for PLOS Computational Biology" },
+  { key: "references", label: "References", placeholder: "Prof. Alan Turner, University of Cambridge, a.turner@cam.ac.uk" },
+];
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 export default function CvBuilder() {
@@ -96,12 +128,13 @@ export default function CvBuilder() {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "err">("idle");
 
   // One-time restore of the saved draft. localStorage only exists after
-  // hydration, so this deliberately sets state from an effect.
+  // hydration, so this deliberately sets state from an effect. normalizeCv
+  // fills fields added since the draft was saved with empty defaults.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (saved) setData({ ...EXAMPLE_CV, ...JSON.parse(saved) });
+      if (saved) setData(normalizeCv(JSON.parse(saved)));
     } catch { /* corrupt or blocked storage: keep the example */ }
     setLoaded(true);
   }, []);
@@ -113,6 +146,7 @@ export default function CvBuilder() {
 
   const texSource = useMemo(() => generateCv(data), [data]);
   const unsupported = useMemo(() => unsupportedChars(data), [data]);
+  const warning = useMemo(() => lengthWarning(data), [data]);
   const set = (patch: Partial<CvData>) => setData((d) => ({ ...d, ...patch }));
 
   async function importOrcid() {
@@ -127,7 +161,7 @@ export default function CvBuilder() {
         const known = new Set(d.publications.map((p) => p.title.trim().toLowerCase()));
         const added = works
           .filter((w) => !known.has(w.title.trim().toLowerCase()))
-          .map((w) => ({ authors: "", title: w.title, venue: w.venue, year: w.year, doi: w.doi }));
+          .map((w) => ({ ...EMPTY_PUB, title: w.title, venue: w.venue, year: w.year, doi: w.doi }));
         setOrcidStatus(added.length
           ? `Imported ${added.length} publication${added.length > 1 ? "s" : ""}. ORCID does not list co-authors: add them below.`
           : "No new publications found on this ORCID record.");
@@ -177,6 +211,10 @@ export default function CvBuilder() {
     form.remove();
   }
 
+  // The example follows the chosen language; layout and page options are kept.
+  const loadExample = () => setData((d) => ({ ...exampleFor(d.lang), layout: d.layout, photo: d.photo, onePage: d.onePage }));
+  const startBlank = () => setData((d) => ({ ...EMPTY_CV, layout: d.layout, lang: d.lang }));
+
   return (
     <div className="cvb-grid">
       {/* ── Form ─────────────────────────────────────────── */}
@@ -207,8 +245,12 @@ export default function CvBuilder() {
             </div>
             {data.layout === "industry" && (
               <div className="cvb-choice">
-                <span className="field-label">Photo</span>
+                <span className="field-label">Page</span>
                 <span className="cvb-options">
+                  <label>
+                    <input type="checkbox" checked={!!data.onePage} onChange={(e) => set({ onePage: e.target.checked })} />
+                    Fit on one page
+                  </label>
                   <label>
                     <input type="checkbox" checked={data.photo} onChange={(e) => set({ photo: e.target.checked })} />
                     Photo slot
@@ -217,6 +259,12 @@ export default function CvBuilder() {
               </div>
             )}
           </div>
+          {data.layout === "industry" && (
+            <span className="cvb-hint">
+              Photo: leave unticked for US, UK and international roles; common in France, Belgium and Germany.
+            </span>
+          )}
+          {warning && <p role="status" className="note cvb-note"><b>Length.</b> {warning}</p>}
         </Section>
 
         <Section n={2} title="Identity">
@@ -224,21 +272,22 @@ export default function CvBuilder() {
             <Field label="Full name" value={data.name} onChange={(v) => set({ name: v })} />
             <Field label="Headline" value={data.headline} onChange={(v) => set({ headline: v })} placeholder="PhD candidate, Economics" />
             <Field label="Email" value={data.email} onChange={(v) => set({ email: v })} />
-            <Field label="Phone" value={data.phone} onChange={(v) => set({ phone: v })} />
+            <Field label="Phone" value={data.phone} onChange={(v) => set({ phone: v })} placeholder="+33 6 12 34 56 78" />
             <Field label="Location" value={data.location} onChange={(v) => set({ location: v })} />
             <Field label="Website" value={data.website} onChange={(v) => set({ website: v })} />
             <Field label="LinkedIn" value={data.linkedin} onChange={(v) => set({ linkedin: v })} placeholder="linkedin.com/in/…" />
+            <Field label="GitHub" value={data.github ?? ""} onChange={(v) => set({ github: v })} placeholder="github.com/username" />
             <Field label="ORCID iD" value={data.orcid} onChange={(v) => set({ orcid: v })} placeholder="0000-0002-1825-0097" />
           </div>
           <Field label={data.layout === "academic" ? "Research interests or profile" : "Profile"} value={data.summary} onChange={(v) => set({ summary: v })} multiline />
         </Section>
 
         <Section n={3} title="Education">
-          <EntryList kind="education" items={data.education} onChange={(v) => set({ education: v })} />
+          <EntryList kind="education" lang={data.lang} items={data.education} onChange={(v) => set({ education: v })} />
         </Section>
 
         <Section n={4} title="Experience">
-          <EntryList kind="experience" items={data.experience} onChange={(v) => set({ experience: v })} />
+          <EntryList kind="experience" lang={data.lang} items={data.experience} onChange={(v) => set({ experience: v })} />
         </Section>
 
         <Section n={5} title="Publications">
@@ -248,7 +297,12 @@ export default function CvBuilder() {
               {orcidStatus || "Uses the ORCID iD from section 2. Only that iD is sent to ORCID."}
             </span>
           </div>
-          <PubList items={data.publications} onChange={(v) => set({ publications: v })} />
+          <Field
+            label="Your name as it appears in author lists (set in bold)" value={data.pubName ?? ""}
+            onChange={(v) => set({ pubName: v })} placeholder="Smith, J."
+          />
+          <span className="cvb-hint">Listed newest first. Give each a type to group them into journal articles, conference papers and preprints.</span>
+          <PubList lang={data.lang} items={data.publications} onChange={(v) => set({ publications: v })} />
         </Section>
 
         <Section n={6} title="Skills and languages">
@@ -256,9 +310,20 @@ export default function CvBuilder() {
           <Field label="Languages" value={data.languages} onChange={(v) => set({ languages: v })} placeholder="English (native), French (B2)" />
         </Section>
 
+        <Section n={7} title="Further sections">
+          <span className="cvb-hint">Optional, one item per line. Empty sections are left out of the CV.</span>
+          {EXTRA_FIELDS.map((f) => (
+            <Field key={f.key} label={f.label} value={data[f.key] ?? ""} onChange={(v) => set({ [f.key]: v })} placeholder={f.placeholder} multiline rows={2} />
+          ))}
+          <div className="cvb-cols">
+            <Field label="Additional section: title" value={data.extraTitle ?? ""} onChange={(v) => set({ extraTitle: v })} placeholder="Volunteering" />
+          </div>
+          <Field label="Additional section: lines" value={data.extra ?? ""} onChange={(v) => set({ extra: v })} multiline rows={2} />
+        </Section>
+
         <div className="cvb-reset">
-          <button type="button" className="btn btn-sm" onClick={() => setData(EXAMPLE_CV)}>Load the example</button>
-          <button type="button" className="btn btn-sm" onClick={() => setData(EMPTY_CV)}>Start from blank</button>
+          <button type="button" className="btn btn-sm" onClick={loadExample}>Load the example</button>
+          <button type="button" className="btn btn-sm" onClick={startBlank}>Start from blank</button>
         </div>
       </form>
 

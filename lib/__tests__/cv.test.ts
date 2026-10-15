@@ -32,7 +32,7 @@ describe("generateCv", () => {
     const out = generateCv(c);
     expect(out).toMatch(/^\\documentclass/);
     expect(out.trim().endsWith("\\end{document}")).toBe(true);
-    expect(out).toContain(c.lang === "fr" ? "[french]{babel}" : "[english]{babel}");
+    expect(out).toContain(c.lang === "fr" ? "[english,french]{babel}" : "[english]{babel}");
     expect(out).toContain("Dr Jane Smith");
     // Braces must balance once escaped braces are ignored.
     const bare = out.replace(/\\[{}]/g, "");

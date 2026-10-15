@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: "Academic or industry layout?",
-    a: "The academic layout follows the classic research CV (dated entries, publication list, small-caps headings). The industry layout is a compact one-page resume with bullet points, skill tags and an optional photo slot. Both exist in English and French.",
+    a: "The academic layout follows the classic research CV (dated entries, publication list, small-caps headings). The industry layout is a compact resume in the order recruiters read (profile, skills, experience, education), with a one-page option and an optional photo slot. Both exist in English and French, and both keep each date next to its entry when an applicant tracking system reads the PDF as text.",
   },
 ];
 
@@ -88,7 +88,7 @@ export default function CvBuilderPage() {
         </div>
 
         <section aria-label="About the CV generator" className="paper cvb-paper">
-          <h2><span className="secnum">7</span>Why a LaTeX CV</h2>
+          <h2><span className="secnum">8</span>Why a LaTeX CV</h2>
           <p>
             Academic hiring committees read many CVs, and a LaTeX CV is easy to recognise: consistent spacing, real
             small caps, a publication list that stays aligned over several pages. The catch has always been writing
@@ -110,12 +110,12 @@ export default function CvBuilderPage() {
                 <tr>
                   <td>Academic</td>
                   <td>The classic research CV</td>
-                  <td>Dated entries, a publication list, small-caps headings</td>
+                  <td>Dated entries, publications by type with your name in bold, grants, teaching and talks</td>
                 </tr>
                 <tr>
                   <td>Industry</td>
                   <td>A compact one-page resume</td>
-                  <td>Bullet points, skill tags, an optional photo slot</td>
+                  <td>Bullet points, skills as plain lines, a one-page option, an optional photo slot</td>
                 </tr>
               </tbody>
             </table>
