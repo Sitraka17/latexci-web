@@ -451,9 +451,9 @@ describe("siunitx", () => {
     expect(out).toContain("m");
   });
 
-  it("\\num{1e6} renders the number", () => {
+  it("\\num{1e6} renders the number in scientific notation", () => {
     const out = text(html("Count: \\num{1e6}."));
-    expect(out).toContain("1e6");
+    expect(out).toContain("1 × 10⁶");
   });
 });
 

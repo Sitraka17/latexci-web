@@ -12,6 +12,20 @@ const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false }
 
 const STORAGE_KEY = "latexci_source";
 
+// The httpOnly session cookie is invisible to JS; "lx_signed_in=1" is the
+// plain hint set alongside it at sign-in.
+function hasSessionHint(): boolean {
+  return document.cookie.split("; ").some((c) => c === "lx_signed_in=1");
+}
+
+/** Add or remove ?then=pdf without a navigation (sign-in returns to this URL). */
+function setThenPdf(on: boolean) {
+  const url = new URL(window.location.href);
+  if (on) url.searchParams.set("then", "pdf");
+  else url.searchParams.delete("then");
+  window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+}
+
 const BLANK = `\\documentclass{article}
 \\usepackage{amsmath}
 
@@ -127,6 +141,10 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pdfStatus, setPdfStatus]     = useState<"idle" | "compiling" | "error">("idle");
   const [signInFor, setSignInFor]     = useState<string | null>(null);
+  // Sign-in availability: null until known. Signed-out visitors on a site with
+  // Google sign-in configured see "PDF (free sign-in)" on the PDF button.
+  const [auth, setAuth]               = useState<{ configured: boolean; signedIn: boolean } | null>(null);
+  const [pdfDone, setPdfDone]         = useState(false);
   const [docTitle, setDocTitle]       = useState("Untitled");
   const [loadError, setLoadError]     = useState(false);
   const [isLight, setIsLight]         = useState(false);
@@ -170,6 +188,36 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
   const pendingScratch = useRef<string | null>(null);
   const splitRef      = useRef<HTMLDivElement>(null);
   const isDragging    = useRef(false);
+  // KaTeX macros from the last parse (\DeclareMathOperator), read by hydration.
+  const macrosRef     = useRef<Record<string, string>>({});
+  // Set when the visitor comes back from Google sign-in with ?then=pdf.
+  const autoPdf       = useRef(false);
+
+  // Back from sign-in with ?then=pdf: drop the parameter, and export once if
+  // the session hint says the sign-in worked. Declared before the document
+  // loader, which may rewrite the URL.
+  useEffect(() => {
+    if (new URL(window.location.href).searchParams.get("then") !== "pdf") return;
+    setThenPdf(false);
+    if (hasSessionHint()) autoPdf.current = true;
+  }, []);
+
+  // Learn whether sign-in is configured (only asked when no session hint).
+  useEffect(() => {
+    if (hasSessionHint()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAuth({ configured: true, signedIn: true });
+      return;
+    }
+    let alive = true;
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { configured?: boolean; user?: unknown } | null) => {
+        if (alive) setAuth({ configured: !!d?.configured, signedIn: !!d?.user });
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
   // Track theme (dark/light toggle)
   useEffect(() => {
     const check = () => setIsLight(document.documentElement.classList.contains("light"));
@@ -453,7 +501,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const savedScroll = previewScroll.current?.scrollTop ?? 0;
-      const { html: rendered, warnings: w } = latexToHtml(source);
+      const { html: rendered, warnings: w, macros } = latexToHtml(source);
+      macrosRef.current = macros;
       setHtml(rendered);
       setWarnings(w);
       // Restore scroll after React commits the new DOM
@@ -476,17 +525,47 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
         try {
           el.innerHTML = katex.renderToString(
             decodeURIComponent(el.dataset.math!),
-            { throwOnError: false, displayMode: false }
+            { throwOnError: false, displayMode: false, macros: { ...macrosRef.current } }
           );
           el.removeAttribute("data-math");
         } catch { /* ignore */ }
       });
+      // Per-row equation numbers (\tag in align / gather) are drawn by KaTeX:
+      // set them like the .eq-number of a single equation, and if a wide row
+      // runs into its number, left-align the block (fleqn) to make room.
+      const styleTags = (el: HTMLElement) => {
+        el.querySelectorAll<HTMLElement>(".katex-html > .tag").forEach(tag => {
+          Object.assign(tag.style, { opacity: "0.65", fontFamily: "var(--font-serif)" });
+          // Shrink the glyphs only: the row offsets are in em of the tag box.
+          tag.querySelectorAll<HTMLElement>(".mord.text").forEach(t => { t.style.fontSize = "0.73em"; });
+        });
+        // A tag can stick out of the display box by a pixel or two, which
+        // shows a useless scrollbar; clip only that sliver.
+        const display = el.querySelector<HTMLElement>(".katex-display");
+        if (display && el.querySelector(".tag") && display.scrollWidth - display.clientWidth <= 4) {
+          display.style.overflowX = "hidden";
+        }
+      };
+      const tagsCollide = (el: HTMLElement) => {
+        const tag = el.querySelector<HTMLElement>(".katex-html > .tag");
+        if (!tag || !tag.parentElement) return false;
+        let right = 0;
+        for (const child of Array.from(tag.parentElement.children)) {
+          if (child !== tag) right = Math.max(right, child.getBoundingClientRect().right);
+        }
+        return right > tag.getBoundingClientRect().left - 12;
+      };
       root.querySelectorAll<HTMLElement>(".math-block[data-math]").forEach(el => {
         try {
-          el.innerHTML = katex.renderToString(
-            decodeURIComponent(el.dataset.math!),
-            { throwOnError: false, displayMode: true }
-          );
+          const math = decodeURIComponent(el.dataset.math!);
+          const render = (fleqn: boolean) => {
+            el.innerHTML = katex.renderToString(math, {
+              throwOnError: false, displayMode: true, fleqn, macros: { ...macrosRef.current },
+            });
+            styleTags(el);
+          };
+          render(false);
+          if (tagsCollide(el)) render(true);
           el.removeAttribute("data-math");
         } catch { /* ignore */ }
       });
@@ -555,7 +634,20 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     }
   }, []);
 
+  // Remember the PDF intent in the URL (?then=pdf) so the Google sign-in, which
+  // returns to this same URL, can finish the export.
+  const askSignInForPdf = useCallback(() => {
+    setThenPdf(true);
+    setSignInFor("PDF export");
+  }, []);
+
+  const closeSignIn = useCallback(() => {
+    setSignInFor(null);
+    setThenPdf(false);
+  }, []);
+
   const exportPdf = useCallback(async () => {
+    if (auth?.configured && !auth.signedIn) { askSignInForPdf(); return; }
     setPdfStatus("compiling");
     try {
       const res = await fetch("/api/compile-pdf", {
@@ -566,7 +658,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
 
       if (res.status === 401) {
         setPdfStatus("idle");
-        setSignInFor("PDF export");
+        setAuth((a) => (a ? { ...a, signedIn: false } : a));
+        askSignInForPdf();
         return;
       }
 
@@ -585,12 +678,36 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       // Revoking right after click() can cancel the download in Safari/Firefox.
       setTimeout(() => URL.revokeObjectURL(url), 30_000);
       setPdfStatus("idle");
+      setPdfDone(true);
     } catch (err) {
       console.error("PDF export failed:", err);
       setPdfStatus("error");
       setTimeout(() => setPdfStatus("idle"), 3500);
     }
-  }, [source, docId, docTitle]);
+  }, [source, docId, docTitle, auth, askSignInForPdf]);
+
+  // Back from sign-in: export once, as soon as the loaded document is parsed.
+  useEffect(() => {
+    if (!autoPdf.current || !html) return;
+    autoPdf.current = false;
+    void exportPdf();
+  }, [html, exportPdf]);
+
+  // The "keep the source" line after a PDF goes away on its own.
+  useEffect(() => {
+    if (!pdfDone) return;
+    const t = setTimeout(() => setPdfDone(false), 8000);
+    return () => clearTimeout(t);
+  }, [pdfDone]);
+
+  const downloadTex = useCallback(() => {
+    const url = URL.createObjectURL(new Blob([source], { type: "application/x-tex;charset=utf-8" }));
+    const a = Object.assign(document.createElement("a"), { href: url, download: "document.tex" });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }, [source]);
+
+  const pdfNeedsSignIn = !!auth?.configured && !auth.signedIn;
 
   // ── LaTeX → Markdown export ────────────────────────────────────────────
   const downloadMarkdown = useCallback(() => {
@@ -807,7 +924,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
             <button
               onClick={exportPdf}
               disabled={pdfStatus === "compiling"}
-              title={pdfStatus === "error" ? "Compilation failed: check LaTeX syntax" : "Compile & download PDF"}
+              title={pdfStatus === "error" ? "Compilation failed: check LaTeX syntax" : pdfNeedsSignIn ? "Free: sign in with Google, then the PDF downloads" : "Compile & download PDF"}
               style={{
                 background: pdfStatus === "error" ? "var(--red)" : "var(--accent-solid)",
                 border: "1px solid transparent",
@@ -819,7 +936,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
                 display: "inline-flex", alignItems: "center", gap: "0.25rem",
               }}
             >
-              {pdfStatus === "compiling" ? "PDF…" : pdfStatus === "error" ? "✗" : "↓ PDF"}
+              {pdfStatus === "compiling" ? "PDF…" : pdfStatus === "error" ? "✗" : pdfNeedsSignIn ? "PDF (free sign-in)" : "↓ PDF"}
             </button>
           </div>
         </div>
@@ -875,7 +992,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
           <button
             onClick={exportPdf}
             disabled={pdfStatus === "compiling"}
-            title={pdfStatus === "error" ? "Compilation failed: check your LaTeX syntax" : "Compile & download PDF via YToTech"}
+            title={pdfStatus === "error" ? "Compilation failed: check your LaTeX syntax" : pdfNeedsSignIn ? "Free: sign in with Google, then the PDF downloads" : "Compile & download PDF via YToTech"}
             style={{
               background: pdfStatus === "error" ? "var(--red)" : "var(--accent-solid)",
               border: "1px solid transparent",
@@ -898,6 +1015,8 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
               <>Compiling…</>
             ) : pdfStatus === "error" ? (
               <>✗ PDF failed</>
+            ) : pdfNeedsSignIn ? (
+              <>PDF (free sign-in)</>
             ) : (
               <>↓ PDF</>
             )}
@@ -1094,7 +1213,24 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       </div>
     </div>
 
-    {signInFor && <SignInPrompt feature={signInFor} onClose={() => setSignInFor(null)} />}
+    {signInFor && <SignInPrompt feature={signInFor} onClose={closeSignIn} />}
+    {pdfDone && (
+      <div role="status" style={{
+        position: "fixed", left: 16, bottom: notice ? 72 : 16, zIndex: 900, maxWidth: "calc(100vw - 32px)",
+        padding: "0.55rem 0.9rem", background: "var(--surface)", border: "1px solid var(--border)",
+        color: "var(--fg-muted)", fontSize: "0.8rem", display: "flex", flexWrap: "wrap", gap: "0.35rem 0.6rem", alignItems: "center",
+      }}>
+        <span>PDF downloaded. Keep the source too:</span>
+        <button onClick={downloadTex} style={statusLinkStyle}>Download .tex</button>
+        {!docId && (
+          <>
+            <span>or</span>
+            <button onClick={() => { setPdfDone(false); saveDoc(); }} style={statusLinkStyle}>Save to My documents</button>
+          </>
+        )}
+        <button onClick={() => setPdfDone(false)} aria-label="Dismiss" style={{ background: "none", border: "none", color: "var(--fg-muted)", cursor: "pointer", fontSize: "1rem", marginLeft: "auto" }}>×</button>
+      </div>
+    )}
     {notice && (
       <div role="status" style={{
         position: "fixed", left: 16, bottom: 16, zIndex: 900, maxWidth: "calc(100vw - 32px)",
@@ -1109,6 +1245,11 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
     </>
   );
 }
+
+const statusLinkStyle: React.CSSProperties = {
+  background: "none", border: "none", padding: 0, cursor: "pointer",
+  color: "var(--accent)", fontWeight: 600, fontSize: "inherit", textDecoration: "underline",
+};
 
 // ── Small reusable button ────────────────────────────────────────────────
 function Btn({

@@ -21,7 +21,8 @@ describe("escaped characters", () => {
 
   it("does not split a tabular cell on \\&", () => {
     const out = html("\\begin{tabular}{cc} a \\& b & c \\\\ \\end{tabular}");
-    expect(out).toContain("<th>a &amp; b</th><th>c</th>");
+    // cells carry the column alignment from the spec ({cc} -> centred)
+    expect(out).toMatch(/<th[^>]*>a &amp; b<\/th><th[^>]*>c<\/th>/);
   });
 
   it("does not treat % in \\url as a comment", () => {
