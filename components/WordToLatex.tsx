@@ -1,6 +1,8 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import SignInPrompt from "@/components/SignInPrompt";
+import GoogleMark from "@/components/GoogleMark";
+import { docxToLatex } from "@/lib/word-latex";
 import { useDropzone } from "react-dropzone";
 import dynamic from "next/dynamic";
 
@@ -27,306 +29,6 @@ interface QualityReport {
   score: "excellent" | "good" | "fair" | "needs-review";
 }
 
-// ── OMML → LaTeX (best-effort converter) ─────────────────────────────────────
-function ommlNodeToLatex(el: Element): string {
-  const tag = el.tagName.replace(/^m:/i, "").toLowerCase();
-  const kids = () => Array.from(el.children).map(ommlNodeToLatex).join("");
-
-  switch (tag) {
-    case "omath":  return `$${kids()}$`;
-    case "omathpara": return `\\[\n${Array.from(el.children).map(ommlNodeToLatex).join("")}\n\\]`;
-    case "r": {
-      // math run — get text
-      const t = el.querySelector("m\\:t, t");
-      const text = t?.textContent ?? "";
-      const rpr = el.querySelector("m\\:rPr, rPr");
-      const isItalic = rpr?.querySelector("m\\:sty, sty")?.getAttribute("m:val") === "i";
-      return isItalic ? `\\mathit{${text}}` : text;
-    }
-    case "f": { // fraction
-      const num = el.querySelector("m\\:num > *, num > *");
-      const den = el.querySelector("m\\:den > *, den > *");
-      return `\\frac{${num ? ommlNodeToLatex(num) : "?"}}{${den ? ommlNodeToLatex(den) : "?"}}`;
-    }
-    case "num": case "den": return kids();
-    case "ssup": { // superscript
-      const e = el.querySelector("m\\:e > *, e > *");
-      const sup = el.querySelector("m\\:sup > *, sup > *");
-      return `${e ? ommlNodeToLatex(e) : ""}^{${sup ? ommlNodeToLatex(sup) : ""}}`;
-    }
-    case "ssub": { // subscript
-      const e = el.querySelector("m\\:e > *, e > *");
-      const sub = el.querySelector("m\\:sub > *, sub > *");
-      return `${e ? ommlNodeToLatex(e) : ""}_{${sub ? ommlNodeToLatex(sub) : ""}}`;
-    }
-    case "ssubsup": {
-      const e = el.querySelector("m\\:e > *, e > *");
-      const sub = el.querySelector("m\\:sub > *, sub > *");
-      const sup = el.querySelector("m\\:sup > *, sup > *");
-      return `${e ? ommlNodeToLatex(e) : ""}_{${sub ? ommlNodeToLatex(sub) : ""}}^{${sup ? ommlNodeToLatex(sup) : ""}}`;
-    }
-    case "rad": { // radical
-      const deg = el.querySelector("m\\:deg, deg");
-      const e   = el.querySelector("m\\:e > *, e > *");
-      const inner = e ? ommlNodeToLatex(e) : "";
-      const degTxt = deg?.textContent?.trim();
-      return degTxt && degTxt !== "2" ? `\\sqrt[${degTxt}]{${inner}}` : `\\sqrt{${inner}}`;
-    }
-    case "nary": { // integral, sum, product
-      const chr = el.querySelector("m\\:naryPr m\\:chr, naryPr chr")?.getAttribute("m:val") ?? "∫";
-      const sub = el.querySelector("m\\:sub > *, sub > *");
-      const sup = el.querySelector("m\\:sup > *, sup > *");
-      const e   = el.querySelector("m\\:e > *, e > *");
-      const sym = chr === "∑" ? "\\sum"
-                : chr === "∏" ? "\\prod"
-                : chr === "∫" ? "\\int"
-                : chr === "∮" ? "\\oint"
-                : `\\int`;
-      return `${sym}_{${sub ? ommlNodeToLatex(sub) : ""}}^{${sup ? ommlNodeToLatex(sup) : ""}} ${e ? ommlNodeToLatex(e) : ""}`;
-    }
-    case "d": { // delimiter
-      const begChr = el.querySelector("m\\:dPr m\\:begChr, dPr begChr")?.getAttribute("m:val") ?? "(";
-      const endChr = el.querySelector("m\\:dPr m\\:endChr, dPr endChr")?.getAttribute("m:val") ?? ")";
-      const openL = begChr === "{" ? "\\{" : begChr;
-      const closeL = endChr === "}" ? "\\}" : endChr;
-      return `\\left${openL}${kids()}\\right${closeL}`;
-    }
-    case "e": return kids();
-    case "func": {
-      const fname = el.querySelector("m\\:fName, fName");
-      const e     = el.querySelector("m\\:e > *, e > *");
-      return `${fname ? ommlNodeToLatex(fname) : ""}${e ? `{${ommlNodeToLatex(e)}}` : ""}`;
-    }
-    case "limupp": case "limloc": {
-      const e = el.querySelector("m\\:e > *, e > *");
-      const lim = el.querySelector("m\\:lim > *, lim > *");
-      return `${e ? ommlNodeToLatex(e) : ""}\\limits_{${lim ? ommlNodeToLatex(lim) : ""}}`;
-    }
-    case "m": { // matrix
-      const rows = Array.from(el.querySelectorAll("m\\:mr, mr"))
-        .map(r => Array.from(r.querySelectorAll("m\\:e, e")).map(c => ommlNodeToLatex(c)).join(" & "))
-        .join(" \\\\\\\\\n");
-      return `\\begin{pmatrix}\n${rows}\n\\end{pmatrix}`;
-    }
-    case "acc": { // accent
-      const chr = el.querySelector("m\\:accPr m\\:chr, accPr chr")?.getAttribute("m:val") ?? "^";
-      const e = el.querySelector("m\\:e > *, e > *");
-      const inner = e ? ommlNodeToLatex(e) : "";
-      return chr === "^" ? `\\hat{${inner}}`
-           : chr === "̃" ? `\\tilde{${inner}}`
-           : chr === "̄" ? `\\bar{${inner}}`
-           : chr === "⃗" ? `\\vec{${inner}}`
-           : `\\hat{${inner}}`;
-    }
-    case "t": return el.textContent ?? "";
-    default:  return kids();
-  }
-}
-
-/**
- * Replace every OMML equation in document.xml with a plain-text placeholder
- * run, so mammoth (which drops OMML) keeps the equation's position. Returns
- * the rewritten XML and the LaTeX for each placeholder, in order.
- */
-const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-const M_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math";
-function eqToken(i: number) { return `LTXCIEQ${i}Z`; }
-
-function inlineOmmlEquations(xml: string): { xml: string; equations: { latex: string; display: boolean }[] } {
-  const doc = new DOMParser().parseFromString(xml, "application/xml");
-  if (doc.getElementsByTagName("parsererror").length) return { xml, equations: [] };
-  const equations: { latex: string; display: boolean }[] = [];
-  const swap = (el: Element, display: boolean) => {
-    // Convert the children, not the element: ommlNodeToLatex wraps oMath in $…$
-    // and oMathPara in \[…\]; the delimiters are chosen when swapping back.
-    const body = (m: Element) => Array.from(m.children).map(ommlNodeToLatex).join("");
-    let latex = "";
-    try {
-      latex = (display
-        ? Array.from(el.getElementsByTagNameNS(M_NS, "oMath")).map(body).join(" \\\\ ")
-        : body(el)).trim();
-    } catch { /* keep empty */ }
-    const run = doc.createElementNS(W_NS, "w:r");
-    const t = doc.createElementNS(W_NS, "w:t");
-    t.textContent = latex ? eqToken(equations.length) : "";
-    run.appendChild(t);
-    el.parentNode?.replaceChild(run, el);
-    if (latex) equations.push({ latex, display });
-  };
-  // Display equations first, so their inner oMath is not handled twice.
-  Array.from(doc.getElementsByTagNameNS(M_NS, "oMathPara")).forEach(el => swap(el, true));
-  Array.from(doc.getElementsByTagNameNS(M_NS, "oMath")).forEach(el => swap(el, false));
-  return { xml: new XMLSerializer().serializeToString(doc), equations };
-}
-
-// ── HTML → LaTeX converter ────────────────────────────────────────────────────
-let imgCounter = 0;
-let tableCols = 1;
-
-function htmlToLatex(html: string): { latex: string; stats: Partial<QualityReport> } {
-  imgCounter = 0;
-  const s: Partial<QualityReport> = {
-    headings: 0, paragraphs: 0, tables: 0, images: 0,
-    lists: 0, links: 0, footnotes: 0, unresolvedImages: 0,
-  };
-
-  // One pass, so the braces of \textbackslash{} are never escaped again.
-  const TEX_ESC: Record<string, string> = {
-    "\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", $: "\\$", "&": "\\&", "%": "\\%",
-    "#": "\\#", _: "\\_", "^": "\\textasciicircum{}", "~": "\\textasciitilde{}",
-  };
-  const escTex = (text: string) => text.replace(/[\\{}$&%#_^~]/g, (c) => TEX_ESC[c]);
-  // Inside \href{...}: hyperref reads the URL verbatim except for these.
-  const escUrl = (url: string) => url.replace(/[\\%#{}]/g, (c) => (c === "\\" ? "/" : `\\${c}`));
-
-  // Word footnotes: mammoth emits <sup><a href="#footnote-N">[N]</a></sup> in
-  // the text and the notes as <li id="footnote-N"> at the end. Turn them into
-  // real \footnote{...} and drop the trailing list.
-  const notes = new Map<string, Element>();
-
-  function walk(node: Node): string {
-    if (node.nodeType === Node.TEXT_NODE) return escTex(node.textContent ?? "");
-    if (node.nodeType !== Node.ELEMENT_NODE) return "";
-    const el = node as Element;
-    const tag = el.tagName.toLowerCase();
-    const kids = () => Array.from(el.childNodes).map(walk).join("");
-
-    switch (tag) {
-      case "h1": s.headings = (s.headings ?? 0) + 1; return `\n\n\\section{${kids()}}\n`;
-      case "h2": s.headings = (s.headings ?? 0) + 1; return `\n\n\\subsection{${kids()}}\n`;
-      case "h3": s.headings = (s.headings ?? 0) + 1; return `\n\n\\subsubsection{${kids()}}\n`;
-      case "h4": case "h5": case "h6": s.headings = (s.headings ?? 0) + 1; return `\n\n\\paragraph{${kids()}}\n`;
-      case "p": {
-        s.paragraphs = (s.paragraphs ?? 0) + 1;
-        const text = kids().trim();
-        return text ? `\n${text}\n` : "";
-      }
-      case "strong": case "b": return `\\textbf{${kids()}}`;
-      case "em": case "i":    return `\\textit{${kids()}}`;
-      case "u":               return `\\underline{${kids()}}`;
-      case "s":               return `\\sout{${kids()}}`;
-      case "sup": {
-        const ref = el.querySelector('a[href^="#footnote-"], a[href^="#endnote-"]');
-        const note = ref && notes.get(ref.getAttribute("href")!.slice(1));
-        if (note) {
-          s.footnotes = (s.footnotes ?? 0) + 1;
-          return `\\footnote{${Array.from(note.childNodes).map(walk).join("").trim()}}`;
-        }
-        return `\\textsuperscript{${kids()}}`;
-      }
-      case "sub":             return `\\textsubscript{${kids()}}`;
-      case "code":            return `\\texttt{${kids()}}`;
-      case "pre":             return `\n\\begin{verbatim}\n${el.textContent ?? ""}\n\\end{verbatim}\n`;
-      case "br":              return "\\\\\n";
-      case "hr":              return "\n\\noindent\\rule{\\linewidth}{0.4pt}\n";
-      case "ul": case "ol": {
-        const items = kids();
-        if (!items.includes("\\item")) return items; // an empty list does not compile
-        s.lists = (s.lists ?? 0) + 1;
-        const env = tag === "ul" ? "itemize" : "enumerate";
-        return `\n\\begin{${env}}\n${items}\\end{${env}}\n`;
-      }
-      case "li":              return `  \\item ${kids().trim()}\n`;
-      case "blockquote":      return `\n\\begin{quote}\n${kids().trim()}\n\\end{quote}\n`;
-      case "a": {
-        s.links = (s.links ?? 0) + 1;
-        const href = el.getAttribute("href") ?? "";
-        if (!href || href.startsWith("#")) return kids(); // internal anchors and backlinks
-        return `\\href{${escUrl(href)}}{${kids()}}`;
-      }
-      case "img": {
-        s.images = (s.images ?? 0) + 1;
-        imgCounter++;
-        const alt = el.getAttribute("alt") ?? "";
-        const caption = alt || `Figure ${imgCounter}`;
-        s.unresolvedImages = (s.unresolvedImages ?? 0) + 1;
-        return (
-          `\n\\begin{figure}[htbp]\n` +
-          `  \\centering\n` +
-          `  \\includegraphics[width=0.8\\textwidth]{figure-${imgCounter}}\n` +
-          `  \\caption{${escTex(caption)}}\n` +
-          `  \\label{fig:${imgCounter}}\n` +
-          `\\end{figure}\n`
-        );
-      }
-      case "table": {
-        s.tables = (s.tables ?? 0) + 1;
-        // Widest row, counting merged cells (colspan), sets the column count.
-        const cols = Math.max(1, ...Array.from(el.querySelectorAll("tr")).map(r =>
-          Array.from(r.querySelectorAll(":scope > td, :scope > th"))
-            .reduce((n, c) => n + Math.max(1, Number(c.getAttribute("colspan")) || 1), 0)));
-        tableCols = cols;
-        const spec = Array(cols).fill("l").join(""); // booktabs: no vertical rules
-        // Use booktabs style
-        return (
-          `\n\\begin{table}[htbp]\n  \\centering\n` +
-          `  \\begin{tabular}{${spec}}\n    \\toprule\n` +
-          `${kids()}` +
-          `    \\bottomrule\n  \\end{tabular}\n` +
-          `  \\caption{Table ${s.tables}}\n` +
-          `\\end{table}\n`
-        );
-      }
-      case "thead": return kids();
-      case "tbody": return kids();
-      case "tfoot": return kids();
-      case "tr": {
-        let width = 0;
-        const cells = Array.from(el.querySelectorAll(":scope > td, :scope > th")).map(c => {
-          const span = Math.max(1, Number(c.getAttribute("colspan")) || 1);
-          width += span;
-          const text = Array.from(c.childNodes).map(walk).join("").trim();
-          return span > 1 ? `\\multicolumn{${span}}{l}{${text}}` : text;
-        });
-        while (width++ < tableCols) cells.push(""); // short rows still need every column
-        // First row after toprule gets midrule
-        const isHead = el.closest("thead") !== null || (el as HTMLTableRowElement).rowIndex === 0;
-        return `    ${cells.join(" & ")} \\\\\n` + (isHead ? "    \\midrule\n" : "");
-      }
-      case "td": case "th": return kids();
-      case "span": return kids();
-      case "div": return kids();
-      default: return kids();
-    }
-  }
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  doc.querySelectorAll('li[id^="footnote-"], li[id^="endnote-"]').forEach(li => {
-    li.querySelectorAll('a[href^="#footnote-ref-"], a[href^="#endnote-ref-"]').forEach(a => a.remove());
-    notes.set(li.id, li.querySelector("p") ?? li);
-    const list = li.parentElement;
-    li.remove();
-    if (list && !list.querySelector("li")) list.remove();
-  });
-  const body = Array.from(doc.body.childNodes).map(walk).join("");
-
-  const packages = [
-    "\\usepackage[utf8]{inputenc}",
-    "\\usepackage[T1]{fontenc}",
-    "\\usepackage{amsmath,amssymb}",
-    "\\usepackage{hyperref}",
-    "\\usepackage{graphicx}",
-    "\\usepackage{booktabs}",
-    // normalem: keep \emph as italics (plain ulem would underline it).
-    ...(body.includes("\\sout")  ? ["\\usepackage[normalem]{ulem}"] : []),
-    ...(s.images! > 0 ? ["\\usepackage{float}"] : []),
-  ];
-
-  const latex = [
-    "\\documentclass[12pt,a4paper]{article}",
-    ...packages,
-    "",
-    "\\begin{document}",
-    "",
-    body.trim(),
-    "",
-    "\\end{document}",
-  ].join("\n");
-
-  return { latex, stats: s };
-}
-
 // ── Score calculator ──────────────────────────────────────────────────────────
 function calcScore(report: QualityReport): QualityReport["score"] {
   const issues = (report.equations > 0 ? 1 : 0) + (report.unresolvedImages > 0 ? 1 : 0);
@@ -347,6 +49,19 @@ export default function WordToLatex() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [report,   setReport]   = useState<QualityReport | null>(null);
   const [needSignIn, setNeedSignIn] = useState(false);
+  // Signed-out visitors sign in before choosing the file: after the Google
+  // round trip the dropped file would be gone.
+  const [signedOut, setSignedOut] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me: { configured?: boolean; user?: unknown } | null) => {
+        if (live && me?.configured && !me.user) setSignedOut(true);
+      })
+      .catch(() => {});
+    return () => { live = false; };
+  }, []);
   const convert = useCallback(async (file: File) => {
     setFileName(file.name);
     setFileSize(file.size);
@@ -382,75 +97,35 @@ export default function WordToLatex() {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-
-      // ── 1. Put OMML equations in place as placeholders (mammoth drops them)
-      let equations: { latex: string; display: boolean }[] = [];
-      let docBuffer: ArrayBuffer = arrayBuffer;
-      try {
-        const JSZip = (await import("jszip")).default;
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        const docXml = await zip.file("word/document.xml")?.async("text");
-        if (docXml) {
-          const res = inlineOmmlEquations(docXml);
-          if (res.equations.length) {
-            equations = res.equations;
-            zip.file("word/document.xml", res.xml);
-            docBuffer = await zip.generateAsync({ type: "arraybuffer" });
-          }
-        }
-      } catch { /* JSZip or XML parsing failed — continue without equations */ }
-      const equationCount = equations.length;
-
-      // ── 2. Convert via mammoth ──────────────────────────────────────────
-      const mammoth = await import("mammoth");
-      let imageIdx = 0;
-      const imageMap: Record<string, string> = {};
-
-      const { value: html, messages } = await mammoth.convertToHtml(
-        { arrayBuffer: docBuffer },
-        {
-          convertImage: mammoth.images.imgElement(async (image) => {
-            imageIdx++;
-            const ext2 = image.contentType?.split("/")[1] ?? "png";
-            imageMap[imageIdx] = `figure-${imageIdx}.${ext2}`;
-            return { src: `__img_${imageIdx}` };
-          }),
-        }
-      );
-
-      const warns = messages
-        .filter(m => m.type === "warning" || m.type === "error")
-        .map(m => m.message)
-        .slice(0, 8);
-
-      // ── 3. Convert HTML → LaTeX ─────────────────────────────────────────
-      const { latex, stats } = htmlToLatex(html);
-
-      // ── 4. Build quality report ─────────────────────────────────────────
+      const [{ default: JSZip }, mammoth] = await Promise.all([import("jszip"), import("mammoth")]);
+      // OMML equations are swapped for placeholders before mammoth (which
+      // drops them), then the HTML is walked into LaTeX: see lib/word-latex.ts.
+      const res = await docxToLatex(arrayBuffer, {
+        loadZip: (data) => JSZip.loadAsync(data),
+        toHtml: (data) => {
+          let imageIdx = 0;
+          return mammoth.convertToHtml(
+            { arrayBuffer: data },
+            { convertImage: mammoth.images.imgElement(async () => ({ src: `__img_${++imageIdx}` })) },
+          );
+        },
+      });
+      const stats = res.stats;
       const fullReport: QualityReport = {
-        headings:  stats.headings ?? 0,
-        paragraphs: stats.paragraphs ?? 0,
-        tables:    stats.tables ?? 0,
-        images:    stats.images ?? 0,
-        equations: equationCount,
-        footnotes: stats.footnotes ?? 0,
-        lists:     stats.lists ?? 0,
-        links:     stats.links ?? 0,
-        unresolvedImages: stats.unresolvedImages ?? 0,
+        headings:  stats.headings,
+        paragraphs: stats.paragraphs,
+        tables:    stats.tables,
+        images:    stats.images,
+        equations: res.equations,
+        footnotes: stats.footnotes,
+        lists:     stats.lists,
+        links:     stats.links,
+        unresolvedImages: stats.unresolvedImages,
         score: "excellent",
       };
       fullReport.score = calcScore(fullReport);
-
-      // ── 5. Swap placeholders back for the converted equations ──────────
-      const finalLatex = latex.replace(/LTXCIEQ(\d+)Z/g, (_, i) => {
-        const eq = equations[Number(i)];
-        if (!eq) return "";
-        if (!eq.display) return `$${eq.latex}$`;
-        // A multi-line oMathPara cannot live in \[ \]: use gather* (amsmath).
-        return eq.latex.includes(" \\\\ ")
-          ? `\n\\begin{gather*}\n  ${eq.latex}\n\\end{gather*}\n`
-          : `\n\\[\n  ${eq.latex}\n\\]\n`;
-      });
+      const finalLatex = res.latex;
+      const warns = res.warnings;
 
       setResult(finalLatex);
       setWarnings(warns);
@@ -486,6 +161,11 @@ export default function WordToLatex() {
     a.click();
   };
 
+  const openPreview = async () => {
+    const LZString = (await import("lz-string")).default;
+    window.open(`/tools/preview#s=${LZString.compressToEncodedURIComponent(result)}`, "_blank", "noopener");
+  };
+
   const reset = () => { setStatus("idle"); setResult(""); setError(""); setWarnings([]); setReport(null); setFileName(""); setFileSize(0); };
   const fmtSize = (b: number) => b < 1024 ? `${b} B` : b < 1024**2 ? `${(b/1024).toFixed(1)} KB` : `${(b/1024**2).toFixed(1)} MB`;
 
@@ -512,6 +192,21 @@ export default function WordToLatex() {
       <div className={`w2l-top${done ? " is-compact" : ""}`}>
         {/* Drop zone */}
         <figure className="w2l-fig">
+          {signedOut && !done && (
+            <p className="note" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem 0.9rem", margin: "0 0 0.75rem" }}>
+              <span>Sign in once, then drop your .docx: free, your file never leaves the browser.</span>
+              <a
+                href={`/api/auth/google?next=${encodeURIComponent("/tools/word-to-latex")}`}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem 0.8rem", border: "1px solid #dadce0",
+                  borderRadius: 4, background: "#fff", color: "#1f1f1f", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none",
+                }}
+              >
+                <GoogleMark />
+                Sign in with Google
+              </a>
+            </p>
+          )}
           <div {...getRootProps()} className={`tool-frame w2l-drop${isDragActive ? " is-active" : ""}${done ? " is-compact" : ""}`}>
             <input {...getInputProps()} />
             <svg width="34" height="42" viewBox="0 0 34 42" aria-hidden="true" className="w2l-icon">
@@ -547,13 +242,14 @@ export default function WordToLatex() {
                 </thead>
                 <tbody>
                   <tr><td>Heading 1 to 3 styles</td><td><code>\section</code>, <code>\subsection</code>, <code>\subsubsection</code></td><td>supported</td></tr>
-                  <tr><td>Bold, italic, underline</td><td><code>\textbf</code>, <code>\textit</code>, <code>\underline</code></td><td>supported</td></tr>
+                  <tr><td>Bold, italic, underline</td><td><code>\textbf</code>, <code>\emph</code>, <code>\underline</code></td><td>supported</td></tr>
                   <tr><td>Bulleted and numbered lists</td><td><code>itemize</code>, <code>enumerate</code></td><td>supported</td></tr>
-                  <tr><td>Tables</td><td><code>tabular</code> with booktabs rules</td><td>supported</td></tr>
+                  <tr><td>Tables</td><td><code>tabular</code> with booktabs rules, <code>p{"{}"}</code> columns when a cell holds a list</td><td>supported</td></tr>
                   <tr><td>Images</td><td><code>figure</code> with an <code>\includegraphics</code> placeholder</td><td>supported</td></tr>
                   <tr><td>Hyperlinks</td><td><code>\href</code></td><td>supported</td></tr>
                   <tr><td>Footnotes</td><td><code>\footnote</code></td><td>supported</td></tr>
                   <tr><td>Equations (equation editor, OMML)</td><td>inline <code>$…$</code> and display <code>\[…\]</code> math</td><td>supported, best effort</td></tr>
+                  <tr><td>MathType objects</td><td>an image placeholder at most (OLE objects, not math)</td><td><i>not supported</i></td></tr>
                   <tr><td>Columns, text boxes, complex layouts</td><td>none</td><td><i>not supported</i></td></tr>
                 </tbody>
               </table>
@@ -621,6 +317,7 @@ export default function WordToLatex() {
               <span className="w2l-actions">
                 <button type="button" className="btn btn-sm" onClick={reset}>New file</button>
                 <button type="button" className="btn btn-sm" onClick={copyLatex}>{copied ? "Copied" : "Copy LaTeX"}</button>
+                <button type="button" className="btn btn-sm" onClick={openPreview}>Open in the live preview</button>
                 <button type="button" className="btn btn-sm btn-primary" onClick={downloadLatex}>Download .tex</button>
               </span>
             </div>

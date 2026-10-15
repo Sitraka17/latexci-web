@@ -5,6 +5,8 @@ import SiteFooter from "@/components/SiteFooter";
 import WordToLatex from "@/components/WordToLatex";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
+import { WORD_SAMPLE_LATEX } from "@/lib/word-latex";
+import katex from "katex";
 import "./word.css";
 
 export const metadata: Metadata = {
@@ -36,7 +38,7 @@ const FAQS = [
   },
   {
     q: "Are Word equations converted?",
-    a: "Yes. Equations written with Word's equation editor (OMML) are translated into LaTeX math: fractions, roots, sub- and superscripts, sums and matrices. Check complex ones in the preview, as the conversion is best-effort.",
+    a: "Yes. Equations written with Word's equation editor (OMML) are translated into LaTeX math: fractions, roots, sub- and superscripts, sums and matrices. Check complex ones in the preview, as the conversion is best-effort. MathType objects are not converted: convert them to Office Math in Word first.",
   },
   {
     q: "What happens to images?",
@@ -51,6 +53,9 @@ const FAQS = [
     a: "Use Word's built-in Heading 1, 2 and 3 styles: they become \\section, \\subsection and \\subsubsection. Text that only looks like a heading (bold, larger font) stays a normal paragraph.",
   },
 ];
+
+// The equation of the sample paragraph, as Word shows it (typeset at build time).
+const SAMPLE_EQ = katex.renderToString("\\sigma^{2}\\leq \\frac{1}{n}", { throwOnError: false });
 
 const appSchema = {
   "@context": "https://schema.org",
@@ -93,7 +98,7 @@ export default function WordToLatexPage() {
           <h2><span className="secnum">1</span>What the converter does</h2>
           <p>
             Drop a .docx and the converter rebuilds it as a LaTeX document: Word heading styles become sections,
-            bold and italic become <code>\textbf</code> and <code>\textit</code>, bulleted and numbered lists become
+            bold and italic become <code>\textbf</code> and <code>\emph</code>, bulleted and numbered lists become
             <code> itemize</code> and <code>enumerate</code>, tables become booktabs tables, and hyperlinks keep their
             targets. Equations typed with Word&rsquo;s equation editor are converted to LaTeX math, and every image
             becomes a figure with a placeholder you can point at the real file.
@@ -103,12 +108,71 @@ export default function WordToLatexPage() {
             flags what needs a human look, so you know where to check before compiling.
           </p>
 
-          <h2><span className="secnum">2</span>Where to look after converting</h2>
+          <figure style={{ margin: "1.75rem 0 0" }}>
+            <div className="figure figure-grid">
+              <div style={{ fontFamily: "var(--font-serif)", color: "var(--fg)" }}>
+                <p style={{ margin: "0 0 0.25rem", fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "var(--fg-muted)" }}>Word</p>
+                <p style={{ margin: "0 0 0.4rem", fontWeight: 700, fontSize: "1.1rem" }}>Results<sup>1</sup></p>
+                <p style={{ margin: 0, fontSize: "1rem", textIndent: 0 }}>
+                  The loss falls <b>below 0.1</b> after 40 epochs, with{" "}
+                  <span dangerouslySetInnerHTML={{ __html: SAMPLE_EQ }} /> for every run.
+                </p>
+                <p style={{ margin: "0.9rem 0 0", paddingTop: "0.35rem", borderTop: "1px solid var(--border)", fontSize: "0.85rem", textIndent: 0 }}>
+                  <sup>1</sup> Measured on the validation set.
+                </p>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: "0 0 0.25rem", fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "var(--fg-muted)" }}>LaTeX output</p>
+                <pre style={{ margin: 0, fontFamily: "var(--font-tt)", fontSize: "0.84rem", lineHeight: 1.6, whiteSpace: "pre-wrap", overflowWrap: "anywhere", color: "var(--fg)" }}>{WORD_SAMPLE_LATEX}</pre>
+              </div>
+            </div>
+            <figcaption className="caption">
+              <b>Figure 2.</b> A Word paragraph with a heading, bold text, a footnote and an equation (left), and
+              the document body the converter writes for it (right). The heading gets a short title without the
+              footnote, as hyperref requires; the output is checked against the converter by a test.
+            </figcaption>
+          </figure>
+
+          <h2><span className="secnum">2</span>Equations and MathType</h2>
+          <p>
+            Equations typed with Word&rsquo;s own equation editor (Insert, Equation) are stored in the .docx as
+            Office Math (OMML). The converter reads them and writes LaTeX math in place: inline equations as{" "}
+            <code>$&hellip;$</code>, display equations as <code>\[&hellip;\]</code> or <code>gather*</code>, with
+            fractions, roots, scripts, sums and integrals, delimiters, accents and matrices. The conversion is best
+            effort, so check long or unusual equations in the preview.
+          </p>
+          <p>
+            MathType equations are a different thing: they are embedded OLE objects with a picture of the
+            equation, not Office Math, and they are not converted. At most the picture comes through as an image
+            placeholder. Convert them in Word first: with MathType installed, its &ldquo;Convert
+            Equations&rdquo; command turns them into Office Math (choose Word&rsquo;s equation format as the
+            target). Save, then drop the file here.
+          </p>
+
+          <h2><span className="secnum">3</span>This converter or pandoc?</h2>
+          <p>
+            <a href="https://pandoc.org" rel="noopener">Pandoc</a> converts Word too, from the command line:{" "}
+            <code>pandoc file.docx -o file.tex</code> writes the body, and <code>-s</code> makes it a full
+            document. It reads every Word structure it knows, extracts the images with{" "}
+            <code>--extract-media</code>, handles citations, and runs offline in batch over many files. Use pandoc
+            when you convert often, need the images saved for you, or work in scripts.
+          </p>
+          <p>
+            This page needs nothing installed and keeps the file in your browser. Its output is meant to compile
+            with pdfLaTeX on the first try: booktabs tables with the caption above, <code>p{"{}"}</code> columns
+            when a cell holds a list, Unicode symbols such as &le; or &alpha; mapped to LaTeX, footnotes in
+            headings given a short title, and a report of what to check. Use it for a single document when you
+            want a clean starting point quickly.
+          </p>
+
+          <h2><span className="secnum">4</span>Where to look after converting</h2>
           <p>
             Complex tables with merged cells, custom paragraph styles and very long equations are the usual spots
-            to tidy by hand. Then open the result in the{" "}
-            <Link href="/tools/preview">live LaTeX preview</Link>, or start
-            from one of the <Link href="/tools/templates">free templates</Link>{" "}
+            to tidy by hand. Characters pdfLaTeX cannot typeset (for example Chinese or Arabic script) are
+            replaced with a question mark and listed in a note: fix them by hand, or compile with XeLaTeX or
+            LuaLaTeX. Then open the result in the{" "}
+            <Link href="/tools/preview">live LaTeX preview</Link> (the button above the converted source does it
+            in one click), or start from one of the <Link href="/tools/templates">free templates</Link>{" "}
             and paste the converted body into it.
           </p>
 
