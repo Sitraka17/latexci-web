@@ -49,3 +49,7 @@ and Word to LaTeX are open to everyone, which is convenient for local work.
 - `CLAUDE.md` / `AGENTS.md`: conventions for contributors and agents.
 
 Deploy: `vercel deploy --prod --yes`.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Bundled fonts (Computer Modern Unicode, STIX Two Math) are under the SIL Open Font License 1.1.
