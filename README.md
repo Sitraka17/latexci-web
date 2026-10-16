@@ -38,6 +38,8 @@ npm run lint    # ESLint
 | `BLOB_READ_WRITE_TOKEN` | optional | Vercel Blob store `latexci-users` (injected by Vercel) |
 | `ADMIN_EMAILS` | optional | Comma-separated admin emails (Users table + CSV in `/dashboard`) |
 | `NEXT_PUBLIC_SITE_URL` | optional | Canonical site URL |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | optional | Turns on OpenTelemetry tracing (`instrumentation.ts`); unset = off, nothing loaded |
+| `OTEL_EXPORTER_OTLP_HEADERS` | optional | OTLP auth header, e.g. `Authorization=Basic%20<base64>` (Grafana Cloud) |
 
 Without `GOOGLE_CLIENT_ID` and `AUTH_SECRET`, sign-in is off and PDF export
 and Word to LaTeX are open to everyone, which is convenient for local work.
