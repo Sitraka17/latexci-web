@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import WordToLatex from "@/components/WordToLatex";
@@ -12,7 +12,7 @@ import "./word.css";
 export const metadata: Metadata = {
   title: "Word to LaTeX Converter: .docx to .tex in Your Browser",
   description:
-    "Convert Word .docx to LaTeX in your browser: headings, lists, booktabs tables, figures and Word equations, with a quality report. Free with a Google sign-in.",
+    "Convert Word .docx to LaTeX in your browser: headings, lists, booktabs tables, figures and Word equations, with a quality report. Free, first file with no account.",
   keywords: [
     "word to latex converter", "docx to latex", "convert word to latex", "word to tex",
     "docx to tex converter", "word equations to latex", "omml to latex",
@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: "Do I need an account?",
-    a: "A free Google sign-in, one click, is needed to convert. There is no paid plan and no usage quota. Signing in only records that you used the converter; the document itself stays in your browser.",
+    a: "Not for your first file: convert it with no account. After that, a free one-click Google sign-in unlocks unlimited conversions. There is no paid plan; signing in only records that you used the converter, and the document itself stays in your browser.",
   },
   {
     q: "Are Word equations converted?",
@@ -87,7 +87,7 @@ export default function WordToLatexPage() {
           <h1>Word to LaTeX converter</h1>
           <p className="lede">
             Turn a Word .docx into clean LaTeX: headings, lists, booktabs tables, footnotes, figures and Word
-            equations, with a report of what to check. It is free and asks for a one-click Google sign-in.
+            equations, with a report of what to check. It is free: the first file needs no account, the next ones a one-click Google sign-in.
             The .docx is converted in your browser and is never uploaded.
           </p>
         </header>

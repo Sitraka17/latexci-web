@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 // The httpOnly session cookie is invisible to JS; "lx_signed_in" is a plain
 // hint set alongside it. No hint means nobody is signed in, so the navbar keeps

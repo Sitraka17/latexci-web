@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
-import Link from "next/link";
+import Link from "@/components/Link";
 import SymbolSearch from "@/components/SymbolSearch";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";

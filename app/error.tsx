@@ -4,7 +4,7 @@
  * Rendered instead of the page when an unexpected error is thrown.
  */
 import { useEffect } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 

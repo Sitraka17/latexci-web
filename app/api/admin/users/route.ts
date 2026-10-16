@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
 
   const users = await listUsers();
   if (req.nextUrl.searchParams.get("format") === "csv") {
-    const rows = [["email", "name", "first_seen", "last_seen", "sign_ins", "pdf_exports", "word_conversions"]]
-      .concat(users.map((u) => [u.email, u.name ?? "", u.firstSeen, u.lastSeen, String(u.counts.signin ?? 0), String(u.counts.pdf ?? 0), String(u.counts.word ?? 0)]));
+    const rows = [["email", "name", "first_seen", "last_seen", "sign_ins", "pdf_exports", "word_conversions", "email_opt_in"]]
+      .concat(users.map((u) => [u.email, u.name ?? "", u.firstSeen, u.lastSeen, String(u.counts.signin ?? 0), String(u.counts.pdf ?? 0), String(u.counts.word ?? 0), u.newsletter?.optIn ? "yes" : "no"]));
     return new NextResponse(rows.map((r) => r.map(csvCell).join(",")).join("\n"), {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",

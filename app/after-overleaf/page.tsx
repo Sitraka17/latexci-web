@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import Faq from "@/components/Faq";
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 const TOOLS: { name: string; href: string; note: string }[] = [
   { name: "Live LaTeX preview", href: "/tools/preview", note: "PDF export with a free sign-in" },
-  { name: "Word to LaTeX", href: "/tools/word-to-latex", note: "unlimited, with a free sign-in" },
+  { name: "Word to LaTeX", href: "/tools/word-to-latex", note: "first file without an account, unlimited with a free sign-in" },
   { name: "BibTeX cleaner", href: "/tools/bibtex", note: "plus DOI, arXiv, PubMed and ISBN lookups" },
   { name: "LaTeX diff", href: "/tools/diff", note: "with downloadable patch" },
   { name: "Table generator", href: "/tools/table", note: "booktabs output" },
@@ -39,7 +39,7 @@ const FAQS = [
   },
   {
     q: "Do I need an account?",
-    a: "Only for PDF export and Word to LaTeX, and it is a single click with Google. Preview, BibTeX tools, diff, tables, CV generator, symbols and templates work without signing in.",
+    a: "Only for PDF export and for Word to LaTeX after your first file, and it is a single click with Google. Preview, BibTeX tools, diff, tables, CV generator, symbols and templates work without signing in.",
   },
   {
     q: "How is latexci funded?",

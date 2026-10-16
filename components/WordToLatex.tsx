@@ -1,7 +1,7 @@
 "use client";
 import { useState, useCallback, useEffect } from "react";
 import SignInPrompt from "@/components/SignInPrompt";
-import GoogleMark from "@/components/GoogleMark";
+import GoogleSignIn from "@/components/GoogleSignIn";
 import { docxToLatex } from "@/lib/word-latex";
 import { useDropzone } from "react-dropzone";
 import dynamic from "next/dynamic";
@@ -52,8 +52,13 @@ export default function WordToLatex() {
   // Signed-out visitors sign in before choosing the file: after the Google
   // round trip the dropped file would be gone.
   const [signedOut, setSignedOut] = useState(false);
+  // The first file is free without an account (cookie set by the API).
+  const [freeUsed, setFreeUsed] = useState(false);
+  const [anonDone, setAnonDone] = useState(false);
   useEffect(() => {
     let live = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFreeUsed(/(?:^|;\s*)lx_wf_used=1/.test(document.cookie));
     fetch("/api/auth/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((me: { configured?: boolean; user?: unknown } | null) => {
@@ -73,10 +78,13 @@ export default function WordToLatex() {
     if (ext === "docx") {
       const gate = await fetch("/api/word-conversion", { method: "POST" }).catch(() => null);
       if (gate?.status === 401) {
+        setFreeUsed(true);
         setNeedSignIn(true);
         setStatus("idle");
         return;
       }
+      const verdict = gate?.ok ? await gate.json().catch(() => null) : null;
+      if (verdict?.anonymous) { setFreeUsed(true); setAnonDone(true); }
     }
 
     setStatus("converting");
@@ -193,19 +201,16 @@ export default function WordToLatex() {
         {/* Drop zone */}
         <figure className="w2l-fig">
           {signedOut && !done && (
-            <p className="note" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem 0.9rem", margin: "0 0 0.75rem" }}>
-              <span>Sign in once, then drop your .docx: free, your file never leaves the browser.</span>
-              <a
-                href={`/api/auth/google?next=${encodeURIComponent("/tools/word-to-latex")}`}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem 0.8rem", border: "1px solid #dadce0",
-                  borderRadius: 4, background: "#fff", color: "#1f1f1f", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none",
-                }}
-              >
-                <GoogleMark />
-                Sign in with Google
-              </a>
-            </p>
+            freeUsed ? (
+              <div className="note" style={{ margin: "0 0 0.75rem" }}>
+                <p style={{ margin: "0 0 0.5rem" }}>Your free conversion is used. Sign in once (free, no card), then drop your next .docx; the file never leaves your browser.</p>
+                <GoogleSignIn next="/tools/word-to-latex" compact />
+              </div>
+            ) : (
+              <p className="note" style={{ margin: "0 0 0.75rem" }}>
+                No account needed for your first file. Further conversions ask for a free Google sign-in.
+              </p>
+            )
           )}
           <div {...getRootProps()} className={`tool-frame w2l-drop${isDragActive ? " is-active" : ""}${done ? " is-compact" : ""}`}>
             <input {...getInputProps()} />
@@ -220,7 +225,7 @@ export default function WordToLatex() {
             ) : (
               <div>
                 <p className="w2l-drop-main">Drop a .docx file here, or click to choose one.</p>
-                <p className="w2l-drop-sub">20 MB at most. A free Google sign-in is asked if you are not signed in yet.</p>
+                <p className="w2l-drop-sub">20 MB at most. Your first file needs no account.</p>
               </div>
             )}
           </div>
@@ -280,6 +285,17 @@ export default function WordToLatex() {
           {report && <> Overall assessment: {scoreLabel[report.score]}.</>}
         </p>
       )}
+
+      {done && anonDone && signedOut && (
+        <div className="note">
+          <p style={{ margin: "0 0 0.5rem" }}>
+            That was your free conversion. Sign in with Google (free, no card) to convert your next files; this
+            result stays here while you download it.
+          </p>
+          <GoogleSignIn next="/tools/word-to-latex" compact />
+        </div>
+      )}
+
 
       {/* Quality report */}
       {report && (

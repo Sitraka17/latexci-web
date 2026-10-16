@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 
 // Server component: the footer is static links, so it ships no client JS.
 // Hover effects are plain CSS (.ft-* rules in app/globals.css) instead of the former

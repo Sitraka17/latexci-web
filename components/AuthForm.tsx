@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import GoogleMark from "@/components/GoogleMark";
+import Link from "@/components/Link";
+import GoogleSignIn from "@/components/GoogleSignIn";
 
 const ERRORS: Record<string, string> = {
   cancelled: "Sign-in was cancelled.",
@@ -39,18 +39,7 @@ export default function AuthForm({ configured }: { configured: boolean }) {
       )}
 
       {configured ? (
-        <a
-          href={`/api/auth/google?next=${encodeURIComponent(nextPath)}`}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.7rem",
-            width: "100%", boxSizing: "border-box", padding: "0.7rem 1rem",
-            border: "1px solid #dadce0", borderRadius: 4, background: "#fff", color: "#1f1f1f",
-            fontWeight: 600, fontSize: "0.92rem", textDecoration: "none",
-          }}
-        >
-          <GoogleMark />
-          Sign in with Google
-        </a>
+        <GoogleSignIn next={nextPath} />
       ) : (
         <p style={{ fontSize: "0.86rem", lineHeight: 1.6, margin: 0, padding: "0.75rem 0.9rem", border: "1px solid var(--border)", background: "var(--surface2)" }}>
           Sign-in is being set up. In the meantime every tool works without an account.

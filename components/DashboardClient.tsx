@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { clearAllDocs, createDoc, deleteDoc, listDocs, updateDoc, type LocalDoc } from "@/lib/local-docs";
 
 type Me = { configured: boolean; user: { email: string; name: string | null } | null; admin?: boolean };
-type UserRow = { sub: string; email: string; name: string | null; firstSeen: string; lastSeen: string; counts: Record<string, number> };
+type UserRow = { sub: string; email: string; name: string | null; firstSeen: string; lastSeen: string; counts: Record<string, number>; newsletter?: { optIn: boolean } };
 
 const cell: CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid var(--border)", fontSize: "0.86rem", verticalAlign: "middle" };
 const head: CSSProperties = { ...cell, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-muted)", textAlign: "left" };
@@ -129,6 +129,7 @@ export default function DashboardClient() {
             <p style={{ fontSize: "0.88rem", margin: "0 0 1rem" }}>
               Signed in with Google as <strong>{me.user.email}</strong>. PDF export and Word to LaTeX are unlocked.
             </p>
+            <NewsletterToggle />
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <button style={btn} onClick={signOut}>Sign out</button>
               <button style={{ ...btn, color: "#ef4444" }} onClick={deleteEverything}>Delete my data</button>
@@ -154,6 +155,28 @@ export default function DashboardClient() {
   );
 }
 
+/** Product-news emails: off unless the user ticks it. */
+function NewsletterToggle() {
+  const [optIn, setOptIn] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    fetch("/api/account/newsletter", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((d) => setOptIn(d?.optIn === true)).catch(() => setOptIn(false));
+  }, []);
+  const change = async (v: boolean) => {
+    setSaving(true);
+    const r = await fetch("/api/account/newsletter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ optIn: v }) }).catch(() => null);
+    if (r?.ok) setOptIn(v);
+    setSaving(false);
+  };
+  if (optIn === null) return null;
+  return (
+    <label style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", fontSize: "0.86rem", lineHeight: 1.5, margin: "0 0 1rem", cursor: "pointer" }}>
+      <input type="checkbox" checked={optIn} disabled={saving} onChange={(e) => change(e.target.checked)} style={{ marginTop: "0.2rem" }} />
+      <span>Email me when a new tool or template ships (at most monthly).</span>
+    </label>
+  );
+}
+
 /** Who signed in (ADMIN_EMAILS only). */
 function AdminUsers() {
   const [users, setUsers] = useState<UserRow[] | null>(null);
@@ -172,13 +195,13 @@ function AdminUsers() {
       ) : (
         <>
           <p style={{ fontSize: "0.84rem", color: "var(--fg-muted)", margin: "0 0 1rem" }}>
-            {users.length} account{users.length === 1 ? "" : "s"} · {total("signin")} sign-ins · {total("pdf")} PDF exports · {total("word")} Word conversions
+            {users.length} account{users.length === 1 ? "" : "s"} · {total("signin")} sign-ins · {total("pdf")} PDF exports · {total("word")} Word conversions · {users.filter((u) => u.newsletter?.optIn).length} opted in to emails
           </p>
           <div style={{ overflowX: "auto", border: "1px solid var(--border)" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
               <thead>
                 <tr>
-                  {["Email", "Name", "First seen", "Last seen", "Sign-ins", "PDF", "Word"].map((h) => <th key={h} style={head}>{h}</th>)}
+                  {["Email", "Name", "First seen", "Last seen", "Sign-ins", "PDF", "Word", "News"].map((h) => <th key={h} style={head}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -191,6 +214,7 @@ function AdminUsers() {
                     <td style={cell}>{u.counts.signin ?? 0}</td>
                     <td style={cell}>{u.counts.pdf ?? 0}</td>
                     <td style={cell}>{u.counts.word ?? 0}</td>
+                    <td style={cell}>{u.newsletter?.optIn ? "yes" : ""}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -41,7 +41,7 @@ const SECTIONS = [
   {
     title: "4. Google sign-in",
     body: [
-      "Most tools work without an account. PDF export and Word to LaTeX require a free sign-in with your Google account. latexci never sees or stores a password: Google confirms your identity and we keep a signed session cookie.",
+      "Most tools work without an account. PDF export, and Word to LaTeX after the first file, require a free sign-in with your Google account. latexci never sees or stores a password: Google confirms your identity and we keep a signed session cookie.",
       "When you sign in, we keep a private record of your email address, name, first and last visit, and the number of sign-ins, PDF exports and Word conversions, stored in Vercel Blob (Paris, EU). Documents you save stay in your own browser (localStorage) and are never uploaded to an account.",
       "You can erase that record at any time with \"Delete my data\" in the dashboard: it is deleted immediately, you are signed out, and the documents saved in that browser are wiped too. We may block sign-in for accounts that violate these terms.",
     ],

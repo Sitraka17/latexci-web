@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import GoogleMark from "@/components/GoogleMark";
+import GoogleSignIn from "@/components/GoogleSignIn";
 
 /**
  * Shown when a free feature needs an account (PDF export, Word to LaTeX).
@@ -40,17 +40,7 @@ export default function SignInPrompt({ feature, onClose }: { feature: string; on
           browser.{" "}
           <a href="/privacy" style={{ color: "var(--accent)" }}>Privacy</a>
         </p>
-        <a
-          ref={btnRef}
-          href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.6rem", padding: "0.65rem 1rem", border: "1px solid #dadce0",
-            borderRadius: 4, background: "#fff", color: "#1f1f1f", fontWeight: 600, fontSize: "0.9rem", textDecoration: "none",
-          }}
-        >
-          <GoogleMark />
-          Sign in with Google
-        </a>
+        <GoogleSignIn next={next} linkRef={btnRef} />
         <button
           onClick={onClose}
           style={{ display: "block", width: "100%", marginTop: "0.6rem", padding: "0.5rem", background: "none", border: "none", color: "var(--fg-muted)", fontSize: "0.84rem", cursor: "pointer" }}

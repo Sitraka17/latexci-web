@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const next = safeNext(req.nextUrl.searchParams.get("next"));
+  const news = req.nextUrl.searchParams.get("news") === "1";
   if (!isAuthConfigured) {
     return NextResponse.redirect(new URL(`/auth?error=unavailable&next=${encodeURIComponent(next)}`, req.url));
   }
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   const res = NextResponse.redirect(auth);
   // SameSite=None: Google's form_post is a cross-site POST, which drops Lax cookies.
-  res.cookies.set("lx_oauth", await sign({ state, nonce, next }), {
+  res.cookies.set("lx_oauth", await sign({ state, nonce, next, news }), {
     httpOnly: true, secure: true, sameSite: "none", path: "/api/auth", maxAge: 600,
   });
   return res;

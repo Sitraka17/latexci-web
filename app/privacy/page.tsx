@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -25,7 +25,8 @@ const SECTIONS = [
       "**PDF export**: your LaTeX source is sent to YToTech (latex.ytotech.com), a third-party compile service, to generate a PDF. No account information or personal data is transmitted, only the raw LaTeX text.",
       "**Citation lookups (BibTeX tools)**: when you look up a DOI, arXiv ID, PubMed ID, or ISBN, that identifier is sent to the corresponding public service (CrossRef with a DataCite fallback for dataset and software DOIs, arXiv, NCBI PubMed, and Open Library respectively) to fetch the citation. NCBI is operated in the United States, so this is an international data transfer under Art. 44 GDPR. Only the identifier you enter is sent, no account data.",
       "**CV generator**: your CV draft stays in your browser (local storage) and is never sent to latexci. If you use the optional ORCID import, only the ORCID iD you enter is sent to ORCID (orcid.org) to list your public works. ORCID is operated in the United States, so this is an international data transfer under Art. 44 GDPR.",
-      "**Sign-in**: PDF export and Word to LaTeX need a sign-in with your Google account. Google tells us your name, your email address and a stable account id. We keep them in a signed cookie in your browser and in a short account record: first and last sign-in dates and how many times you signed in, exported a PDF and converted a Word file. The record is stored privately in Vercel Blob (Paris region, EU). Documents you save in the editor stay in your browser (local storage) and are never sent to latexci.",
+      "**Sign-in**: PDF export, and Word to LaTeX after your first file, need a sign-in with your Google account. Google tells us your name, your email address and a stable account id. We keep them in a signed cookie in your browser and in a short account record: first and last sign-in dates and how many times you signed in, exported a PDF and converted a Word file. The record is stored privately in Vercel Blob (Paris region, EU). Documents you save in the editor stay in your browser (local storage) and are never sent to latexci.",
+      "**Product-news emails** (optional): if you tick the box under the sign-in button, your account record notes that you agreed, with the date, and we may email you when a new tool or template ships, at most once a month. The box is never ticked for you; untick it at any time in your dashboard, or reply to any of these emails.",
       "**Analytics**: we may collect anonymised page-view counts and referrer data via Vercel Analytics. No cookies are set for this purpose.",
     ],
   },
@@ -41,7 +42,7 @@ const SECTIONS = [
   {
     title: "3. Cookies",
     body: [
-      "We use essential cookies only for signed-in users: a signed session cookie (your name, email and Google account id, valid 30 days or until you sign out), and a plain flag telling the page you are signed in.",
+      "We use essential cookies only: for signed-in users, a signed session cookie (your name, email and Google account id, valid 30 days or until you sign out) and a plain flag telling the page you are signed in; for visitors who convert a Word file without an account, a signed counter and a plain flag (one year) recording that the free conversion was used. They hold no personal data.",
       "We do not use advertising cookies, tracking pixels, or third-party analytics cookies.",
     ],
   },

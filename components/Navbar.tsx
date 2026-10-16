@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import ThemeToggle from "./ThemeToggle";
 import AuthButton from "./AuthButton";
 import NavLinks from "./NavLinks";

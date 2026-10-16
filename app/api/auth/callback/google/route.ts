@@ -12,7 +12,7 @@ import { recordUsage } from "@/lib/users";
 
 export const runtime = "nodejs";
 
-type OAuthState = { state: string; nonce: string; next: string };
+type OAuthState = { state: string; nonce: string; next: string; news?: boolean };
 
 function fail(req: NextRequest, code: string) {
   // 303: turn Google's POST into a GET of the sign-in page.
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     name: claims.name,
     exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
   };
-  after(() => recordUsage(session, "signin"));
+  after(() => recordUsage(session, "signin", { newsletter: saved.news === true }));
   const secure = req.nextUrl.protocol === "https:";
   const res = NextResponse.redirect(new URL(safeNext(saved.next), req.url), 303);
   res.cookies.set(SESSION_COOKIE, await sign(session), {

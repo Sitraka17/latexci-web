@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { clampDescription } from "@/lib/snippet";
 import type { CSSProperties } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";

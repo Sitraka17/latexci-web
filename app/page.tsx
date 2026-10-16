@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import katex from "katex";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
@@ -149,8 +149,8 @@ export default function HomePage() {
             latexci gathers the small tools a LaTeX writer reaches for between two compilations: a live
             preview that typesets as you type, a converter from Word, a BibTeX cleaner with DOI, arXiv,
             PubMed and ISBN lookups, a diff for advisor revisions, a table generator, a CV generator and
-            28 templates. Everything is free. Most tools need no account; PDF export and Word to LaTeX ask
-            for a one-click Google sign-in.
+            28 templates. Everything is free. Most tools need no account; PDF export and Word to LaTeX (after
+            your first file) ask for a one-click Google sign-in.
           </p>
         </section>
 

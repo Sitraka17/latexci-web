@@ -18,6 +18,8 @@ export type UserRecord = {
   firstSeen: string;
   lastSeen: string;
   counts: Partial<Record<UsageEvent, number>>;
+  /** Product-news emails: only true after the user ticked the box. */
+  newsletter?: { optIn: boolean; at: string };
 };
 
 const enabled = () => !!process.env.BLOB_READ_WRITE_TOKEN;
@@ -33,7 +35,25 @@ async function read(pathname: string): Promise<UserRecord | null> {
   return (await readWithTag(pathname))?.rec ?? null;
 }
 
-export async function recordUsage(session: Session, event: UsageEvent): Promise<void> {
+export async function recordUsage(session: Session, event: UsageEvent, opts: { newsletter?: boolean } = {}): Promise<void> {
+  await update(session, (rec) => {
+    rec.counts = { ...rec.counts, [event]: (rec.counts[event] ?? 0) + 1 };
+    // Ticking the box at sign-in opts in; leaving it empty never opts out
+    // (that is done from the dashboard).
+    if (opts.newsletter) rec.newsletter = { optIn: true, at: rec.lastSeen };
+  }, event);
+}
+
+export async function setNewsletter(session: Session, optIn: boolean): Promise<void> {
+  await update(session, (rec) => { rec.newsletter = { optIn, at: rec.lastSeen }; }, "newsletter");
+}
+
+export async function getUser(sub: string): Promise<UserRecord | null> {
+  if (!enabled()) return null;
+  return read(pathOf(sub));
+}
+
+async function update(session: Session, mutate: (rec: UserRecord) => void, what: string): Promise<void> {
   if (!enabled()) return;
   const path = pathOf(session.sub);
   // Read-modify-write guarded by the blob's ETag, so two requests landing
@@ -49,8 +69,10 @@ export async function recordUsage(session: Session, event: UsageEvent): Promise<
         name: session.name ?? p?.name ?? null,
         firstSeen: p?.firstSeen ?? now,
         lastSeen: now,
-        counts: { ...p?.counts, [event]: (p?.counts?.[event] ?? 0) + 1 },
+        counts: { ...p?.counts },
+        ...(p?.newsletter ? { newsletter: p.newsletter } : {}),
       };
+      mutate(rec);
       await put(path, JSON.stringify(rec), {
         access: "private", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json",
         ...(prev ? { ifMatch: prev.etag } : {}),
@@ -61,11 +83,11 @@ export async function recordUsage(session: Session, event: UsageEvent): Promise<
         await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
         continue;
       }
-      console.error("[users] could not record", event, err instanceof Error ? err.message : err);
+      console.error("[users] could not record", what, err instanceof Error ? err.message : err);
       return;
     }
   }
-  console.error("[users] gave up recording", event, "after concurrent updates");
+  console.error("[users] gave up recording", what, "after concurrent updates");
 }
 
 export async function deleteUser(sub: string): Promise<void> {
