@@ -1,6 +1,10 @@
 "use client";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { CATEGORIES, searchSymbols, type SymbolEntry } from "@/lib/symbols";
+import Link from "next/link";
+import { CATEGORIES, SYMBOLS, searchSymbols, type SymbolEntry } from "@/lib/symbols";
+import { toggleFavourite, type FavouriteSymbol } from "@/lib/favourites";
+import { useFavouriteSymbols } from "@/components/useFavouriteSymbols";
+import CopyButton from "@/components/CopyButton";
 
 // ── KaTeX lazy loader ────────────────────────────────────────────────────────
 let katexLoaded = false;
@@ -98,8 +102,85 @@ function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cm
   );
 }
 
+// ── Favourite toggle on a card (a sibling of the card button, never nested) ──
+function StarToggle({ fav, saved }: { fav: FavouriteSymbol; saved: boolean }) {
+  return (
+    <button
+      type="button"
+      className="symbol-card-star"
+      aria-pressed={saved}
+      aria-label={`Save ${fav.command} to favourites`}
+      title={saved ? "Saved. Click to remove from favourites" : "Save to favourites"}
+      onClick={() => toggleFavourite(fav)}
+    >
+      <span aria-hidden="true">{saved ? "\u2605" : "\u2606"}</span>
+    </button>
+  );
+}
+
+// ── Favourites block, shown above the search once something is saved ────────
+function FavouritesBlock({ favs, katexReady }: { favs: FavouriteSymbol[]; katexReady: boolean }) {
+  return (
+    <section aria-labelledby="fav-title" className="fav-block">
+      <h2 id="fav-title" className="fav-block-title">Favourites</h2>
+      <div className="fav-table-wrap">
+        <table className="booktabs fav-table">
+          <thead>
+            <tr>
+              <th scope="col" className="fav-glyph">Symbol</th>
+              <th scope="col">Command</th>
+              <th scope="col" className="hide-sm">Name</th>
+              <th scope="col"><span className="fav-sr">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {favs.map((f) => (
+              <tr key={f.slug}>
+                <td className="fav-glyph">
+                  <span
+                    aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: katexReady && katexRender ? renderKaTeX(f.render ?? f.command) : "" }}
+                  />
+                </td>
+                <td>
+                  <Link href={`/tools/symbols/${f.slug}`} prefetch={false} className="fav-cmd">
+                    <code>{f.command}</code>
+                  </Link>
+                </td>
+                <td className="hide-sm fav-name">{f.name}</td>
+                <td className="fav-actions">
+                  <CopyButton text={f.command} label="Copy" />
+                  <button
+                    type="button"
+                    className="fav-remove"
+                    aria-label={`Remove ${f.command} from favourites`}
+                    title="Remove from favourites"
+                    onClick={() => toggleFavourite(f)}
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="fav-caption">
+        {favs.length} saved symbol{favs.length !== 1 ? "s" : ""}, kept in this browser only (no account).
+        Use the star on any symbol below, or the button on its page.
+      </p>
+    </section>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
-export default function SymbolSearch() {
+/**
+ * `slugs[i]` is the canonical page slug of SYMBOLS[i]. The hub passes it in so
+ * the slug tables (lib/seo-pages, which pulls in the templates) stay out of
+ * the client bundle.
+ */
+const NO_SLUGS: string[] = [];
+export default function SymbolSearch({ slugs = NO_SLUGS }: { slugs?: string[] }) {
   const [inputValue, setInputValue] = useState(""); // raw keystroke value
   const [query, setQuery]           = useState(""); // debounced search query
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -107,6 +188,13 @@ export default function SymbolSearch() {
   const [lastCopied, setLastCopied] = useState<string | null>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const favs = useFavouriteSymbols();
+  const savedSlugs = useMemo(() => new Set(favs.map((f) => f.slug)), [favs]);
+  const slugOf = useMemo(() => {
+    const m = new Map<SymbolEntry, string>();
+    SYMBOLS.forEach((s, i) => { if (slugs[i]) m.set(s, slugs[i]); });
+    return m;
+  }, [slugs]);
 
   // Debounce search: only run the O(n) filter 120 ms after the user stops typing
   const handleQueryChange = useCallback((value: string) => {
@@ -149,6 +237,8 @@ export default function SymbolSearch() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {favs.length > 0 && <FavouritesBlock favs={favs} katexReady={katexReady} />}
+
       {/* Search bar */}
       <div style={{ position: "relative" }}>
         <span style={{
@@ -276,14 +366,20 @@ export default function SymbolSearch() {
             gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
             gap: "0.6rem",
           }}>
-            {results.map((sym, i) => (
-              <SymbolCard
-                key={`${sym.command}-${i}`}
-                sym={sym}
-                onCopy={setLastCopied}
-                katexReady={katexReady}
-              />
-            ))}
+            {results.map((sym, i) => {
+              const slug = slugOf.get(sym);
+              return (
+                <div key={`${sym.command}-${i}`} className="symbol-cell">
+                  <SymbolCard sym={sym} onCopy={setLastCopied} katexReady={katexReady} />
+                  {slug && (
+                    <StarToggle
+                      fav={{ slug, command: sym.command, name: sym.name, ...(sym.render ? { render: sym.render } : {}) }}
+                      saved={savedSlugs.has(slug)}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", textAlign: "right", margin: 0 }}>
             {results.length} symbol{results.length !== 1 ? "s" : ""}
@@ -350,6 +446,19 @@ export default function SymbolSearch() {
           outline-offset: 2px;
           border-color: var(--accent);
         }
+        .symbol-cell { position: relative; display: flex; }
+        .symbol-card-star {
+          position: absolute; top: 3px; right: 3px; z-index: 1;
+          width: 1.5rem; height: 1.5rem; padding: 0; margin: 0;
+          display: flex; align-items: center; justify-content: center;
+          font: inherit; font-size: 0.85rem; line-height: 1; cursor: pointer;
+          background: transparent; border: 1px solid transparent; border-radius: var(--radius);
+          color: var(--fg-muted); opacity: 0.55;
+        }
+        .symbol-cell:hover .symbol-card-star, .symbol-card-star:focus-visible { opacity: 1; }
+        .symbol-card-star:hover { border-color: var(--border); background: var(--surface2); opacity: 1; }
+        .symbol-card-star[aria-pressed="true"] { color: var(--fg); opacity: 1; }
+        .symbol-card-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
       `}</style>
     </div>
   );

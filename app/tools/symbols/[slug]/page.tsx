@@ -6,6 +6,7 @@ import katex from "katex";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import CopyButton from "@/components/CopyButton";
+import FavouriteButton from "@/components/FavouriteButton";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import type { SymbolEntry, SymbolCategory } from "@/lib/symbols";
 import { noteFor } from "@/lib/symbol-notes";
@@ -241,6 +242,14 @@ export default async function SymbolPage({ params }: Props) {
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
                 <code style={{ ...codeStyle, fontSize: "1rem", padding: "0.3em 0.6em" }}>{sym.command}</code>
                 <CopyButton text={sym.command} label="Copy command" />
+                <FavouriteButton
+                  symbol={{
+                    slug: canonicalSlug(sym),
+                    command: sym.command,
+                    name: sym.name,
+                    ...(sym.render ? { render: sym.render } : {}),
+                  }}
+                />
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--fg-muted)" }}>
                 <Link href={categoryHref(sym.category)} style={{ color: "var(--accent)", textDecoration: "none" }}>{sym.category}</Link>

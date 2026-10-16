@@ -101,7 +101,7 @@ export default function SymbolsPage() {
         {/* Tool */}
         <section style={{ padding: "2rem 1.5rem 4rem" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <SymbolSearch />
+            <SymbolSearch slugs={SYMBOLS.map(canonicalSlug)} />
           </div>
         </section>
 
