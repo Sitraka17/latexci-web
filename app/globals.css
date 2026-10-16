@@ -1063,3 +1063,29 @@ button.btn { cursor: pointer; }
 /* Diff colours readable in both themes (were fixed mint and pink). */
 .diff-added   { background: color-mix(in srgb, var(--green) 14%, transparent) !important; color: var(--green) !important; }
 .diff-removed { background: color-mix(in srgb, var(--red) 12%, transparent) !important; color: var(--red) !important; }
+
+/* Favourite symbols (localStorage). Toggle on a symbol page, ruled block on the hub. */
+.fav-btn { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; padding: 0.18rem 0.6rem; line-height: 1.4; border-color: var(--border); color: var(--fg-muted); }
+.fav-btn:hover { color: var(--fg); border-color: var(--fg); }
+.fav-btn[aria-pressed="true"] { background: var(--surface2); color: var(--fg); border-color: var(--fg); }
+.fav-star { font-size: 0.95em; line-height: 1; }
+.fav-block { border-bottom: 1px solid var(--border); padding: 0 0 0.9rem; }
+.fav-block-title { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; margin: 0 0 0.4rem; }
+.fav-table-wrap { overflow-x: auto; }
+.fav-table th, .fav-table td { vertical-align: middle; padding-top: 0.32rem; padding-bottom: 0.32rem; }
+.fav-table .fav-glyph { width: 4.5rem; text-align: center; font-size: 1.1rem; color: var(--fg); }
+.fav-table .fav-name { color: var(--fg-muted); font-size: 0.9rem; }
+.fav-cmd { color: var(--accent); text-decoration: none; }
+.fav-cmd:hover { text-decoration: underline; }
+.fav-cmd code { font-family: var(--font-tt), monospace; font-size: 0.92em; }
+.fav-table .fav-actions { text-align: right; white-space: nowrap; }
+.fav-table .fav-actions > * + * { margin-left: 0.4rem; }
+.fav-remove { font-family: var(--font-sans); font-size: 0.7rem; padding: 0.18rem 0.55rem; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--fg-muted); cursor: pointer; }
+.fav-remove:hover { color: var(--fg); border-color: var(--fg); }
+.fav-caption { font-family: var(--font-serif); font-size: 0.88rem; color: var(--fg-muted); margin: 0.5rem 0 0; }
+.fav-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 560px) {
+  .booktabs.fav-table td.fav-glyph, .booktabs.fav-table th.fav-glyph { width: 2.5rem; min-width: 0 !important; padding-left: 0.2rem; padding-right: 0.2rem; }
+  .fav-table .fav-actions { white-space: normal; }
+  .fav-table .fav-actions > * { margin: 0.15rem 0 0.15rem 0.4rem; }
+}
