@@ -20,9 +20,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
----
-
-Third-party files keep their own licences: the Computer Modern Unicode and
-STIX Two Math fonts in app/fonts and lib/og/fonts are under the SIL Open Font
-License 1.1 (see the README.txt in each folder). npm dependencies are under
-their respective licences.
