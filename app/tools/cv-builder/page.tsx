@@ -8,21 +8,21 @@ import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import "./cv.css";
 
 export const metadata: Metadata = {
-  title: "LaTeX CV Generator: Fill a Form, Get a Clean CV",
+  title: "LaTeX Resume and CV Builder: Free, ATS-Friendly",
   description:
-    "Build a LaTeX CV without writing LaTeX: fill in a form, pick an academic or industry layout in English or French, import publications from ORCID, then open it in Overleaf. Free, no signup.",
+    "Build a LaTeX resume or academic CV from a form: one-page industry or research layout, English or French, ORCID import, ATS-readable PDF. Free, no signup.",
   keywords: [
-    "latex cv generator", "latex cv builder", "latex resume generator", "academic cv latex",
+    "latex resume builder", "latex resume template", "latex cv generator", "latex cv builder", "latex resume generator", "ats friendly latex resume", "academic cv latex",
     "cv latex template", "orcid cv", "générateur cv latex", "cv latex français",
   ],
   alternates: { canonical: "/tools/cv-builder" },
   openGraph: {
-    title: "LaTeX CV Generator | latexci",
-    description: "Fill a form, get a clean LaTeX CV. Academic or industry, English or French, ORCID import.",
+    title: "LaTeX Resume and CV Builder | latexci",
+    description: "Fill a form, get a clean LaTeX resume or CV. Academic or industry, English or French, ORCID import.",
     url: "/tools/cv-builder",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "LaTeX CV Generator | latexci" },
+  twitter: { card: "summary_large_image", title: "LaTeX Resume and CV Builder | latexci" },
 };
 
 const FAQS = [
@@ -74,7 +74,7 @@ export default function CvBuilderPage() {
       <Navbar />
       <main style={{ flex: 1 }}>
         <header className="tool-head">
-          <h1>LaTeX CV generator</h1>
+          <h1>LaTeX resume and CV builder</h1>
           <p className="lede">
             Fill in the form, choose a layout, and get a clean LaTeX CV that compiles. Import your publications from
             ORCID, then open the result in Overleaf for the PDF. No account is needed. Built on the same layouts as our{" "}
