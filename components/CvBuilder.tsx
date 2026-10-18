@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  generateCv, unsupportedChars, lengthWarning, normalizeCv, exampleFor, EXAMPLE_CV, EMPTY_CV, EMPTY_ENTRY, EMPTY_PUB,
+  generateCv, orcidPubType, unsupportedChars, lengthWarning, normalizeCv, exampleFor, EXAMPLE_CV, EMPTY_CV, EMPTY_ENTRY, EMPTY_PUB,
   type CvData, type CvEntry, type CvLang, type CvPublication, type PubType,
 } from "@/lib/cv";
 
@@ -135,6 +135,8 @@ export default function CvBuilder() {
       const saved = localStorage.getItem(STORAGE_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved) setData(normalizeCv(JSON.parse(saved)));
+      // No draft yet: ?lang=fr (linked from the French guide) starts from the French example.
+      else if (new URLSearchParams(window.location.search).get("lang") === "fr") setData(exampleFor("fr"));
     } catch { /* corrupt or blocked storage: keep the example */ }
     setLoaded(true);
   }, []);
@@ -156,12 +158,12 @@ export default function CvBuilder() {
       const res = await fetch(`/api/orcid-works?id=${encodeURIComponent(data.orcid)}`);
       const json = await res.json();
       if (!res.ok) { setOrcidStatus(json.error ?? "ORCID lookup failed."); return; }
-      const works = json.works as { title: string; venue: string; year: string; doi: string }[];
+      const works = json.works as { title: string; venue: string; year: string; doi: string; type?: string }[];
       setData((d) => {
         const known = new Set(d.publications.map((p) => p.title.trim().toLowerCase()));
         const added = works
           .filter((w) => !known.has(w.title.trim().toLowerCase()))
-          .map((w) => ({ ...EMPTY_PUB, title: w.title, venue: w.venue, year: w.year, doi: w.doi }));
+          .map((w) => ({ ...EMPTY_PUB, title: w.title, venue: w.venue, year: w.year, doi: w.doi, type: orcidPubType(w.type) }));
         setOrcidStatus(added.length
           ? `Imported ${added.length} publication${added.length > 1 ? "s" : ""}. ORCID does not list co-authors: add them below.`
           : "No new publications found on this ORCID record.");

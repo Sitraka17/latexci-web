@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "ranOn": "2026-10-18"
+  },
+  "fr-babel": {
+    "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=12cm,paperheight=2.4cm,margin=0.5cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[french]{babel}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\nLangues: français, anglais; disponible en janvier!\\par\nPourquoi ce poste? \\og Pour la recherche appliquée.\\fg{}\\par\n\\end{document}\n",
+    "shown": "Langues: français, anglais; disponible en janvier!\\par\nPourquoi ce poste? \\og Pour la recherche appliquée.\\fg{}\\par",
+    "text": "Langues : français, anglais ; disponible en janvier !\nPourquoi ce poste ? « Pour la recherche appliquée. »",
+    "pages": 1,
+    "codepoints": [
+      {
+        "ch": "ç",
+        "cp": "U+00E7"
+      },
+      {
+        "ch": "«",
+        "cp": "U+00AB"
+      },
+      {
+        "ch": "é",
+        "cp": "U+00E9"
+      },
+      {
+        "ch": "»",
+        "cp": "U+00BB"
+      }
+    ],
+    "size": {
+      "width": 572,
+      "height": 106
+    },
+    "png": "/guides/cv/fr-babel.png"
+  },
+  "fr-english": {
+    "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=12cm,paperheight=2.4cm,margin=0.5cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[english]{babel}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\nLangues: français, anglais; disponible en janvier!\\par\nPourquoi ce poste? «Pour la recherche appliquée.»\\par\n\\end{document}\n",
+    "shown": "Langues: français, anglais; disponible en janvier!\\par\nPourquoi ce poste? «Pour la recherche appliquée.»\\par",
+    "text": "Langues: français, anglais; disponible en janvier!\nPourquoi ce poste? «Pour la recherche appliquée.»",
+    "pages": 1,
+    "codepoints": [
+      {
+        "ch": "ç",
+        "cp": "U+00E7"
+      },
+      {
+        "ch": "«",
+        "cp": "U+00AB"
+      },
+      {
+        "ch": "é",
+        "cp": "U+00E9"
+      },
+      {
+        "ch": "»",
+        "cp": "U+00BB"
+      }
+    ],
+    "size": {
+      "width": 558,
+      "height": 106
+    },
+    "png": "/guides/cv/fr-english.png"
+  },
+  "fr-preamble": {
+    "source": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[french]{babel}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV de Camille Moreau}, pdfauthor={Camille Moreau}, pdflang={fr}}\n\\pagestyle{empty}\n\\begin{document}\nCamille Moreau\\par\nData scientist\n\\end{document}\n",
+    "shown": "\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[french]{babel}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV de Camille Moreau}, pdfauthor={Camille Moreau}, pdflang={fr}}",
+    "text": "Camille Moreau\nData scientist",
+    "pages": 1,
+    "codepoints": []
+  },
+  "fr-itemize": {
+    "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=7cm,paperheight=2.2cm,margin=0.5cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[french]{babel}\n\\pagestyle{empty}\n\\begin{document}\n\\begin{itemize}\n  \\item Python, R, SQL\n  \\item Git, Docker\n\\end{itemize}\n\\end{document}\n",
+    "shown": "",
+    "text": "\u2014 Python, R, SQL\n\u2014 Git, Docker",
+    "pages": 1,
+    "codepoints": [
+      {
+        "ch": "\u2014",
+        "cp": "U+2014"
+      }
+    ],
+    "size": {
+      "width": 252,
+      "height": 106
+    },
+    "png": "/guides/cv/fr-itemize.png"
+  },
+  "fr-itemize-std": {
+    "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=7cm,paperheight=2.2cm,margin=0.5cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[french]{babel}\n\\frenchsetup{StandardItemLabels=true}\n\\pagestyle{empty}\n\\begin{document}\n\\begin{itemize}\n  \\item Python, R, SQL\n  \\item Git, Docker\n\\end{itemize}\n\\end{document}\n",
+    "shown": "\\frenchsetup{StandardItemLabels=true}",
+    "text": "• Python, R, SQL\n• Git, Docker",
+    "pages": 1,
+    "codepoints": [
+      {
+        "ch": "•",
+        "cp": "U+2022"
+      }
+    ],
+    "size": {
+      "width": 241,
+      "height": 106
+    },
+    "png": "/guides/cv/fr-itemize-std.png"
+  },
+  "builder-fr-industry": {
+    "source": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english,french]{babel}\n\\frenchsetup{StandardItemLabels=true}\n\\usepackage{geometry}\n\\geometry{top=1cm, bottom=1cm, left=1.3cm, right=1.3cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Camille Moreau}, pdfauthor={Camille Moreau}, pdfsubject={Docteure en statistique, data scientist}, pdflang=fr}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{graphicx}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\linespread{0.95}\n\n\\definecolor{accent}{RGB}{30, 90, 180}\n\n% Section heading: title, then a rule underneath; never alone at a page foot\n\\newcommand{\\sect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.5em}%\n  {\\bfseries\\large\\color{accent} #1}\\par\\nointerlineskip\\vspace{2pt}%\n  {\\color{accent}\\rule{\\linewidth}{1.2pt}}\\par\\vspace{0.25em}%\n}\n\\newcommand{\\sectsub}[1]{\\par\\needspace{3\\baselineskip}{\\small\\bfseries #1}\\par}\n\n% \\job{title}{dates}{organisation}{location}\n\\newcommand{\\job}[4]{%\n  \\par\\needspace{3\\baselineskip}%\n  {\\bfseries #1}\\hfill{\\small\\itshape\\color{gray}#2}\\\\*%\n  {\\small\\color{gray}#3\\ifx&#4&\\else{} \\textbullet{} #4\\fi}%\n}\n\n\\begin{document}\n\n\\begin{minipage}[c]{1.0\\linewidth}\n  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} Camille Moreau}\\\\[0.3em]\n  {\\large Docteure en statistique, data scientist}\\\\[0.35em]\n  \\small \\mbox{\\href{mailto:camille.moreau@exemple.fr}{camille.moreau@exemple.fr}} \\enspace\\textbar\\enspace \\mbox{\\href{tel:+33612345678}{+33 6 12 34 56 78}} \\enspace\\textbar\\enspace \\mbox{Lyon, France}\\\\[0.15em]\n  \\mbox{\\href{https://linkedin.com/in/camille-moreau}{linkedin.com/in/camille-moreau}} \\enspace\\textbar\\enspace \\mbox{\\href{https://github.com/cmoreau}{github.com/cmoreau}}\n\\end{minipage}\n\n\\vspace{0.4em}\n{\\color{accent}\\rule{\\linewidth}{1.8pt}}\n\n\\sect{Profil}\n{\\small Statisticienne spécialisée dans les séries temporelles et la prévision de la demande ; six ans d'expérience entre recherche publique et industrie.\\par}\n\n\\sect{Compétences}\n{\\small\n\\textbf{Programmation:} Python, R, SQL\\\\[2pt]\n\\textbf{Outils:} Git, Docker, Airflow, MLflow\\\\[2pt]\n\\textbf{Langues:} Français (langue maternelle), anglais (C1), espagnol (B1)\n\\par}\n\n\\sect{Expérience professionnelle}\n\n\\job{Data scientist senior}{mars 2022 -- aujourd'hui}{Enedis}{Lyon}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Réduit de 18 \\% l'erreur de prévision journalière sur 35 millions de compteurs\n  \\item Encadre une équipe de 4 data scientists et 2 alternants\n  \\item Mis en production un pipeline de prévision suivi en continu (MLflow, Airflow)\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{Ingénieure de recherche}{janv. 2021 -- févr. 2022}{Inria}{Grenoble}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Développé une bibliothèque Python open source de prévision probabiliste (1 200 étoiles sur GitHub)\n\\end{itemize}\n\n\\sect{Formation}\n\n\\job{Doctorat en mathématiques appliquées}{oct. 2017 -- déc. 2020}{Université Claude Bernard Lyon 1}{Lyon}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Thèse : modèles bayésiens hiérarchiques pour la prévision de consommation électrique\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{Master Statistique et science des données}{sept. 2015 -- juin 2017}{ENSAI}{Rennes}\n\n\\sect{Publications}\n\\sectsub{Articles de revues}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.}, Durand, P. \\& Lefèvre, H. (2022). \\foreignlanguage{english}{Hierarchical forecasting of electricity demand: a Bayesian approach}. \\textit{International Journal of Forecasting}.\n\\end{enumerate}\n\\sectsub{Actes de conférences}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.} \\& Bernard, T. (2021). Prévision probabiliste de la consommation : une étude comparative. \\textit{Journées de statistique de la SFdS}.\n\\end{enumerate}\n\n\\sect{Enseignement et encadrement}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2018 – 2020 : travaux dirigés de probabilités, licence 2 (64 h par an)\n\\end{itemize}\n\n\\sect{Prix et distinctions}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2021 : prix de thèse de la Société française de statistique\n\\end{itemize}\n\n\\end{document}\n",
+    "shown": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english,french]{babel}\n\\frenchsetup{StandardItemLabels=true}\n\\usepackage{geometry}\n\\geometry{top=1cm, bottom=1cm, left=1.3cm, right=1.3cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Camille Moreau}, pdfauthor={Camille Moreau}, pdfsubject={Docteure en statistique, data scientist}, pdflang=fr}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{graphicx}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\linespread{0.95}\n\n\\definecolor{accent}{RGB}{30, 90, 180}\n\n% Section heading: title, then a rule underneath; never alone at a page foot\n\\newcommand{\\sect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.5em}%\n  {\\bfseries\\large\\color{accent} #1}\\par\\nointerlineskip\\vspace{2pt}%\n  {\\color{accent}\\rule{\\linewidth}{1.2pt}}\\par\\vspace{0.25em}%\n}\n\\newcommand{\\sectsub}[1]{\\par\\needspace{3\\baselineskip}{\\small\\bfseries #1}\\par}\n\n% \\job{title}{dates}{organisation}{location}\n\\newcommand{\\job}[4]{%\n  \\par\\needspace{3\\baselineskip}%\n  {\\bfseries #1}\\hfill{\\small\\itshape\\color{gray}#2}\\\\*%\n  {\\small\\color{gray}#3\\ifx&#4&\\else{} \\textbullet{} #4\\fi}%\n}\n\n\\begin{document}\n\n\\begin{minipage}[c]{1.0\\linewidth}\n  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} Camille Moreau}\\\\[0.3em]\n  {\\large Docteure en statistique, data scientist}\\\\[0.35em]\n  \\small \\mbox{\\href{mailto:camille.moreau@exemple.fr}{camille.moreau@exemple.fr}} \\enspace\\textbar\\enspace \\mbox{\\href{tel:+33612345678}{+33 6 12 34 56 78}} \\enspace\\textbar\\enspace \\mbox{Lyon, France}\\\\[0.15em]\n  \\mbox{\\href{https://linkedin.com/in/camille-moreau}{linkedin.com/in/camille-moreau}} \\enspace\\textbar\\enspace \\mbox{\\href{https://github.com/cmoreau}{github.com/cmoreau}}\n\\end{minipage}\n\n\\vspace{0.4em}\n{\\color{accent}\\rule{\\linewidth}{1.8pt}}\n\n\\sect{Profil}\n{\\small Statisticienne spécialisée dans les séries temporelles et la prévision de la demande ; six ans d'expérience entre recherche publique et industrie.\\par}\n\n\\sect{Compétences}\n{\\small\n\\textbf{Programmation:} Python, R, SQL\\\\[2pt]\n\\textbf{Outils:} Git, Docker, Airflow, MLflow\\\\[2pt]\n\\textbf{Langues:} Français (langue maternelle), anglais (C1), espagnol (B1)\n\\par}\n\n\\sect{Expérience professionnelle}\n\n\\job{Data scientist senior}{mars 2022 -- aujourd'hui}{Enedis}{Lyon}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Réduit de 18 \\% l'erreur de prévision journalière sur 35 millions de compteurs\n  \\item Encadre une équipe de 4 data scientists et 2 alternants\n  \\item Mis en production un pipeline de prévision suivi en continu (MLflow, Airflow)\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{Ingénieure de recherche}{janv. 2021 -- févr. 2022}{Inria}{Grenoble}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Développé une bibliothèque Python open source de prévision probabiliste (1 200 étoiles sur GitHub)\n\\end{itemize}\n\n\\sect{Formation}\n\n\\job{Doctorat en mathématiques appliquées}{oct. 2017 -- déc. 2020}{Université Claude Bernard Lyon 1}{Lyon}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Thèse : modèles bayésiens hiérarchiques pour la prévision de consommation électrique\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{Master Statistique et science des données}{sept. 2015 -- juin 2017}{ENSAI}{Rennes}\n\n\\sect{Publications}\n\\sectsub{Articles de revues}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.}, Durand, P. \\& Lefèvre, H. (2022). \\foreignlanguage{english}{Hierarchical forecasting of electricity demand: a Bayesian approach}. \\textit{International Journal of Forecasting}.\n\\end{enumerate}\n\\sectsub{Actes de conférences}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.} \\& Bernard, T. (2021). Prévision probabiliste de la consommation : une étude comparative. \\textit{Journées de statistique de la SFdS}.\n\\end{enumerate}\n\n\\sect{Enseignement et encadrement}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2018 – 2020 : travaux dirigés de probabilités, licence 2 (64 h par an)\n\\end{itemize}\n\n\\sect{Prix et distinctions}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2021 : prix de thèse de la Société française de statistique\n\\end{itemize}\n\n\\end{document}",
+    "text": "Camille Moreau\nDocteure en statistique, data scientist\ncamille.moreau@exemple.fr | +33 6 12 34 56 78 | Lyon, France\nlinkedin.com/in/camille-moreau | github.com/cmoreau\n\nProfil\nStatisticienne spécialisée dans les séries temporelles et la prévision de la demande ; six ans d’expérience entre recherche publique et\nindustrie.\n\nCompétences\nProgrammation : Python, R, SQL\nOutils : Git, Docker, Airflow, MLflow\nLangues : Français (langue maternelle), anglais (C1), espagnol (B1)\n\nExpérience professionnelle\nData scientist senior\n\nmars 2022 – aujourd’hui\n\nEnedis • Lyon\n\n• Réduit de 18 % l’erreur de prévision journalière sur 35 millions de compteurs\n• Encadre une équipe de 4 data scientists et 2 alternants\n• Mis en production un pipeline de prévision suivi en continu (MLflow, Airflow)\nIngénieure de recherche\n\njanv. 2021 – févr. 2022\n\nInria • Grenoble\n\n• Développé une bibliothèque Python open source de prévision probabiliste (1 200 étoiles sur GitHub)\n\nFormation\nDoctorat en mathématiques appliquées\n\noct. 2017 – déc. 2020\n\nUniversité Claude Bernard Lyon 1 • Lyon\n\n• Thèse : modèles bayésiens hiérarchiques pour la prévision de consommation électrique\nMaster Statistique et science des données\n\nsept. 2015 – juin 2017\n\nENSAI • Rennes\n\nPublications\nArticles de revues\n\n1. Moreau, C., Durand, P. & Lefèvre, H. (2022). Hierarchical forecasting of electricity demand: a Bayesian approach.\nInternational Journal of Forecasting.\nActes de conférences\n\n1. Moreau, C. & Bernard, T. (2021). Prévision probabiliste de la consommation : une étude comparative. Journées de\nstatistique de la SFdS.\n\nEnseignement et encadrement\n• 2018 – 2020 : travaux dirigés de probabilités, licence 2 (64 h par an)\n\nPrix et distinctions\n• 2021 : prix de thèse de la Société française de statistique",
+    "pages": 1,
+    "codepoints": [
+      {
+        "ch": "é",
+        "cp": "U+00E9"
+      },
+      {
+        "ch": "’",
+        "cp": "U+2019"
+      },
+      {
+        "ch": "ç",
+        "cp": "U+00E7"
+      },
+      {
+        "ch": "–",
+        "cp": "U+2013"
+      },
+      {
+        "ch": "•",
+        "cp": "U+2022"
+      },
+      {
+        "ch": "è",
+        "cp": "U+00E8"
+      }
+    ],
+    "size": {
+      "width": 782,
+      "height": 858
+    },
+    "png": "/guides/cv/builder-fr-industry.png"
+  },
+  "builder-fr-academic": {
+    "source": "\\documentclass[11pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english,french]{babel}\n\\frenchsetup{StandardItemLabels=true}\n\\usepackage{geometry}\n\\geometry{top=1.9cm, bottom=2cm, left=2.2cm, right=2.2cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Camille Moreau}, pdfauthor={Camille Moreau}, pdfsubject={Docteure en statistique, data scientist}, pdflang=fr}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\n\\definecolor{navy}{RGB}{0,51,102}\n\\definecolor{mygray}{RGB}{95,100,110}\n\n% Section heading: small caps, navy, ruled; never alone at a page foot\n\\newcommand{\\cvsect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.75em}%\n  {\\large\\bfseries\\color{navy}\\scshape #1}%\n  \\\\[-0.55em]%\n  {\\color{navy!55}\\hrule height 0.6pt}%\n  \\vspace{0.3em}%\n}\n\\newcommand{\\cvsub}[1]{\\par\\needspace{3\\baselineskip}\\vspace{0.2em}{\\bfseries\\itshape #1}\\par}\n\n% \\cventry{dates}{title}{institution}{location}{details}\n% One flow, the date on the title line, so text extraction keeps them together.\n\\newcommand{\\cventry}[5]{%\n  \\par\\noindent{\\bfseries #2}\\hfill{\\small\\color{mygray}#1}\\\\*%\n  {\\small\\itshape\\color{mygray}#3\\ifx&#4&\\else, #4\\fi}%\n  \\ifx&#5&\\else\\\\*{\\small #5}\\fi\\par\n  \\vspace{0.38em}%\n}\n\n\\begin{document}\n\n\\begin{center}\n  {\\Huge\\bfseries\\color{navy} Camille Moreau}\\\\[0.35em]\n  {\\large Docteure en statistique, data scientist}\\\\[0.3em]\n  \\small \\mbox{\\href{mailto:camille.moreau@exemple.fr}{camille.moreau@exemple.fr}} \\quad\\textbullet\\quad \\mbox{\\href{tel:+33612345678}{+33 6 12 34 56 78}} \\quad\\textbullet\\quad \\mbox{Lyon, France}\\\\[0.15em]\n  \\mbox{\\href{https://linkedin.com/in/camille-moreau}{linkedin.com/in/camille-moreau}} \\quad\\textbullet\\quad \\mbox{\\href{https://github.com/cmoreau}{github.com/cmoreau}}\n\\end{center}\n\n{\\color{navy}\\rule{\\linewidth}{1.2pt}}\n\n\\cvsect{Profil}\nStatisticienne spécialisée dans les séries temporelles et la prévision de la demande ; six ans d'expérience entre recherche publique et industrie.\n\n\\cvsect{Formation}\n\\cventry{oct. 2017 -- déc. 2020}{Doctorat en mathématiques appliquées}{Université Claude Bernard Lyon 1}{Lyon}{Thèse : modèles bayésiens hiérarchiques pour la prévision de consommation électrique}\n\\cventry{sept. 2015 -- juin 2017}{Master Statistique et science des données}{ENSAI}{Rennes}{}\n\n\\cvsect{Expérience professionnelle}\n\\cventry{mars 2022 -- aujourd'hui}{Data scientist senior}{Enedis}{Lyon}{Réduit de 18 \\% l'erreur de prévision journalière sur 35 millions de compteurs\\\\ Encadre une équipe de 4 data scientists et 2 alternants\\\\ Mis en production un pipeline de prévision suivi en continu (MLflow, Airflow)}\n\\cventry{janv. 2021 -- févr. 2022}{Ingénieure de recherche}{Inria}{Grenoble}{Développé une bibliothèque Python open source de prévision probabiliste (1 200 étoiles sur GitHub)}\n\n\\cvsect{Publications}\n\\cvsub{Articles de revues}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.}, Durand, P. \\& Lefèvre, H. (2022). \\foreignlanguage{english}{Hierarchical forecasting of electricity demand: a Bayesian approach}. \\textit{International Journal of Forecasting}.\n\\end{enumerate}\n\\cvsub{Actes de conférences}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.} \\& Bernard, T. (2021). Prévision probabiliste de la consommation : une étude comparative. \\textit{Journées de statistique de la SFdS}.\n\\end{enumerate}\n\n\\cvsect{Enseignement et encadrement}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2018 – 2020 : travaux dirigés de probabilités, licence 2 (64 h par an)\n\\end{itemize}\n\n\\cvsect{Prix et distinctions}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2021 : prix de thèse de la Société française de statistique\n\\end{itemize}\n\n\\cvsect{Compétences}\n\\begin{tabular}{@{}lp{0.72\\linewidth}}\n  \\textbf{Programmation} & Python, R, SQL\\\\\n  \\textbf{Outils} & Git, Docker, Airflow, MLflow\\\\\n  \\textbf{Langues} & Français (langue maternelle), anglais (C1), espagnol (B1)\\\\\n\\end{tabular}\n\n\\end{document}\n",
+    "shown": "\\documentclass[11pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english,french]{babel}\n\\frenchsetup{StandardItemLabels=true}\n\\usepackage{geometry}\n\\geometry{top=1.9cm, bottom=2cm, left=2.2cm, right=2.2cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Camille Moreau}, pdfauthor={Camille Moreau}, pdfsubject={Docteure en statistique, data scientist}, pdflang=fr}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\n\\definecolor{navy}{RGB}{0,51,102}\n\\definecolor{mygray}{RGB}{95,100,110}\n\n% Section heading: small caps, navy, ruled; never alone at a page foot\n\\newcommand{\\cvsect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.75em}%\n  {\\large\\bfseries\\color{navy}\\scshape #1}%\n  \\\\[-0.55em]%\n  {\\color{navy!55}\\hrule height 0.6pt}%\n  \\vspace{0.3em}%\n}\n\\newcommand{\\cvsub}[1]{\\par\\needspace{3\\baselineskip}\\vspace{0.2em}{\\bfseries\\itshape #1}\\par}\n\n% \\cventry{dates}{title}{institution}{location}{details}\n% One flow, the date on the title line, so text extraction keeps them together.\n\\newcommand{\\cventry}[5]{%\n  \\par\\noindent{\\bfseries #2}\\hfill{\\small\\color{mygray}#1}\\\\*%\n  {\\small\\itshape\\color{mygray}#3\\ifx&#4&\\else, #4\\fi}%\n  \\ifx&#5&\\else\\\\*{\\small #5}\\fi\\par\n  \\vspace{0.38em}%\n}\n\n\\begin{document}\n\n\\begin{center}\n  {\\Huge\\bfseries\\color{navy} Camille Moreau}\\\\[0.35em]\n  {\\large Docteure en statistique, data scientist}\\\\[0.3em]\n  \\small \\mbox{\\href{mailto:camille.moreau@exemple.fr}{camille.moreau@exemple.fr}} \\quad\\textbullet\\quad \\mbox{\\href{tel:+33612345678}{+33 6 12 34 56 78}} \\quad\\textbullet\\quad \\mbox{Lyon, France}\\\\[0.15em]\n  \\mbox{\\href{https://linkedin.com/in/camille-moreau}{linkedin.com/in/camille-moreau}} \\quad\\textbullet\\quad \\mbox{\\href{https://github.com/cmoreau}{github.com/cmoreau}}\n\\end{center}\n\n{\\color{navy}\\rule{\\linewidth}{1.2pt}}\n\n\\cvsect{Profil}\nStatisticienne spécialisée dans les séries temporelles et la prévision de la demande ; six ans d'expérience entre recherche publique et industrie.\n\n\\cvsect{Formation}\n\\cventry{oct. 2017 -- déc. 2020}{Doctorat en mathématiques appliquées}{Université Claude Bernard Lyon 1}{Lyon}{Thèse : modèles bayésiens hiérarchiques pour la prévision de consommation électrique}\n\\cventry{sept. 2015 -- juin 2017}{Master Statistique et science des données}{ENSAI}{Rennes}{}\n\n\\cvsect{Expérience professionnelle}\n\\cventry{mars 2022 -- aujourd'hui}{Data scientist senior}{Enedis}{Lyon}{Réduit de 18 \\% l'erreur de prévision journalière sur 35 millions de compteurs\\\\ Encadre une équipe de 4 data scientists et 2 alternants\\\\ Mis en production un pipeline de prévision suivi en continu (MLflow, Airflow)}\n\\cventry{janv. 2021 -- févr. 2022}{Ingénieure de recherche}{Inria}{Grenoble}{Développé une bibliothèque Python open source de prévision probabiliste (1 200 étoiles sur GitHub)}\n\n\\cvsect{Publications}\n\\cvsub{Articles de revues}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.}, Durand, P. \\& Lefèvre, H. (2022). \\foreignlanguage{english}{Hierarchical forecasting of electricity demand: a Bayesian approach}. \\textit{International Journal of Forecasting}.\n\\end{enumerate}\n\\cvsub{Actes de conférences}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Moreau, C.} \\& Bernard, T. (2021). Prévision probabiliste de la consommation : une étude comparative. \\textit{Journées de statistique de la SFdS}.\n\\end{enumerate}\n\n\\cvsect{Enseignement et encadrement}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2018 – 2020 : travaux dirigés de probabilités, licence 2 (64 h par an)\n\\end{itemize}\n\n\\cvsect{Prix et distinctions}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2021 : prix de thèse de la Société française de statistique\n\\end{itemize}\n\n\\cvsect{Compétences}\n\\begin{tabular}{@{}lp{0.72\\linewidth}}\n  \\textbf{Programmation} & Python, R, SQL\\\\\n  \\textbf{Outils} & Git, Docker, Airflow, MLflow\\\\\n  \\textbf{Langues} & Français (langue maternelle), anglais (C1), espagnol (B1)\\\\\n\\end{tabular}\n\n\\end{document}",
+    "text": "Camille Moreau\nDocteure en statistique, data scientist\ncamille.moreau@exemple.fr • +33 6 12 34 56 78 • Lyon, France\nlinkedin.com/in/camille-moreau • github.com/cmoreau\n\nProfil\nStatisticienne spécialisée dans les séries temporelles et la prévision de la demande ; six ans d’expérience\nentre recherche publique et industrie.\n\nFormation\noct. 2017 – déc. 2020\n\nDoctorat en mathématiques appliquées\nUniversité Claude Bernard Lyon 1, Lyon\nThèse : modèles bayésiens hiérarchiques pour la prévision de consommation électrique\n\nsept. 2015 – juin 2017\n\nMaster Statistique et science des données\nENSAI, Rennes\n\nExpérience professionnelle\nData scientist senior\n\nmars 2022 – aujourd’hui\n\nEnedis, Lyon\nRéduit de 18 % l’erreur de prévision journalière sur 35 millions de compteurs\nEncadre une équipe de 4 data scientists et 2 alternants\nMis en production un pipeline de prévision suivi en continu (MLflow, Airflow)\n\nIngénieure de recherche\njanv. 2021 – févr. 2022\nInria, Grenoble\nDéveloppé une bibliothèque Python open source de prévision probabiliste (1 200 étoiles sur GitHub)\n\nPublications\nArticles de revues\n1. Moreau, C., Durand, P. & Lefèvre, H. (2022). Hierarchical forecasting of electricity demand: a\nBayesian approach. International Journal of Forecasting.\nActes de conférences\n1. Moreau, C. & Bernard, T. (2021). Prévision probabiliste de la consommation : une étude\ncomparative. Journées de statistique de la SFdS.\n\nEnseignement et encadrement\n• 2018 – 2020 : travaux dirigés de probabilités, licence 2 (64 h par an)\n\nPrix et distinctions\n• 2021 : prix de thèse de la Société française de statistique\n\nCompétences\nProgrammation\nOutils\nLangues\n\nPython, R, SQL\nGit, Docker, Airflow, MLflow\nFrançais (langue maternelle), anglais (C1), espagnol (B1)",
+    "pages": 1,
+    "codepoints": [
+      {
+        "ch": "•",
+        "cp": "U+2022"
+      },
+      {
+        "ch": "é",
+        "cp": "U+00E9"
+      },
+      {
+        "ch": "’",
+        "cp": "U+2019"
+      },
+      {
+        "ch": "–",
+        "cp": "U+2013"
+      },
+      {
+        "ch": "è",
+        "cp": "U+00E8"
+      },
+      {
+        "ch": "ç",
+        "cp": "U+00E7"
+      }
+    ],
+    "size": {
+      "width": 710,
+      "height": 1019
+    },
+    "png": "/guides/cv/builder-fr-academic.png"
+  }
+}

@@ -131,6 +131,9 @@ export default function TemplatesPage() {
               uses, and a one-click “open in editor”.
               Need a CV without writing LaTeX? Fill in the{" "}
               <Link href="/tools/cv-builder" style={{ color: "var(--accent)" }}>CV generator</Link>.
+              CV guides: <Link href="/latex-resume-ats" style={{ color: "var(--accent)" }}>LaTeX resumes and ATS</Link>,{" "}
+              <Link href="/orcid-to-latex-cv" style={{ color: "var(--accent)" }}>ORCID to LaTeX</Link>,{" "}
+              <Link href="/cv-latex" hrefLang="fr" lang="fr" style={{ color: "var(--accent)" }}>CV LaTeX en français</Link>.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               {TEMPLATES.map((t) => (

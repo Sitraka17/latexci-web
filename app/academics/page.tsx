@@ -336,6 +336,11 @@ export default function AcademicsPage() {
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>
           <Link href="/tools/templates" className="btn btn-primary">Browse thesis templates (free)</Link>
         </div>
+        <p style={{ marginTop: "1.25rem", textIndent: 0 }}>
+          Applying for a position? The <Link href="/tools/cv-builder">CV builder</Link> sets an academic CV
+          from a form and can import your works from ORCID; <Link href="/orcid-to-latex-cv">ORCID to a LaTeX
+          publication list</Link> explains what that import can and cannot fill in.
+        </p>
 
         <h2 style={{ marginTop: "3rem" }}>Appendix A&ensp;Questions</h2>
         <Faq items={FAQS} />

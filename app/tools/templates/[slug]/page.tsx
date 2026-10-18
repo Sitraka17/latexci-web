@@ -14,6 +14,7 @@ import {
   templateEditorHref,
   templatePackages,
   templateDocumentClass,
+  CV_TEMPLATE_SEO,
 } from "@/lib/seo-pages";
 
 export const dynamicParams = false;
@@ -29,10 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = templateById(slug);
   if (!t) return {};
   const path = `/tools/templates/${slug}`;
-  const title = templateTitle(t.title);
+  const seo = CV_TEMPLATE_SEO[slug];
+  const title = seo?.title ?? templateTitle(t.title);
   return {
     title,
-    description: clampDescription(`${t.desc} Open it in the browser editor, free and without signup, or copy the full source.`),
+    description: seo?.description ?? clampDescription(`${t.desc} Open it in the browser editor, free and without signup, or copy the full source.`),
     alternates: { canonical: path },
     openGraph: { title, description: clampDescription(t.desc), url: path, type: "website" },
     twitter: { card: "summary_large_image", title },
@@ -113,6 +115,13 @@ export default async function TemplatePage({ params }: Props) {
             </h1>
           </div>
           <p style={{ ...para, marginBottom: "1.5rem" }}>{t.desc}</p>
+          {t.category === "CV" && (
+            <p style={{ ...para, marginTop: "-0.75rem", marginBottom: "1.5rem" }}>
+              {t.id.startsWith("cv-french") || t.id === "cv-academic-photo"
+                ? <span lang="fr">Guide&nbsp;: <Link href="/cv-latex" hrefLang="fr" style={{ color: "var(--accent)" }}>modèle de CV LaTeX en français, typographie et usages</Link>.</span>
+                : <>Guide: <Link href="/latex-resume-ats" style={{ color: "var(--accent)" }}>is a LaTeX resume ATS-friendly? Text extraction tests</Link>.</>}
+            </p>
+          )}
 
           {/* Actions */}
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center", marginBottom: "1.25rem" }}>

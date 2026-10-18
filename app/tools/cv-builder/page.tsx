@@ -81,6 +81,11 @@ export default function CvBuilderPage() {
             <Link href="/tools/templates/cv">academic</Link> and{" "}
             <Link href="/tools/templates/cv-photo">industry</Link> CV templates.
           </p>
+          <p className="lede" style={{ marginTop: "0.6rem", fontSize: "0.98rem" }}>
+            <b>Guides.</b> <Link href="/latex-resume-ats">Is a LaTeX resume ATS-friendly?</Link> &middot;{" "}
+            <Link href="/orcid-to-latex-cv">ORCID to a LaTeX publication list</Link> &middot;{" "}
+            <Link href="/cv-latex" hrefLang="fr" lang="fr">Modèle de CV LaTeX en français</Link>
+          </p>
         </header>
 
         <div className="cvb-wrap">

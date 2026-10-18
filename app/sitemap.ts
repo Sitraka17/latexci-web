@@ -1,6 +1,6 @@
 export const dynamic = "force-static";
 import type { MetadataRoute } from "next";
-import { canonicalSymbolSlugs, allTemplateIds, symbolBySlug, categoryHref } from "@/lib/seo-pages";
+import { canonicalSymbolSlugs, allTemplateIds, symbolBySlug, categoryHref, CV_TEMPLATE_SEO } from "@/lib/seo-pages";
 import { noteFor } from "@/lib/symbol-notes";
 import { CATEGORIES } from "@/lib/symbols";
 
@@ -11,6 +11,8 @@ const PROGRAMMATIC_LASTMOD = "2026-10-13";
 // Symbol pages with an editorial note (lib/symbol-notes.ts) and the category
 // hubs were last revised on this date; bump it when the notes change.
 const NOTES_LASTMOD = "2026-10-16";
+// CV template pages got new titles, descriptions and a guide link on this date.
+const CV_TEMPLATES_LASTMOD = "2026-10-18";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -23,7 +25,7 @@ const BASE_URL =
 // relevant entry when you materially edit a page (templates also covers lib/templates.ts).
 const LAST_MODIFIED: Record<string, string> = {
   "/": "2026-10-07",
-  "/academics": "2026-07-05",
+  "/academics": "2026-10-18",
   "/tools/preview": "2026-10-07",
   "/tools/table": "2026-10-13",
   "/tools/diff": "2026-10-13",
@@ -34,8 +36,11 @@ const LAST_MODIFIED: Record<string, string> = {
   "/tools/pubmed-to-bibtex": "2026-10-13",
   "/tools/isbn-to-bibtex": "2026-10-13",
   "/tools/symbols": "2026-10-16",
-  "/tools/templates": "2026-07-06",
-  "/tools/cv-builder": "2026-10-13",
+  "/tools/templates": "2026-10-18",
+  "/tools/cv-builder": "2026-10-18",
+  "/latex-resume-ats": "2026-10-18",
+  "/orcid-to-latex-cv": "2026-10-18",
+  "/cv-latex": "2026-10-18",
   "/after-overleaf": "2026-07-05",
   "/pricing": "2026-10-07",
   "/privacy": "2026-10-07",
@@ -65,6 +70,9 @@ const PAGES: Entry[] = [
   { path: "/tools/symbols",     changeFrequency: "monthly", priority: 0.9 },
   { path: "/tools/templates",   changeFrequency: "weekly",  priority: 0.8 },
   { path: "/tools/cv-builder",  changeFrequency: "monthly", priority: 0.85 },
+  { path: "/latex-resume-ats",  changeFrequency: "monthly", priority: 0.8 },
+  { path: "/orcid-to-latex-cv", changeFrequency: "monthly", priority: 0.75 },
+  { path: "/cv-latex",          changeFrequency: "monthly", priority: 0.8 },
   { path: "/after-overleaf",    changeFrequency: "monthly", priority: 0.85 },
   { path: "/pricing",           changeFrequency: "monthly", priority: 0.9 },
   { path: "/privacy",           changeFrequency: "yearly",  priority: 0.3 },
@@ -90,7 +98,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
   const templates: MetadataRoute.Sitemap = allTemplateIds().map((slug) => ({
     url: `${BASE_URL}/tools/templates/${slug}`,
-    lastModified: PROGRAMMATIC_LASTMOD,
+    lastModified: CV_TEMPLATE_SEO[slug] ? CV_TEMPLATES_LASTMOD : PROGRAMMATIC_LASTMOD,
     changeFrequency: "yearly",
     priority: 0.6,
   }));

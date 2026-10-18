@@ -650,6 +650,16 @@ export const EXAMPLE_CV_FR: CvData = {
   languages: "Français (langue maternelle), anglais (C1), espagnol (B1)",
 };
 
+/** ORCID work type (v3.0 vocabulary) -> the builder's publication group. */
+export function orcidPubType(type: string | undefined): PubType {
+  switch (type) {
+    case "journal-article": return "journal";
+    case "conference-paper": return "conference";
+    case "preprint": return "preprint";
+    default: return "";
+  }
+}
+
 /** The example matching the CV language. */
 export function exampleFor(lang: CvLang): CvData {
   return lang === "fr" ? EXAMPLE_CV_FR : EXAMPLE_CV;

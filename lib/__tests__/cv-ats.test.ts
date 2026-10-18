@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  generateCv, texDates, texAuthors, sortPublications, groupPublications, normalizeCv, lengthWarning,
+  generateCv, texDates, texAuthors, orcidPubType, sortPublications, groupPublications, normalizeCv, lengthWarning,
   EXAMPLE_CV, EXAMPLE_CV_FR, EMPTY_CV, EMPTY_ENTRY, EMPTY_PUB, type CvData, type CvPublication,
 } from "../cv";
 
@@ -144,5 +144,15 @@ describe("ATS-friendly output", () => {
     const bullets = [{ ...EMPTY_ENTRY, title: "Job", details: "a\nb\nc\nd\ne\nf\ng" }];
     expect(lengthWarning({ ...EXAMPLE_CV, layout: "industry", experience: bullets })).toMatch(/one page/);
     expect(lengthWarning({ ...EXAMPLE_CV, layout: "industry" })).toBe("");
+  });
+});
+
+describe("orcidPubType()", () => {
+  it("maps ORCID work types to publication groups", () => {
+    expect(orcidPubType("journal-article")).toBe("journal");
+    expect(orcidPubType("conference-paper")).toBe("conference");
+    expect(orcidPubType("preprint")).toBe("preprint");
+    expect(orcidPubType("book-chapter")).toBe("");
+    expect(orcidPubType(undefined)).toBe("");
   });
 });

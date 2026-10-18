@@ -1,0 +1,256 @@
+{
+  "meta": {
+    "ranOn": "2026-10-18",
+    "orcid": "0000-0002-1825-0097",
+    "api": "https://pub.orcid.org/v3.0/0000-0002-1825-0097"
+  },
+  "summary": {
+    "groups": 6,
+    "summaries": 7,
+    "summaryKeys": [
+      "put-code",
+      "created-date",
+      "last-modified-date",
+      "source",
+      "title",
+      "external-ids",
+      "url",
+      "type",
+      "publication-date",
+      "journal-title",
+      "visibility",
+      "path",
+      "display-index"
+    ],
+    "fullKeys": [
+      "created-date",
+      "last-modified-date",
+      "source",
+      "put-code",
+      "path",
+      "title",
+      "journal-title",
+      "short-description",
+      "citation",
+      "type",
+      "publication-date",
+      "external-ids",
+      "url",
+      "contributors",
+      "language-code",
+      "country",
+      "visibility"
+    ],
+    "rows": [
+      {
+        "putCode": 9543020,
+        "type": "journal-article",
+        "year": "2012",
+        "title": "A Methodology for the Emulation of Architecture",
+        "journal": "",
+        "doi": "10.5555/12345680",
+        "source": "Crossref Metadata Search",
+        "sources": 2
+      },
+      {
+        "putCode": 4562455,
+        "type": "journal-article",
+        "year": "2012",
+        "title": "The Memory Bus Considered Harmful",
+        "journal": "",
+        "doi": "10.5555/666655554444",
+        "source": "Josiah Carberry",
+        "sources": 1
+      },
+      {
+        "putCode": 4562454,
+        "type": "journal-article",
+        "year": "2011",
+        "title": "The Impact of Interactive Epistemologies on Cryptography",
+        "journal": "",
+        "doi": "10.5555/987654321",
+        "source": "Josiah Carberry",
+        "sources": 1
+      },
+      {
+        "putCode": 4562453,
+        "type": "journal-article",
+        "year": "2008",
+        "title": "Developing Thin Clients Using Amphibious Epistemologies",
+        "journal": "",
+        "doi": "10.5555/12345679",
+        "source": "Josiah Carberry",
+        "sources": 1
+      },
+      {
+        "putCode": 4562456,
+        "type": "journal-article",
+        "year": "2008",
+        "title": "Toward a Unified Theory of High-Energy Metaphysics: Silly String Theory",
+        "journal": "",
+        "doi": "10.5555/12345678",
+        "source": "Josiah Carberry",
+        "sources": 1
+      },
+      {
+        "putCode": 19980729,
+        "type": "journal-article",
+        "year": "1987",
+        "title": "Bulk and surface plasmons in artificially structured materials",
+        "journal": "IEEE Transactions on Plasma Science",
+        "doi": "10.1109/TPS.1987.4316723",
+        "source": "Scopus - Elsevier",
+        "sources": 1
+      }
+    ],
+    "fullRows": [
+      {
+        "putCode": 4562453,
+        "contributors": [],
+        "citationType": "bibtex",
+        "citationKey": "Carberry_2008"
+      },
+      {
+        "putCode": 4562454,
+        "contributors": [],
+        "citationType": "bibtex",
+        "citationKey": "Carberry_2011"
+      },
+      {
+        "putCode": 4562455,
+        "contributors": [],
+        "citationType": "bibtex",
+        "citationKey": "Carberry_2012"
+      },
+      {
+        "putCode": 4562456,
+        "contributors": [],
+        "citationType": "bibtex",
+        "citationKey": "Carberry_2008"
+      },
+      {
+        "putCode": 9543020,
+        "contributors": [],
+        "citationType": "bibtex",
+        "citationKey": "Carberry_2012"
+      },
+      {
+        "putCode": 19980729,
+        "contributors": [
+          "Quinn, J.J.",
+          "Carberry, J.S."
+        ],
+        "citationType": "bibtex",
+        "citationKey": "Carberry1987"
+      }
+    ],
+    "firstSummary": {
+      "put-code": 9543020,
+      "created-date": {
+        "value": 1375526492206
+      },
+      "last-modified-date": {
+        "value": 1494016313835
+      },
+      "source": {
+        "source-orcid": null,
+        "source-client-id": {
+          "uri": "https://orcid.org/client/0000-0002-3054-1567",
+          "path": "0000-0002-3054-1567",
+          "host": "orcid.org"
+        },
+        "source-name": {
+          "value": "Crossref Metadata Search"
+        },
+        "assertion-origin-orcid": {
+          "uri": "https://orcid.org/0000-0002-1825-0097",
+          "path": "0000-0002-1825-0097",
+          "host": "orcid.org"
+        },
+        "assertion-origin-client-id": null,
+        "assertion-origin-name": {
+          "value": "Josiah Carberry"
+        }
+      },
+      "title": {
+        "title": {
+          "value": "A Methodology for the Emulation of Architecture"
+        },
+        "subtitle": {
+          "value": "Journal of Psychoceramics"
+        },
+        "translated-title": null
+      },
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "issn",
+            "external-id-value": "0264-3561",
+            "external-id-normalized": {
+              "value": "0264-3561",
+              "transient": true
+            },
+            "external-id-normalized-error": null,
+            "external-id-url": null,
+            "external-id-relationship": "part-of"
+          },
+          {
+            "external-id-type": "doi",
+            "external-id-value": "10.5555/12345680",
+            "external-id-normalized": {
+              "value": "10.5555/12345680",
+              "transient": true
+            },
+            "external-id-normalized-error": null,
+            "external-id-url": null,
+            "external-id-relationship": "self"
+          }
+        ]
+      },
+      "url": null,
+      "type": "journal-article",
+      "publication-date": {
+        "year": {
+          "value": "2012"
+        },
+        "month": null,
+        "day": null
+      },
+      "journal-title": null,
+      "visibility": "public",
+      "path": "/0000-0002-1825-0097/work/9543020",
+      "display-index": "2"
+    },
+    "duplicateKeys": [
+      "Carberry_2008",
+      "Carberry_2012"
+    ]
+  },
+  "doi": {
+    "doi": "10.5555/12345679",
+    "status": 200,
+    "bibtex": "@article{Carberry_2012, title={Developing Thin Clients Using Amphibious Epistemologies - edited title}, volume={1}, ISSN={0264-3561}, url={http://dx.doi.org/10.5555/12345679}, DOI={10.5555/12345679}, number={1}, journal={Journal of Psychoceramics}, publisher={Test accounts}, author={Carberry, Josiah}, year={2012}, month=Jan }",
+    "orcidCopy": "@article{Carberry_2008, title={Developing Thin Clients Using Amphibious Epistemologies}, volume={5}, url={http://dx.doi.org/10.5555/12345679}, DOI={10.5555/12345679}, number={11}, journal={Journal of Psychoceramics}, publisher={CrossRef test user}, author={Carberry, Josiah}, year={2008}, month={Feb}, pages={1-3}}"
+  },
+  "orcid-plain": {
+    "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=13cm,margin=0.7cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage{enumitem}\n\\usepackage{xurl}\n\\usepackage[hidelinks]{hyperref}\n\\setlist[enumerate]{nosep,leftmargin=*}\n\\pagestyle{empty}\n\\begin{document}\n\\section*{Publications}\n\\subsection*{2012}\n\\begin{enumerate}\n  \\item \\textit{A Methodology for the Emulation of Architecture}.\\newline\n    DOI~\\href{https://doi.org/10.5555/12345680}{\\nolinkurl{10.5555/12345680}}\n  \\item \\textit{The Memory Bus Considered Harmful}.\\newline\n    DOI~\\href{https://doi.org/10.5555/666655554444}{\\nolinkurl{10.5555/666655554444}}\n\\end{enumerate}\n\\subsection*{2011}\n\\begin{enumerate}\n  \\item \\textit{The Impact of Interactive Epistemologies on Cryptography}.\\newline\n    DOI~\\href{https://doi.org/10.5555/987654321}{\\nolinkurl{10.5555/987654321}}\n\\end{enumerate}\n\\subsection*{2008}\n\\begin{enumerate}\n  \\item \\textit{Developing Thin Clients Using Amphibious Epistemologies}.\\newline\n    DOI~\\href{https://doi.org/10.5555/12345679}{\\nolinkurl{10.5555/12345679}}\n  \\item \\textit{Toward a Unified Theory of High-Energy Metaphysics: Silly String Theory}.\\newline\n    DOI~\\href{https://doi.org/10.5555/12345678}{\\nolinkurl{10.5555/12345678}}\n\\end{enumerate}\n\\subsection*{1987}\n\\begin{enumerate}\n  \\item \\textit{Bulk and surface plasmons in artificially structured materials}.\n    IEEE Transactions on Plasma Science.\\newline\n    DOI~\\href{https://doi.org/10.1109/TPS.1987.4316723}{\\nolinkurl{10.1109/TPS.1987.4316723}}\n\\end{enumerate}\n\\end{document}\n",
+    "shown": "\\section*{Publications}\n\\subsection*{2012}\n\\begin{enumerate}\n  \\item \\textit{A Methodology for the Emulation of Architecture}.\\newline\n    DOI~\\href{https://doi.org/10.5555/12345680}{\\nolinkurl{10.5555/12345680}}\n  \\item \\textit{The Memory Bus Considered Harmful}.\\newline\n    DOI~\\href{https://doi.org/10.5555/666655554444}{\\nolinkurl{10.5555/666655554444}}\n\\end{enumerate}\n\\subsection*{2011}\n\\begin{enumerate}\n  \\item \\textit{The Impact of Interactive Epistemologies on Cryptography}.\\newline\n    DOI~\\href{https://doi.org/10.5555/987654321}{\\nolinkurl{10.5555/987654321}}\n\\end{enumerate}\n\\subsection*{2008}\n\\begin{enumerate}\n  \\item \\textit{Developing Thin Clients Using Amphibious Epistemologies}.\\newline\n    DOI~\\href{https://doi.org/10.5555/12345679}{\\nolinkurl{10.5555/12345679}}\n  \\item \\textit{Toward a Unified Theory of High-Energy Metaphysics: Silly String Theory}.\\newline\n    DOI~\\href{https://doi.org/10.5555/12345678}{\\nolinkurl{10.5555/12345678}}\n\\end{enumerate}\n\\subsection*{1987}\n\\begin{enumerate}\n  \\item \\textit{Bulk and surface plasmons in artificially structured materials}.\n    IEEE Transactions on Plasma Science.\\newline\n    DOI~\\href{https://doi.org/10.1109/TPS.1987.4316723}{\\nolinkurl{10.1109/TPS.1987.4316723}}\n\\end{enumerate}",
+    "text": "Publications\n2012\n1. A Methodology for the Emulation of Architecture.\nDOI 10.5555/12345680\n2. The Memory Bus Considered Harmful.\nDOI 10.5555/666655554444\n\n2011\n1. The Impact of Interactive Epistemologies on Cryptography.\nDOI 10.5555/987654321\n\n2008\n1. Developing Thin Clients Using Amphibious Epistemologies.\nDOI 10.5555/12345679\n2. Toward a Unified Theory of High-Energy Metaphysics: Silly String Theory.\nDOI 10.5555/12345678\n\n1987\n1. Bulk and surface plasmons in artificially structured materials. IEEE Transactions on\nPlasma Science.\nDOI 10.1109/TPS.1987.4316723",
+    "png": "/guides/cv/orcid-plain.png",
+    "size": {
+      "width": 858,
+      "height": 680
+    }
+  },
+  "orcid-biblatex": {
+    "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=13cm,margin=0.7cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\usepackage[hidelinks]{hyperref}\n\\usepackage[style=authoryear, sorting=ydnt, maxbibnames=99,\n            uniquename=false, uniquelist=false, url=false]{biblatex}\n\\addbibresource{orcid.bib}\n\\begin{document}\n\\nocite{*}\n\\printbibliography[type=article, title={Journal articles}]\n\\pagestyle{empty}\n\\end{document}\n",
+    "shown": "\\usepackage[style=authoryear, sorting=ydnt, maxbibnames=99,\n            uniquename=false, uniquelist=false, url=false]{biblatex}\n\\addbibresource{orcid.bib}\n\\begin{document}\n\\nocite{*}\n\\printbibliography[type=article, title={Journal articles}]",
+    "text": "Journal articles\nCarberry, Josiah (Feb. 2012a). “A Methodology for the Emulation of Architecture”. In:\nJournal of Psychoceramics 5.11, pp. 1–3. doi: 10.5555/12345680.\n\u2014 (Oct. 2012b). “The Memory Bus Considered Harmful”. In: Journal of Psychoceramics\n9.11, pp. 1–3. doi: 10.5555/666655554444.\n\u2014 (Oct. 2011). “The Impact of Interactive Epistemologies on Cryptography”. In: Journal\nof Psychoceramics 8.11, pp. 1–3. doi: 10.5555/987654321.\n\u2014 (Feb. 2008a). “Developing Thin Clients Using Amphibious Epistemologies”. In: Journal of Psychoceramics 5.11, pp. 1–3. doi: 10.5555/12345679.\n\u2014 (Aug. 2008b). “Toward a Unified Theory of High-Energy Metaphysics: Silly String\nTheory”. In: Journal of Psychoceramics 5.11, pp. 1–3. doi: 10.5555/12345678.\nQuinn, J.J. and J.S. Carberry (1987). “Bulk and surface plasmons in artificially structured\nmaterials”. In: IEEE Transactions on Plasma Science 15.4, pp. 394–410.",
+    "png": "/guides/cv/orcid-biblatex.png",
+    "size": {
+      "width": 861,
+      "height": 401
+    },
+    "bib": "@article{orcid4562453, title={Developing Thin Clients Using Amphibious Epistemologies}, volume={5}, url={http://dx.doi.org/10.5555/12345679}, DOI={10.5555/12345679}, number={11}, journal={Journal of Psychoceramics}, publisher={CrossRef test user}, author={Carberry, Josiah}, year={2008}, month={Feb}, pages={1-3}}\n\n@article{orcid4562454, title={The Impact of Interactive Epistemologies on Cryptography}, volume={8}, url={http://dx.doi.org/10.5555/987654321}, DOI={10.5555/987654321}, number={11}, journal={Journal of Psychoceramics}, publisher={CrossRef test user}, author={Carberry, Josiah}, year={2011}, month={Oct}, pages={1-3}}\n\n@article{orcid4562455, title={The Memory Bus Considered Harmful}, volume={9}, url={http://dx.doi.org/10.5555/666655554444}, DOI={10.5555/666655554444}, number={11}, journal={Journal of Psychoceramics}, publisher={CrossRef test user}, author={Carberry, Josiah}, year={2012}, month={Oct}, pages={1-3}}\n\n@article{orcid4562456, title={Toward a Unified Theory of High-Energy Metaphysics: Silly String Theory}, volume={5}, url={http://dx.doi.org/10.5555/12345678}, DOI={10.5555/12345678}, number={11}, journal={Journal of Psychoceramics}, publisher={CrossRef test user}, author={Carberry, Josiah}, year={2008}, month={Aug}, pages={1-3}}\n\n@article{orcid9543020, title={A Methodology for the Emulation of Architecture}, volume={5}, url={http://dx.doi.org/10.5555/12345680}, DOI={10.5555/12345680}, number={11}, journal={Journal of Psychoceramics}, publisher={CrossRef test user}, author={Carberry, Josiah}, year={2012}, month={Feb}, pages={1-3}}\n\n@article{orcid19980729,title = {Bulk and surface plasmons in artificially structured materials},journal = {IEEE Transactions on Plasma Science},year = {1987},volume = {15},number = {4},pages = {394-410},author = {Quinn, J.J. and Carberry, J.S.}}\n"
+  }
+}

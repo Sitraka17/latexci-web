@@ -465,3 +465,29 @@ export function templatePackages(t: Template): string[] {
 export function templateDocumentClass(t: Template): string | null {
   return t.source.match(/\\documentclass(?:\[[^\]]*\])?\{([^}]*)\}/)?.[1] ?? null;
 }
+
+// CV templates: titles in the words people search ("resume" in English,
+// French for the French templates). Titles <= 55 chars (the layout appends
+// " | latexci"), descriptions 110-158 chars; checked in lib/__tests__/cv-seo.test.ts.
+export const CV_TEMPLATE_SEO: Record<string, { title: string; description: string }> = {
+  cv: {
+    title: "Academic CV LaTeX Template for Researchers (Free)",
+    description: "Free academic CV template in LaTeX: education, positions, publications by type, grants, teaching and talks. Copy the source or edit it in the browser.",
+  },
+  "cv-photo": {
+    title: "LaTeX Resume Template with Photo: One Page, Free",
+    description: "Free one-page LaTeX resume template with an optional photo: experience with results, skills, projects. Copy the source or edit it in the browser.",
+  },
+  "cv-french-academic": {
+    title: "Modèle de CV académique LaTeX en français (gratuit)",
+    description: "Modèle de CV académique LaTeX gratuit en français : formation, publications par type, financements, enseignement, jurys. Source complète à copier.",
+  },
+  "cv-french-industry": {
+    title: "Modèle de CV LaTeX professionnel en français",
+    description: "Modèle de CV LaTeX professionnel en français : accroche, expériences chiffrées, compétences, langues, photo facultative. Gratuit, sans inscription.",
+  },
+  "cv-academic-photo": {
+    title: "CV académique LaTeX avec photo : modèle gratuit",
+    description: "CV académique LaTeX en français avec emplacement photo facultatif : formation, publications, enseignement, prix. Modèle gratuit, source complète.",
+  },
+};

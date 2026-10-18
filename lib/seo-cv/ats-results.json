@@ -1,0 +1,973 @@
+{
+  "meta": {
+    "ranOn": "2026-10-18",
+    "engine": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea\nversion 6.4.2\nLaTeX 2025-11-01\npdfgentounicode=1",
+    "extractor": "pdftotext version 26.07.0",
+    "extractor2": "pypdf 6.14.2",
+    "service": "https://latex.ytotech.com/builds/sync (compiler: pdflatex)"
+  },
+  "results": {
+    "lig-ot1": {
+      "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=12cm,paperheight=2.9cm,margin=0.5cm]{geometry}\n\\pagestyle{empty}\n\\begin{document}\nZoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par\n\\end{document}\n",
+      "shown": "Zoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par",
+      "text": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "layout": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "pypdf": "Zo¨ e M¨ uller,´Ecole Polytechnique, Z¨ urich\nOffice efficiency: financial workflows, affine fitting\n2019–2021•Python→SQL & C++",
+      "fonts": [
+        {
+          "name": "CMR10",
+          "toUnicode": true
+        },
+        {
+          "name": "SFRM1095",
+          "toUnicode": true
+        },
+        {
+          "name": "CMSY10",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 35909,
+      "codepoints": [
+        {
+          "ch": "̈",
+          "cp": "U+0308"
+        },
+        {
+          "ch": "́",
+          "cp": "U+0301"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "¨",
+          "cp": "U+00A8"
+        },
+        {
+          "ch": "´",
+          "cp": "U+00B4"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "size": {
+        "width": 550,
+        "height": 139
+      },
+      "png": "/guides/cv/lig-ot1.png"
+    },
+    "lig-ot1-g2u": {
+      "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=12cm,paperheight=2.9cm,margin=0.5cm]{geometry}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\begin{document}\nZoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par\n\\end{document}\n",
+      "shown": "Zoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par",
+      "text": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "layout": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "pypdf": "Zo¨ e M¨ uller,´Ecole Polytechnique, Z¨ urich\nOffice efficiency: financial workflows, affine fitting\n2019–2021•Python→SQL & C++",
+      "fonts": [
+        {
+          "name": "CMR10",
+          "toUnicode": true
+        },
+        {
+          "name": "SFRM1095",
+          "toUnicode": true
+        },
+        {
+          "name": "CMSY10",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 35909,
+      "codepoints": [
+        {
+          "ch": "̈",
+          "cp": "U+0308"
+        },
+        {
+          "ch": "́",
+          "cp": "U+0301"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "¨",
+          "cp": "U+00A8"
+        },
+        {
+          "ch": "´",
+          "cp": "U+00B4"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "size": {
+        "width": 550,
+        "height": 139
+      },
+      "png": "/guides/cv/lig-ot1-g2u.png"
+    },
+    "lig-t1": {
+      "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=12cm,paperheight=2.9cm,margin=0.5cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\pagestyle{empty}\n\\begin{document}\nZoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par\n\\end{document}\n",
+      "shown": "Zoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par",
+      "text": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "layout": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "pypdf": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021•Python→SQL & C++",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMMathSymbols10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 36386,
+      "codepoints": [
+        {
+          "ch": "ë",
+          "cp": "U+00EB"
+        },
+        {
+          "ch": "ü",
+          "cp": "U+00FC"
+        },
+        {
+          "ch": "É",
+          "cp": "U+00C9"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "ë",
+          "cp": "U+00EB"
+        },
+        {
+          "ch": "ü",
+          "cp": "U+00FC"
+        },
+        {
+          "ch": "É",
+          "cp": "U+00C9"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "size": {
+        "width": 550,
+        "height": 138
+      },
+      "png": "/guides/cv/lig-t1.png"
+    },
+    "lig-t1-g2u": {
+      "source": "\\documentclass[11pt]{article}\n\\usepackage[paperwidth=12cm,paperheight=2.9cm,margin=0.5cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\begin{document}\nZoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par\n\\end{document}\n",
+      "shown": "Zoë Müller, École Polytechnique, Zürich\\par\nOffice efficiency: financial workflows, affine fitting\\par\n2019--2021 \\textbullet\\ Python $\\to$ SQL \\& C++\\par",
+      "text": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "layout": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021 • Python → SQL & C++",
+      "pypdf": "Zoë Müller, École Polytechnique, Zürich\nOffice efficiency: financial workflows, affine fitting\n2019–2021•Python→SQL & C++",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMMathSymbols10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 36386,
+      "codepoints": [
+        {
+          "ch": "ë",
+          "cp": "U+00EB"
+        },
+        {
+          "ch": "ü",
+          "cp": "U+00FC"
+        },
+        {
+          "ch": "É",
+          "cp": "U+00C9"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "ë",
+          "cp": "U+00EB"
+        },
+        {
+          "ch": "ü",
+          "cp": "U+00FC"
+        },
+        {
+          "ch": "É",
+          "cp": "U+00C9"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "→",
+          "cp": "U+2192"
+        }
+      ],
+      "size": {
+        "width": 550,
+        "height": 138
+      },
+      "png": "/guides/cv/lig-t1-g2u.png"
+    },
+    "cols-minipage": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=6cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\begin{minipage}[t]{0.3\\linewidth}\n  \\textbf{Skills}\\par\n  Python, SQL\\par\n  Spark, Airflow\\par\n  \\medskip\n  \\textbf{Languages}\\par\n  English (native)\\par\n  French (C1)\n\\end{minipage}\\hfill\n\\begin{minipage}[t]{0.66\\linewidth}\n  \\textbf{Experience}\\par\n  \\textbf{Data Engineer}, Acme Analytics\\par\n  Built the nightly billing pipeline\\par\n  Cut report latency from 6 h to 40 min\\par\n  \\medskip\n  \\textbf{Data Analyst}, Northwind Bank\\par\n  Automated the monthly risk dashboard\n\\end{minipage}\n\\end{document}\n",
+      "shown": "\\begin{minipage}[t]{0.3\\linewidth}\n  \\textbf{Skills}\\par\n  Python, SQL\\par\n  Spark, Airflow\\par\n  \\medskip\n  \\textbf{Languages}\\par\n  English (native)\\par\n  French (C1)\n\\end{minipage}\\hfill\n\\begin{minipage}[t]{0.66\\linewidth}\n  \\textbf{Experience}\\par\n  \\textbf{Data Engineer}, Acme Analytics\\par\n  Built the nightly billing pipeline\\par\n  Cut report latency from 6 h to 40 min\\par\n  \\medskip\n  \\textbf{Data Analyst}, Northwind Bank\\par\n  Automated the monthly risk dashboard\n\\end{minipage}",
+      "text": "Skills\nPython, SQL\nSpark, Airflow\nLanguages\nEnglish (native)\nFrench (C1)\n\nExperience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "layout": "Skills             Experience\nPython, SQL        Data Engineer, Acme Analytics\nSpark, Airflow     Built the nightly billing pipeline\n                   Cut report latency from 6 h to 40 min\nLanguages\nEnglish (native)   Data Analyst, Northwind Bank\nFrench (C1)        Automated the monthly risk dashboard",
+      "pypdf": "Skills\nPython, SQL\nSpark, Airflow\nLanguages\nEnglish (native)\nFrench (C1)\nExperience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 56681,
+      "codepoints": [],
+      "pypdfCodepoints": [],
+      "size": {
+        "width": 693,
+        "height": 214
+      },
+      "png": "/guides/cv/cols-minipage.png"
+    },
+    "cols-paracol": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=6cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\usepackage{paracol}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\columnratio{0.3}\n\\begin{paracol}{2}\n  \\textbf{Skills}\\par\n  Python, SQL\\par\n  Spark, Airflow\\par\n  \\medskip\n  \\textbf{Languages}\\par\n  English (native)\\par\n  French (C1)\n\\switchcolumn\n  \\textbf{Experience}\\par\n  \\textbf{Data Engineer}, Acme Analytics\\par\n  Built the nightly billing pipeline\\par\n  Cut report latency from 6 h to 40 min\\par\n  \\medskip\n  \\textbf{Data Analyst}, Northwind Bank\\par\n  Automated the monthly risk dashboard\n\\end{paracol}\n\\end{document}\n",
+      "shown": "\\columnratio{0.3}\n\\begin{paracol}{2}\n  \\textbf{Skills}\\par\n  Python, SQL\\par\n  Spark, Airflow\\par\n  \\medskip\n  \\textbf{Languages}\\par\n  English (native)\\par\n  French (C1)\n\\switchcolumn\n  \\textbf{Experience}\\par\n  \\textbf{Data Engineer}, Acme Analytics\\par\n  Built the nightly billing pipeline\\par\n  Cut report latency from 6 h to 40 min\\par\n  \\medskip\n  \\textbf{Data Analyst}, Northwind Bank\\par\n  Automated the monthly risk dashboard\n\\end{paracol}",
+      "text": "Skills\nPython, SQL\nSpark, Airflow\nLanguages\nEnglish (native)\nFrench (C1)\n\nExperience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "layout": "Skills             Experience\nPython, SQL        Data Engineer, Acme Analytics\nSpark, Airflow     Built the nightly billing pipeline\n                   Cut report latency from 6 h to 40 min\nLanguages\nEnglish (native)   Data Analyst, Northwind Bank\nFrench (C1)        Automated the monthly risk dashboard",
+      "pypdf": "Skills\nPython, SQL\nSpark, Airflow\nLanguages\nEnglish (native)\nFrench (C1)\nExperience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 56687,
+      "codepoints": [],
+      "pypdfCodepoints": [],
+      "size": {
+        "width": 675,
+        "height": 214
+      },
+      "png": "/guides/cv/cols-paracol.png"
+    },
+    "cols-single": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=5.4cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\textbf{Experience}\\par\n\\textbf{Data Engineer}, Acme Analytics\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\textbf{Data Analyst}, Northwind Bank\\par\nAutomated the monthly risk dashboard\\par\n\\medskip\n\\textbf{Skills}\\quad Python, SQL, Spark, Airflow\\par\n\\textbf{Languages}\\quad English (native), French (C1)\n\\end{document}\n",
+      "shown": "\\textbf{Experience}\\par\n\\textbf{Data Engineer}, Acme Analytics\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\textbf{Data Analyst}, Northwind Bank\\par\nAutomated the monthly risk dashboard\\par\n\\medskip\n\\textbf{Skills}\\quad Python, SQL, Spark, Airflow\\par\n\\textbf{Languages}\\quad English (native), French (C1)",
+      "text": "Experience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\nSkills Python, SQL, Spark, Airflow\nLanguages English (native), French (C1)",
+      "layout": "Experience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\nSkills Python, SQL, Spark, Airflow\nLanguages English (native), French (C1)",
+      "pypdf": "Experience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\nSkillsPython, SQL, Spark, Airflow\nLanguagesEnglish (native), French (C1)",
+      "fonts": [
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 56682,
+      "codepoints": [],
+      "pypdfCodepoints": [],
+      "size": {
+        "width": 451,
+        "height": 263
+      },
+      "png": "/guides/cv/cols-single.png"
+    },
+    "icons-fa": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\usepackage{fontawesome5}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\faEnvelope\\ jane.doe@example.com \\quad\n\\faPhone\\ +33 6 12 34 56 78 \\quad\n\\faLinkedin\\ in/janedoe \\quad\n\\faGithub\\ janedoe\n\\end{document}\n",
+      "shown": "\\faEnvelope\\ jane.doe@example.com \\quad\n\\faPhone\\ +33 6 12 34 56 78 \\quad\n\\faLinkedin\\ in/janedoe \\quad\n\\faGithub\\ janedoe",
+      "text": "# jane.doe@example.com\n\n +33 6 12 34 56 78\n\nï in/janedoe\n\n§ janedoe",
+      "layout": "# jane.doe@example.com    +33 6 12 34 56 78   ï in/janedoe   § janedoe",
+      "pypdf": "/envel⌢pejane.doe@example.com♂phone+33 6 12 34 56 78/linkedinin/janedoe/githubjanedoe",
+      "fonts": [
+        {
+          "name": "FontAwesome5Free-Solid",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "FontAwesome5Free-Solid",
+          "toUnicode": true
+        },
+        {
+          "name": "FontAwesome5Brands-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 44235,
+      "codepoints": [
+        {
+          "ch": "",
+          "cp": "U+0083"
+        },
+        {
+          "ch": "ï",
+          "cp": "U+00EF"
+        },
+        {
+          "ch": "§",
+          "cp": "U+00A7"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "⌢",
+          "cp": "U+2322"
+        },
+        {
+          "ch": "♂",
+          "cp": "U+2642"
+        }
+      ],
+      "size": {
+        "width": 786,
+        "height": 81
+      },
+      "png": "/guides/cv/icons-fa.png"
+    },
+    "icons-plain": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\nEmail: jane.doe@example.com \\quad\nPhone: +33 6 12 34 56 78 \\quad\nLinkedIn: in/janedoe \\quad\nGitHub: janedoe\n\\end{document}\n",
+      "shown": "Email: jane.doe@example.com \\quad\nPhone: +33 6 12 34 56 78 \\quad\nLinkedIn: in/janedoe \\quad\nGitHub: janedoe",
+      "text": "Email: jane.doe@example.com\nGitHub: janedoe\n\nPhone: +33 6 12 34 56 78\n\nLinkedIn: in/janedoe",
+      "layout": "Email: jane.doe@example.com   Phone: +33 6 12 34 56 78   LinkedIn: in/janedoe\nGitHub: janedoe",
+      "pypdf": "Email: jane.doe@example.com Phone: +33 6 12 34 56 78 LinkedIn: in/janedoe\nGitHub: janedoe",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 30375,
+      "codepoints": [],
+      "pypdfCodepoints": [],
+      "size": {
+        "width": 871,
+        "height": 102
+      },
+      "png": "/guides/cv/icons-plain.png"
+    },
+    "dates-tabular": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=4.2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\begin{tabular}{@{}p{2.4cm}p{10.6cm}@{}}\n  2021--2024 & \\textbf{Data Engineer}, Acme Analytics\\newline\n               Built the nightly billing pipeline\\newline\n               Cut report latency from 6 h to 40 min \\\\[4pt]\n  2019--2021 & \\textbf{Data Analyst}, Northwind Bank\\newline\n               Automated the monthly risk dashboard\n\\end{tabular}\n\\end{document}\n",
+      "shown": "\\begin{tabular}{@{}p{2.4cm}p{10.6cm}@{}}\n  2021--2024 & \\textbf{Data Engineer}, Acme Analytics\\newline\n               Built the nightly billing pipeline\\newline\n               Cut report latency from 6 h to 40 min \\\\[4pt]\n  2019--2021 & \\textbf{Data Analyst}, Northwind Bank\\newline\n               Automated the monthly risk dashboard\n\\end{tabular}",
+      "text": "2021–2024\n\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\n\n2019–2021\n\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "layout": "2021–2024   Data Engineer, Acme Analytics\n            Built the nightly billing pipeline\n            Cut report latency from 6 h to 40 min\n2019–2021   Data Analyst, Northwind Bank\n            Automated the monthly risk dashboard",
+      "pypdf": "2021–2024Data Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\n2019–2021Data Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 53928,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "size": {
+        "width": 581,
+        "height": 184
+      },
+      "png": "/guides/cv/dates-tabular.png"
+    },
+    "dates-minipage": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=4.2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\begin{minipage}[t]{2.4cm}\n  2021--2024\\par\\vspace{3\\baselineskip}\n  2019--2021\n\\end{minipage}%\n\\begin{minipage}[t]{10.6cm}\n  \\textbf{Data Engineer}, Acme Analytics\\par\n  Built the nightly billing pipeline\\par\n  Cut report latency from 6 h to 40 min\\par\n  \\textbf{Data Analyst}, Northwind Bank\\par\n  Automated the monthly risk dashboard\n\\end{minipage}\n\\end{document}\n",
+      "shown": "\\begin{minipage}[t]{2.4cm}\n  2021--2024\\par\\vspace{3\\baselineskip}\n  2019--2021\n\\end{minipage}%\n\\begin{minipage}[t]{10.6cm}\n  \\textbf{Data Engineer}, Acme Analytics\\par\n  Built the nightly billing pipeline\\par\n  Cut report latency from 6 h to 40 min\\par\n  \\textbf{Data Analyst}, Northwind Bank\\par\n  Automated the monthly risk dashboard\n\\end{minipage}",
+      "text": "2021–2024\n\n2019–2021\n\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "layout": "2021–2024   Data Engineer, Acme Analytics\n            Built the nightly billing pipeline\n            Cut report latency from 6 h to 40 min\n            Data Analyst, Northwind Bank\n2019–2021   Automated the monthly risk dashboard",
+      "pypdf": "2021–2024\n2019–2021\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 53923,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "size": {
+        "width": 556,
+        "height": 175
+      },
+      "png": "/guides/cv/dates-minipage.png"
+    },
+    "dates-hfill": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=4.2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\textbf{Data Engineer}, Acme Analytics \\hfill 2021--2024\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\smallskip\n\\textbf{Data Analyst}, Northwind Bank \\hfill 2019--2021\\par\nAutomated the monthly risk dashboard\n\\end{document}\n",
+      "shown": "\\textbf{Data Engineer}, Acme Analytics \\hfill 2021--2024\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\smallskip\n\\textbf{Data Analyst}, Northwind Bank \\hfill 2019--2021\\par\nAutomated the monthly risk dashboard",
+      "text": "Data Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\n\n2021–2024\n\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\n\n2019–2021",
+      "layout": "Data Engineer, Acme Analytics           2021–2024\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank            2019–2021\nAutomated the monthly risk dashboard",
+      "pypdf": "Data Engineer, Acme Analytics 2021–2024\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank 2019–2021\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 53918,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "size": {
+        "width": 871,
+        "height": 182
+      },
+      "png": "/guides/cv/dates-hfill.png"
+    },
+    "dates-inline": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=4.2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\textbf{Data Engineer}, Acme Analytics, 2021--2024\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\smallskip\n\\textbf{Data Analyst}, Northwind Bank, 2019--2021\\par\nAutomated the monthly risk dashboard\n\\end{document}\n",
+      "shown": "\\textbf{Data Engineer}, Acme Analytics, 2021--2024\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\smallskip\n\\textbf{Data Analyst}, Northwind Bank, 2019--2021\\par\nAutomated the monthly risk dashboard",
+      "text": "Data Engineer, Acme Analytics, 2021–2024\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank, 2019–2021\nAutomated the monthly risk dashboard",
+      "layout": "Data Engineer, Acme Analytics, 2021–2024\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank, 2019–2021\nAutomated the monthly risk dashboard",
+      "pypdf": "Data Engineer, Acme Analytics, 2021–2024\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank, 2019–2021\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 53911,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "size": {
+        "width": 469,
+        "height": 182
+      },
+      "png": "/guides/cv/dates-inline.png"
+    },
+    "preamble": {
+      "source": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\usepackage[hidelinks,pdfusetitle]{hyperref}\n\\hypersetup{pdftitle={Jane Doe, CV}, pdfauthor={Jane Doe}, pdflang={en}}\n\\pagestyle{empty}\n\\begin{document}\nJane Doe\\par\nData Engineer\n\\end{document}\n",
+      "shown": "\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\usepackage[hidelinks,pdfusetitle]{hyperref}\n\\hypersetup{pdftitle={Jane Doe, CV}, pdfauthor={Jane Doe}, pdflang={en}}",
+      "text": "Jane Doe\nData Engineer",
+      "layout": "Jane Doe\nData Engineer",
+      "pypdf": "Jane Doe\nData Engineer",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 26166,
+      "codepoints": [],
+      "pypdfCodepoints": [],
+      "info": "Title:           Jane Doe, CV\nAuthor:          Jane Doe\nCreator:         LaTeX with hyperref\nProducer:        pdfTeX-1.40.29"
+    },
+    "banner": {
+      "source": "\\documentclass{article}\n\\pagestyle{empty}\n\\begin{document}\n\\pdftexbanner\\par\nLaTeX \\fmtversion\\par\npdfgentounicode=\\the\\pdfgentounicode\n\\end{document}\n",
+      "shown": "\\documentclass{article}\n\\pagestyle{empty}\n\\begin{document}\n\\pdftexbanner\\par\nLaTeX \\fmtversion\\par\npdfgentounicode=\\the\\pdfgentounicode\n\\end{document}",
+      "text": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea\nversion 6.4.2\nLaTeX 2025-11-01\npdfgentounicode=1",
+      "layout": "   This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea\nversion 6.4.2\n   LaTeX 2025-11-01\n   pdfgentounicode=1",
+      "pypdf": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea\nversion 6.4.2\nLaTeX 2025-11-01\npdfgentounicode=1",
+      "fonts": [
+        {
+          "name": "CMR10",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 17890,
+      "codepoints": [],
+      "pypdfCodepoints": []
+    },
+    "cols-single-iws": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=5.4cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pdfinterwordspaceon\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\textbf{Experience}\\par\n\\textbf{Data Engineer}, Acme Analytics\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\textbf{Data Analyst}, Northwind Bank\\par\nAutomated the monthly risk dashboard\\par\n\\medskip\n\\textbf{Skills}\\quad Python, SQL, Spark, Airflow\\par\n\\textbf{Languages}\\quad English (native), French (C1)\n\\end{document}\n",
+      "shown": "\\textbf{Experience}\\par\n\\textbf{Data Engineer}, Acme Analytics\\par\nBuilt the nightly billing pipeline\\par\nCut report latency from 6 h to 40 min\\par\n\\textbf{Data Analyst}, Northwind Bank\\par\nAutomated the monthly risk dashboard\\par\n\\medskip\n\\textbf{Skills}\\quad Python, SQL, Spark, Airflow\\par\n\\textbf{Languages}\\quad English (native), French (C1)",
+      "text": "Experience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\nSkills Python, SQL, Spark, Airflow\nLanguages English (native), French (C1)",
+      "layout": "Experience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\nSkills Python, SQL, Spark, Airflow\nLanguages English (native), French (C1)",
+      "pypdf": "Experience\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard\nSkills Python, SQL, Spark, Airflow\nLanguages English (native), French (C1)",
+      "fonts": [
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "PdfTeX-Space",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 59695,
+      "codepoints": [],
+      "pypdfCodepoints": [],
+      "size": {
+        "width": 451,
+        "height": 263
+      },
+      "png": "/guides/cv/cols-single-iws.png"
+    },
+    "dates-tabular-iws": {
+      "source": "\\documentclass[10pt]{article}\n\\usepackage[paperwidth=15cm,paperheight=4.2cm,margin=0.6cm]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\pdfinterwordspaceon\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\begin{document}\n\\begin{tabular}{@{}p{2.4cm}p{10.6cm}@{}}\n  2021--2024 & \\textbf{Data Engineer}, Acme Analytics\\newline\n               Built the nightly billing pipeline\\newline\n               Cut report latency from 6 h to 40 min \\\\[4pt]\n  2019--2021 & \\textbf{Data Analyst}, Northwind Bank\\newline\n               Automated the monthly risk dashboard\n\\end{tabular}\n\\end{document}\n",
+      "shown": "\\begin{tabular}{@{}p{2.4cm}p{10.6cm}@{}}\n  2021--2024 & \\textbf{Data Engineer}, Acme Analytics\\newline\n               Built the nightly billing pipeline\\newline\n               Cut report latency from 6 h to 40 min \\\\[4pt]\n  2019--2021 & \\textbf{Data Analyst}, Northwind Bank\\newline\n               Automated the monthly risk dashboard\n\\end{tabular}",
+      "text": "2021–2024\n\nData Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\n\n2019–2021\n\nData Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "layout": "2021–2024   Data Engineer, Acme Analytics\n            Built the nightly billing pipeline\n            Cut report latency from 6 h to 40 min\n2019–2021   Data Analyst, Northwind Bank\n            Automated the monthly risk dashboard",
+      "pypdf": "2021–2024 Data Engineer, Acme Analytics\nBuilt the nightly billing pipeline\nCut report latency from 6 h to 40 min\n2019–2021 Data Analyst, Northwind Bank\nAutomated the monthly risk dashboard",
+      "fonts": [
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "PdfTeX-Space",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 56882,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        }
+      ],
+      "size": {
+        "width": 581,
+        "height": 184
+      },
+      "png": "/guides/cv/dates-tabular-iws.png"
+    },
+    "builder-academic": {
+      "source": "\\documentclass[11pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english]{babel}\n\\usepackage{geometry}\n\\geometry{top=1.9cm, bottom=2cm, left=2.2cm, right=2.2cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Dr Jane Smith}, pdfauthor={Dr Jane Smith}, pdfsubject={Postdoctoral Researcher, Computational Neuroscience}, pdflang=en}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\n\\definecolor{navy}{RGB}{0,51,102}\n\\definecolor{mygray}{RGB}{95,100,110}\n\n% Section heading: small caps, navy, ruled; never alone at a page foot\n\\newcommand{\\cvsect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.75em}%\n  {\\large\\bfseries\\color{navy}\\scshape #1}%\n  \\\\[-0.55em]%\n  {\\color{navy!55}\\hrule height 0.6pt}%\n  \\vspace{0.3em}%\n}\n\\newcommand{\\cvsub}[1]{\\par\\needspace{3\\baselineskip}\\vspace{0.2em}{\\bfseries\\itshape #1}\\par}\n\n% \\cventry{dates}{title}{institution}{location}{details}\n% One flow, the date on the title line, so text extraction keeps them together.\n\\newcommand{\\cventry}[5]{%\n  \\par\\noindent{\\bfseries #2}\\hfill{\\small\\color{mygray}#1}\\\\*%\n  {\\small\\itshape\\color{mygray}#3\\ifx&#4&\\else, #4\\fi}%\n  \\ifx&#5&\\else\\\\*{\\small #5}\\fi\\par\n  \\vspace{0.38em}%\n}\n\n\\begin{document}\n\n\\begin{center}\n  {\\Huge\\bfseries\\color{navy} Dr Jane Smith}\\\\[0.35em]\n  {\\large Postdoctoral Researcher, Computational Neuroscience}\\\\[0.3em]\n  \\small \\mbox{\\href{mailto:j.smith@university.edu}{j.smith@university.edu}} \\quad\\textbullet\\quad \\mbox{\\href{tel:+442000000000}{+44 20 0000 0000}} \\quad\\textbullet\\quad \\mbox{Oxford, UK}\\\\[0.15em]\n  \\mbox{\\href{https://janesmith.github.io}{janesmith.github.io}} \\quad\\textbullet\\quad \\mbox{\\href{https://github.com/janesmith}{github.com/janesmith}} \\quad\\textbullet\\quad \\mbox{\\href{https://orcid.org/0000-0002-1825-0097}{ORCID~0000-0002-1825-0097}}\n\\end{center}\n\n{\\color{navy}\\rule{\\linewidth}{1.2pt}}\n\n\\cvsect{Profile}\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\n\n\\cvsect{Education}\n\\cventry{Oct. 2019 -- Sept. 2023}{Ph.D. in Computational Neuroscience}{University of Cambridge}{Cambridge, UK}{Thesis: Probabilistic models of predictive coding in visual cortex}\n\\cventry{Sept. 2017 -- June 2019}{M.Sc. in Mathematics}{Imperial College London}{London, UK}{}\n\n\\cvsect{Experience}\n\\cventry{Oct. 2023 -- present}{Postdoctoral Research Fellow}{University of Oxford}{Oxford, UK}{Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40\\%\\\\ Leads a team of 3 PhD students and 2 master's interns}\n\n\\cvsect{Publications}\n\\cvsub{Journal articles}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} \\& Researcher, A. (2023). Efficient coding with correlated neural noise. \\textit{PLOS Computational Biology}.\n\\end{enumerate}\n\\cvsub{Conference papers}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item Chen, L., \\textbf{Smith, J.} \\& Okafor, N. (2024). Predictive coding as amortised inference. \\textit{Advances in Neural Information Processing Systems (NeurIPS)}.\n\\end{enumerate}\n\\cvsub{Preprints}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} (2025). Sparse priors for laminar fMRI. \\textit{bioRxiv}.\n\\end{enumerate}\n\n\\cvsect{Grants and fellowships}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\\end{itemize}\n\n\\cvsect{Teaching and supervision}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n  \\item 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\\end{itemize}\n\n\\cvsect{Invited talks}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2024: Gatsby Computational Neuroscience Unit, London\n\\end{itemize}\n\n\\cvsect{Awards}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2023: Best Thesis Prize, Cambridge Neuroscience\n\\end{itemize}\n\n\\cvsect{Service}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item Reviewer for PLOS Computational Biology and NeurIPS\n\\end{itemize}\n\n\\cvsect{References}\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\\par\n\n\\cvsect{Skills}\n\\begin{tabular}{@{}lp{0.72\\linewidth}}\n  \\textbf{Programming} & Python, PyTorch, JAX, R\\\\\n  \\textbf{Tools} & Git, LaTeX, Slurm, Docker\\\\\n  \\textbf{Languages} & English (native), French (B2)\\\\\n\\end{tabular}\n\n\\end{document}\n",
+      "shown": "\\documentclass[11pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english]{babel}\n\\usepackage{geometry}\n\\geometry{top=1.9cm, bottom=2cm, left=2.2cm, right=2.2cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Dr Jane Smith}, pdfauthor={Dr Jane Smith}, pdfsubject={Postdoctoral Researcher, Computational Neuroscience}, pdflang=en}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\n\\definecolor{navy}{RGB}{0,51,102}\n\\definecolor{mygray}{RGB}{95,100,110}\n\n% Section heading: small caps, navy, ruled; never alone at a page foot\n\\newcommand{\\cvsect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.75em}%\n  {\\large\\bfseries\\color{navy}\\scshape #1}%\n  \\\\[-0.55em]%\n  {\\color{navy!55}\\hrule height 0.6pt}%\n  \\vspace{0.3em}%\n}\n\\newcommand{\\cvsub}[1]{\\par\\needspace{3\\baselineskip}\\vspace{0.2em}{\\bfseries\\itshape #1}\\par}\n\n% \\cventry{dates}{title}{institution}{location}{details}\n% One flow, the date on the title line, so text extraction keeps them together.\n\\newcommand{\\cventry}[5]{%\n  \\par\\noindent{\\bfseries #2}\\hfill{\\small\\color{mygray}#1}\\\\*%\n  {\\small\\itshape\\color{mygray}#3\\ifx&#4&\\else, #4\\fi}%\n  \\ifx&#5&\\else\\\\*{\\small #5}\\fi\\par\n  \\vspace{0.38em}%\n}\n\n\\begin{document}\n\n\\begin{center}\n  {\\Huge\\bfseries\\color{navy} Dr Jane Smith}\\\\[0.35em]\n  {\\large Postdoctoral Researcher, Computational Neuroscience}\\\\[0.3em]\n  \\small \\mbox{\\href{mailto:j.smith@university.edu}{j.smith@university.edu}} \\quad\\textbullet\\quad \\mbox{\\href{tel:+442000000000}{+44 20 0000 0000}} \\quad\\textbullet\\quad \\mbox{Oxford, UK}\\\\[0.15em]\n  \\mbox{\\href{https://janesmith.github.io}{janesmith.github.io}} \\quad\\textbullet\\quad \\mbox{\\href{https://github.com/janesmith}{github.com/janesmith}} \\quad\\textbullet\\quad \\mbox{\\href{https://orcid.org/0000-0002-1825-0097}{ORCID~0000-0002-1825-0097}}\n\\end{center}\n\n{\\color{navy}\\rule{\\linewidth}{1.2pt}}\n\n\\cvsect{Profile}\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\n\n\\cvsect{Education}\n\\cventry{Oct. 2019 -- Sept. 2023}{Ph.D. in Computational Neuroscience}{University of Cambridge}{Cambridge, UK}{Thesis: Probabilistic models of predictive coding in visual cortex}\n\\cventry{Sept. 2017 -- June 2019}{M.Sc. in Mathematics}{Imperial College London}{London, UK}{}\n\n\\cvsect{Experience}\n\\cventry{Oct. 2023 -- present}{Postdoctoral Research Fellow}{University of Oxford}{Oxford, UK}{Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40\\%\\\\ Leads a team of 3 PhD students and 2 master's interns}\n\n\\cvsect{Publications}\n\\cvsub{Journal articles}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} \\& Researcher, A. (2023). Efficient coding with correlated neural noise. \\textit{PLOS Computational Biology}.\n\\end{enumerate}\n\\cvsub{Conference papers}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item Chen, L., \\textbf{Smith, J.} \\& Okafor, N. (2024). Predictive coding as amortised inference. \\textit{Advances in Neural Information Processing Systems (NeurIPS)}.\n\\end{enumerate}\n\\cvsub{Preprints}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} (2025). Sparse priors for laminar fMRI. \\textit{bioRxiv}.\n\\end{enumerate}\n\n\\cvsect{Grants and fellowships}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\\end{itemize}\n\n\\cvsect{Teaching and supervision}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n  \\item 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\\end{itemize}\n\n\\cvsect{Invited talks}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2024: Gatsby Computational Neuroscience Unit, London\n\\end{itemize}\n\n\\cvsect{Awards}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item 2023: Best Thesis Prize, Cambridge Neuroscience\n\\end{itemize}\n\n\\cvsect{Service}\n\\begin{itemize}[leftmargin=1.2em, itemsep=1pt, topsep=2pt]\n  \\item Reviewer for PLOS Computational Biology and NeurIPS\n\\end{itemize}\n\n\\cvsect{References}\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\\par\n\n\\cvsect{Skills}\n\\begin{tabular}{@{}lp{0.72\\linewidth}}\n  \\textbf{Programming} & Python, PyTorch, JAX, R\\\\\n  \\textbf{Tools} & Git, LaTeX, Slurm, Docker\\\\\n  \\textbf{Languages} & English (native), French (B2)\\\\\n\\end{tabular}\n\n\\end{document}",
+      "text": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu • +44 20 0000 0000 • Oxford, UK\njanesmith.github.io • github.com/janesmith • ORCID 0000-0002-1825-0097\n\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine\nlearning for neuroimaging.\n\nEducation\nPh.D. in Computational Neuroscience\n\nOct. 2019 – Sept. 2023\n\nUniversity of Cambridge, Cambridge, UK\nThesis: Probabilistic models of predictive coding in visual cortex\n\nM.Sc. in Mathematics\n\nSept. 2017 – June 2019\n\nImperial College London, London, UK\n\nExperience\nPostdoctoral Research Fellow\n\nOct. 2023 – present\n\nUniversity of Oxford, Oxford, UK\nBuilt a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\nLeads a team of 3 PhD students and 2 master’s interns\n\nPublications\nJournal articles\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS\nComputational Biology.\nConference papers\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in\nNeural Information Processing Systems (NeurIPS).\nPreprints\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\n\nGrants and fellowships\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\nTeaching and supervision\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\nInvited talks\n• 2024: Gatsby Computational Neuroscience Unit, London\n\nAwards\n• 2023: Best Thesis Prize, Cambridge Neuroscience\n\nService\n• Reviewer for PLOS Computational Biology and NeurIPS\n\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\n\nSkills\nProgramming\nTools\nLanguages\n\nPython, PyTorch, JAX, R\nGit, LaTeX, Slurm, Docker\nEnglish (native), French (B2)",
+      "layout": "                                  Dr Jane Smith\n                      Postdoctoral Researcher, Computational Neuroscience\n                    j.smith@university.edu • +44 20 0000 0000 • Oxford, UK\n            janesmith.github.io • github.com/janesmith • ORCID 0000-0002-1825-0097\n\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine\nlearning for neuroimaging.\nEducation\nPh.D. in Computational Neuroscience                                         Oct. 2019 – Sept. 2023\nUniversity of Cambridge, Cambridge, UK\nThesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics                                                       Sept. 2017 – June 2019\nImperial College London, London, UK\n\nExperience\nPostdoctoral Research Fellow                                                   Oct. 2023 – present\nUniversity of Oxford, Oxford, UK\nBuilt a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\nLeads a team of 3 PhD students and 2 master’s interns\n\nPublications\nJournal articles\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS\n   Computational Biology.\nConference papers\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in\n   Neural Information Processing Systems (NeurIPS).\nPreprints\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\n\nGrants and fellowships\n\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\nTeaching and supervision\n\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\nInvited talks\n\n• 2024: Gatsby Computational Neuroscience Unit, London\n\nAwards\n\n• 2023: Best Thesis Prize, Cambridge Neuroscience",
+      "pypdf": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu•+44 20 0000 0000•Oxford, UK\njanesmith.github.io•github.com/janesmith•ORCID 0000-0002-1825-0097\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine\nlearning for neuroimaging.\nEducation\nPh.D. in Computational NeuroscienceOct. 2019 – Sept. 2023\nUniversity of Cambridge, Cambridge, UK\nThesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in MathematicsSept. 2017 – June 2019\nImperial College London, London, UK\nExperience\nPostdoctoral Research F ellowOct. 2023 – present\nUniversity of Oxford, Oxford, UK\nBuilt a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\nLeads a team of 3 PhD students and 2 master’s interns\nPublications\nJournal articles\n1. Smith, J.& Researcher, A. (2023). Efficient coding with correlated neural noise.PLOS\nComputational Biology.\nConference papers\n1. Chen, L.,Smith, J.& Okafor, N. (2024). Predictive coding as amortised inference.Advances in\nNeural Information Processing Systems (NeurIPS).\nPreprints\n1.Smith, J.(2025). Sparse priors for laminar fMRI.bioRxiv.\nGrants and fellowships\n•2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\nTeaching and supervision\n•2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n•2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\nInvited talks\n•2024: Gatsby Computational Neuroscience Unit, London\nAwards\n•2023: Best Thesis Prize, Cambridge Neuroscience",
+      "fonts": [
+        {
+          "name": "LMRoman12-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman12-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Italic",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-BoldItalic",
+          "toUnicode": true
+        }
+      ],
+      "pages": 2,
+      "bytes": 154335,
+      "codepoints": [
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "’",
+          "cp": "U+2019"
+        },
+        {
+          "ch": "ł",
+          "cp": "U+0142"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "’",
+          "cp": "U+2019"
+        },
+        {
+          "ch": "ł",
+          "cp": "U+0142"
+        }
+      ]
+    },
+    "builder-industry": {
+      "source": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english]{babel}\n\\usepackage{geometry}\n\\geometry{top=1cm, bottom=1cm, left=1.3cm, right=1.3cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Dr Jane Smith}, pdfauthor={Dr Jane Smith}, pdfsubject={Postdoctoral Researcher, Computational Neuroscience}, pdflang=en}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{graphicx}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\linespread{0.95}\n\n\\definecolor{accent}{RGB}{30, 90, 180}\n\n% Section heading: title, then a rule underneath; never alone at a page foot\n\\newcommand{\\sect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.5em}%\n  {\\bfseries\\large\\color{accent} #1}\\par\\nointerlineskip\\vspace{2pt}%\n  {\\color{accent}\\rule{\\linewidth}{1.2pt}}\\par\\vspace{0.25em}%\n}\n\\newcommand{\\sectsub}[1]{\\par\\needspace{3\\baselineskip}{\\small\\bfseries #1}\\par}\n\n% \\job{title}{dates}{organisation}{location}\n\\newcommand{\\job}[4]{%\n  \\par\\needspace{3\\baselineskip}%\n  {\\bfseries #1}\\hfill{\\small\\itshape\\color{gray}#2}\\\\*%\n  {\\small\\color{gray}#3\\ifx&#4&\\else{} \\textbullet{} #4\\fi}%\n}\n\n\\begin{document}\n\n\\begin{minipage}[c]{1.0\\linewidth}\n  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} Dr Jane Smith}\\\\[0.3em]\n  {\\large Postdoctoral Researcher, Computational Neuroscience}\\\\[0.35em]\n  \\small \\mbox{\\href{mailto:j.smith@university.edu}{j.smith@university.edu}} \\enspace\\textbar\\enspace \\mbox{\\href{tel:+442000000000}{+44 20 0000 0000}} \\enspace\\textbar\\enspace \\mbox{Oxford, UK}\\\\[0.15em]\n  \\mbox{\\href{https://janesmith.github.io}{janesmith.github.io}} \\enspace\\textbar\\enspace \\mbox{\\href{https://github.com/janesmith}{github.com/janesmith}} \\enspace\\textbar\\enspace \\mbox{\\href{https://orcid.org/0000-0002-1825-0097}{ORCID~0000-0002-1825-0097}}\n\\end{minipage}\n\n\\vspace{0.4em}\n{\\color{accent}\\rule{\\linewidth}{1.8pt}}\n\n\\sect{Profile}\n{\\small Computational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\\par}\n\n\\sect{Skills}\n{\\small\n\\textbf{Programming:} Python, PyTorch, JAX, R\\\\[2pt]\n\\textbf{Tools:} Git, LaTeX, Slurm, Docker\\\\[2pt]\n\\textbf{Languages:} English (native), French (B2)\n\\par}\n\n\\sect{Experience}\n\n\\job{Postdoctoral Research Fellow}{Oct. 2023 -- present}{University of Oxford}{Oxford, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40\\%\n  \\item Leads a team of 3 PhD students and 2 master's interns\n\\end{itemize}\n\n\\sect{Education}\n\n\\job{Ph.D. in Computational Neuroscience}{Oct. 2019 -- Sept. 2023}{University of Cambridge}{Cambridge, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Thesis: Probabilistic models of predictive coding in visual cortex\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{M.Sc. in Mathematics}{Sept. 2017 -- June 2019}{Imperial College London}{London, UK}\n\n\\sect{Publications}\n\\sectsub{Journal articles}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} \\& Researcher, A. (2023). Efficient coding with correlated neural noise. \\textit{PLOS Computational Biology}.\n\\end{enumerate}\n\\sectsub{Conference papers}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item Chen, L., \\textbf{Smith, J.} \\& Okafor, N. (2024). Predictive coding as amortised inference. \\textit{Advances in Neural Information Processing Systems (NeurIPS)}.\n\\end{enumerate}\n\\sectsub{Preprints}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} (2025). Sparse priors for laminar fMRI. \\textit{bioRxiv}.\n\\end{enumerate}\n\n\\sect{Grants and fellowships}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\\end{itemize}\n\n\\sect{Teaching and supervision}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n  \\item 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\\end{itemize}\n\n\\sect{Invited talks}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Gatsby Computational Neuroscience Unit, London\n\\end{itemize}\n\n\\sect{Awards}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023: Best Thesis Prize, Cambridge Neuroscience\n\\end{itemize}\n\n\\sect{Service}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item Reviewer for PLOS Computational Biology and NeurIPS\n\\end{itemize}\n\n\\sect{References}\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\\par\n\n\\end{document}\n",
+      "shown": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english]{babel}\n\\usepackage{geometry}\n\\geometry{top=1cm, bottom=1cm, left=1.3cm, right=1.3cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Dr Jane Smith}, pdfauthor={Dr Jane Smith}, pdfsubject={Postdoctoral Researcher, Computational Neuroscience}, pdflang=en}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{graphicx}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\linespread{0.95}\n\n\\definecolor{accent}{RGB}{30, 90, 180}\n\n% Section heading: title, then a rule underneath; never alone at a page foot\n\\newcommand{\\sect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.5em}%\n  {\\bfseries\\large\\color{accent} #1}\\par\\nointerlineskip\\vspace{2pt}%\n  {\\color{accent}\\rule{\\linewidth}{1.2pt}}\\par\\vspace{0.25em}%\n}\n\\newcommand{\\sectsub}[1]{\\par\\needspace{3\\baselineskip}{\\small\\bfseries #1}\\par}\n\n% \\job{title}{dates}{organisation}{location}\n\\newcommand{\\job}[4]{%\n  \\par\\needspace{3\\baselineskip}%\n  {\\bfseries #1}\\hfill{\\small\\itshape\\color{gray}#2}\\\\*%\n  {\\small\\color{gray}#3\\ifx&#4&\\else{} \\textbullet{} #4\\fi}%\n}\n\n\\begin{document}\n\n\\begin{minipage}[c]{1.0\\linewidth}\n  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} Dr Jane Smith}\\\\[0.3em]\n  {\\large Postdoctoral Researcher, Computational Neuroscience}\\\\[0.35em]\n  \\small \\mbox{\\href{mailto:j.smith@university.edu}{j.smith@university.edu}} \\enspace\\textbar\\enspace \\mbox{\\href{tel:+442000000000}{+44 20 0000 0000}} \\enspace\\textbar\\enspace \\mbox{Oxford, UK}\\\\[0.15em]\n  \\mbox{\\href{https://janesmith.github.io}{janesmith.github.io}} \\enspace\\textbar\\enspace \\mbox{\\href{https://github.com/janesmith}{github.com/janesmith}} \\enspace\\textbar\\enspace \\mbox{\\href{https://orcid.org/0000-0002-1825-0097}{ORCID~0000-0002-1825-0097}}\n\\end{minipage}\n\n\\vspace{0.4em}\n{\\color{accent}\\rule{\\linewidth}{1.8pt}}\n\n\\sect{Profile}\n{\\small Computational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\\par}\n\n\\sect{Skills}\n{\\small\n\\textbf{Programming:} Python, PyTorch, JAX, R\\\\[2pt]\n\\textbf{Tools:} Git, LaTeX, Slurm, Docker\\\\[2pt]\n\\textbf{Languages:} English (native), French (B2)\n\\par}\n\n\\sect{Experience}\n\n\\job{Postdoctoral Research Fellow}{Oct. 2023 -- present}{University of Oxford}{Oxford, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40\\%\n  \\item Leads a team of 3 PhD students and 2 master's interns\n\\end{itemize}\n\n\\sect{Education}\n\n\\job{Ph.D. in Computational Neuroscience}{Oct. 2019 -- Sept. 2023}{University of Cambridge}{Cambridge, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Thesis: Probabilistic models of predictive coding in visual cortex\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{M.Sc. in Mathematics}{Sept. 2017 -- June 2019}{Imperial College London}{London, UK}\n\n\\sect{Publications}\n\\sectsub{Journal articles}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} \\& Researcher, A. (2023). Efficient coding with correlated neural noise. \\textit{PLOS Computational Biology}.\n\\end{enumerate}\n\\sectsub{Conference papers}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item Chen, L., \\textbf{Smith, J.} \\& Okafor, N. (2024). Predictive coding as amortised inference. \\textit{Advances in Neural Information Processing Systems (NeurIPS)}.\n\\end{enumerate}\n\\sectsub{Preprints}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} (2025). Sparse priors for laminar fMRI. \\textit{bioRxiv}.\n\\end{enumerate}\n\n\\sect{Grants and fellowships}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\\end{itemize}\n\n\\sect{Teaching and supervision}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n  \\item 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\\end{itemize}\n\n\\sect{Invited talks}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Gatsby Computational Neuroscience Unit, London\n\\end{itemize}\n\n\\sect{Awards}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023: Best Thesis Prize, Cambridge Neuroscience\n\\end{itemize}\n\n\\sect{Service}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item Reviewer for PLOS Computational Biology and NeurIPS\n\\end{itemize}\n\n\\sect{References}\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\\par\n\n\\end{document}",
+      "text": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu | +44 20 0000 0000 | Oxford, UK\njanesmith.github.io | github.com/janesmith | ORCID 0000-0002-1825-0097\n\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\n\nSkills\nProgramming: Python, PyTorch, JAX, R\nTools: Git, LaTeX, Slurm, Docker\nLanguages: English (native), French (B2)\n\nExperience\nPostdoctoral Research Fellow\n\nOct. 2023 – present\n\nUniversity of Oxford • Oxford, UK\n\n• Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\n• Leads a team of 3 PhD students and 2 master’s interns\n\nEducation\nPh.D. in Computational Neuroscience\n\nOct. 2019 – Sept. 2023\n\nUniversity of Cambridge • Cambridge, UK\n\n• Thesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics\n\nSept. 2017 – June 2019\n\nImperial College London • London, UK\n\nPublications\nJournal articles\n\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS Computational Biology.\nConference papers\n\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in Neural Information\nProcessing Systems (NeurIPS).\nPreprints\n\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\n\nGrants and fellowships\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\nTeaching and supervision\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\nInvited talks\n• 2024: Gatsby Computational Neuroscience Unit, London\n\nAwards\n• 2023: Best Thesis Prize, Cambridge Neuroscience\n\nService\n• Reviewer for PLOS Computational Biology and NeurIPS\n\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk",
+      "layout": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu | +44 20 0000 0000 | Oxford, UK\njanesmith.github.io | github.com/janesmith | ORCID 0000-0002-1825-0097\n\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\nSkills\nProgramming: Python, PyTorch, JAX, R\nTools: Git, LaTeX, Slurm, Docker\nLanguages: English (native), French (B2)\nExperience\nPostdoctoral Research Fellow                                                                               Oct. 2023 – present\nUniversity of Oxford • Oxford, UK\n• Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\n• Leads a team of 3 PhD students and 2 master’s interns\nEducation\nPh.D. in Computational Neuroscience                                                                     Oct. 2019 – Sept. 2023\nUniversity of Cambridge • Cambridge, UK\n• Thesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics                                                                                   Sept. 2017 – June 2019\nImperial College London • London, UK\nPublications\nJournal articles\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS Computational Biology.\nConference papers\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in Neural Information\n   Processing Systems (NeurIPS).\nPreprints\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\n\nGrants and fellowships\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\nTeaching and supervision\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\nInvited talks\n• 2024: Gatsby Computational Neuroscience Unit, London\n\nAwards\n• 2023: Best Thesis Prize, Cambridge Neuroscience\n\nService\n• Reviewer for PLOS Computational Biology and NeurIPS\n\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk",
+      "pypdf": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu | +44 20 0000 0000 | Oxford, UK\njanesmith.github.io | github.com/janesmith | ORCID 0000-0002-1825-0097\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\nSkills\nProgramming:Python, PyTorch, JAX, R\nT ools:Git, LaTeX, Slurm, Docker\nLanguages:English (native), French (B2)\nExperience\nPostdoctoral Research F ellow Oct. 2023 – present\nUniversity of Oxford•Oxford, UK\n•Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\n•Leads a team of 3 PhD students and 2 master’s interns\nEducation\nPh.D. in Computational NeuroscienceOct. 2019 – Sept. 2023\nUniversity of Cambridge•Cambridge, UK\n•Thesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics Sept. 2017 – June 2019\nImperial College London•London, UK\nPublications\nJournal articles\n1.Smith, J.& Researcher, A. (2023). Efficient coding with correlated neural noise.PLOS Computational Biology.\nConference papers\n1. Chen, L.,Smith, J.& Okafor, N. (2024). Predictive coding as amortised inference.Advances in Neural Information\nProcessing Systems (NeurIPS).\nPreprints\n1.Smith, J.(2025). Sparse priors for laminar fMRI.bioRxiv.\nGrants and fellowships\n•2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\nTeaching and supervision\n•2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n•2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\nInvited talks\n•2024: Gatsby Computational Neuroscience Unit, London\nAwards\n•2023: Best Thesis Prize, Cambridge Neuroscience\nService\n•Reviewer for PLOS Computational Biology and NeurIPS\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk",
+      "fonts": [
+        {
+          "name": "LMRoman12-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman12-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Italic",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Italic",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 210347,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "’",
+          "cp": "U+2019"
+        },
+        {
+          "ch": "ł",
+          "cp": "U+0142"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "’",
+          "cp": "U+2019"
+        },
+        {
+          "ch": "ł",
+          "cp": "U+0142"
+        }
+      ]
+    },
+    "builder-industry-iws": {
+      "source": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english]{babel}\n\\usepackage{geometry}\n\\geometry{top=1cm, bottom=1cm, left=1.3cm, right=1.3cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Dr Jane Smith}, pdfauthor={Dr Jane Smith}, pdfsubject={Postdoctoral Researcher, Computational Neuroscience}, pdflang=en}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{graphicx}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pdfinterwordspaceon\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\linespread{0.95}\n\n\\definecolor{accent}{RGB}{30, 90, 180}\n\n% Section heading: title, then a rule underneath; never alone at a page foot\n\\newcommand{\\sect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.5em}%\n  {\\bfseries\\large\\color{accent} #1}\\par\\nointerlineskip\\vspace{2pt}%\n  {\\color{accent}\\rule{\\linewidth}{1.2pt}}\\par\\vspace{0.25em}%\n}\n\\newcommand{\\sectsub}[1]{\\par\\needspace{3\\baselineskip}{\\small\\bfseries #1}\\par}\n\n% \\job{title}{dates}{organisation}{location}\n\\newcommand{\\job}[4]{%\n  \\par\\needspace{3\\baselineskip}%\n  {\\bfseries #1}\\hfill{\\small\\itshape\\color{gray}#2}\\\\*%\n  {\\small\\color{gray}#3\\ifx&#4&\\else{} \\textbullet{} #4\\fi}%\n}\n\n\\begin{document}\n\n\\begin{minipage}[c]{1.0\\linewidth}\n  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} Dr Jane Smith}\\\\[0.3em]\n  {\\large Postdoctoral Researcher, Computational Neuroscience}\\\\[0.35em]\n  \\small \\mbox{\\href{mailto:j.smith@university.edu}{j.smith@university.edu}} \\enspace\\textbar\\enspace \\mbox{\\href{tel:+442000000000}{+44 20 0000 0000}} \\enspace\\textbar\\enspace \\mbox{Oxford, UK}\\\\[0.15em]\n  \\mbox{\\href{https://janesmith.github.io}{janesmith.github.io}} \\enspace\\textbar\\enspace \\mbox{\\href{https://github.com/janesmith}{github.com/janesmith}} \\enspace\\textbar\\enspace \\mbox{\\href{https://orcid.org/0000-0002-1825-0097}{ORCID~0000-0002-1825-0097}}\n\\end{minipage}\n\n\\vspace{0.4em}\n{\\color{accent}\\rule{\\linewidth}{1.8pt}}\n\n\\sect{Profile}\n{\\small Computational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\\par}\n\n\\sect{Skills}\n{\\small\n\\textbf{Programming:} Python, PyTorch, JAX, R\\\\[2pt]\n\\textbf{Tools:} Git, LaTeX, Slurm, Docker\\\\[2pt]\n\\textbf{Languages:} English (native), French (B2)\n\\par}\n\n\\sect{Experience}\n\n\\job{Postdoctoral Research Fellow}{Oct. 2023 -- present}{University of Oxford}{Oxford, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40\\%\n  \\item Leads a team of 3 PhD students and 2 master's interns\n\\end{itemize}\n\n\\sect{Education}\n\n\\job{Ph.D. in Computational Neuroscience}{Oct. 2019 -- Sept. 2023}{University of Cambridge}{Cambridge, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Thesis: Probabilistic models of predictive coding in visual cortex\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{M.Sc. in Mathematics}{Sept. 2017 -- June 2019}{Imperial College London}{London, UK}\n\n\\sect{Publications}\n\\sectsub{Journal articles}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} \\& Researcher, A. (2023). Efficient coding with correlated neural noise. \\textit{PLOS Computational Biology}.\n\\end{enumerate}\n\\sectsub{Conference papers}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item Chen, L., \\textbf{Smith, J.} \\& Okafor, N. (2024). Predictive coding as amortised inference. \\textit{Advances in Neural Information Processing Systems (NeurIPS)}.\n\\end{enumerate}\n\\sectsub{Preprints}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} (2025). Sparse priors for laminar fMRI. \\textit{bioRxiv}.\n\\end{enumerate}\n\n\\sect{Grants and fellowships}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\\end{itemize}\n\n\\sect{Teaching and supervision}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n  \\item 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\\end{itemize}\n\n\\sect{Invited talks}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Gatsby Computational Neuroscience Unit, London\n\\end{itemize}\n\n\\sect{Awards}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023: Best Thesis Prize, Cambridge Neuroscience\n\\end{itemize}\n\n\\sect{Service}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item Reviewer for PLOS Computational Biology and NeurIPS\n\\end{itemize}\n\n\\sect{References}\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\\par\n\n\\end{document}\n",
+      "shown": "\\documentclass[10pt,a4paper]{article}\n\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n\\usepackage{lmodern}\n% Map every glyph to Unicode so the PDF text can be copied and parsed\n\\input{glyphtounicode}\\pdfgentounicode=1\n\\hbadness=10000\n\\usepackage[english]{babel}\n\\usepackage{geometry}\n\\geometry{top=1cm, bottom=1cm, left=1.3cm, right=1.3cm}\n\\usepackage[hidelinks]{hyperref}\n\\hypersetup{pdftitle={CV Dr Jane Smith}, pdfauthor={Dr Jane Smith}, pdfsubject={Postdoctoral Researcher, Computational Neuroscience}, pdflang=en}\n\\usepackage{enumitem}\n\\usepackage{xcolor}\n\\usepackage{graphicx}\n\\usepackage{needspace}\n\\usepackage{microtype}\n\\pdfinterwordspaceon\n\\pagestyle{empty}\n\\setlength{\\parindent}{0pt}\n\\linespread{0.95}\n\n\\definecolor{accent}{RGB}{30, 90, 180}\n\n% Section heading: title, then a rule underneath; never alone at a page foot\n\\newcommand{\\sect}[1]{%\n  \\par\\needspace{4\\baselineskip}%\n  \\vspace{0.5em}%\n  {\\bfseries\\large\\color{accent} #1}\\par\\nointerlineskip\\vspace{2pt}%\n  {\\color{accent}\\rule{\\linewidth}{1.2pt}}\\par\\vspace{0.25em}%\n}\n\\newcommand{\\sectsub}[1]{\\par\\needspace{3\\baselineskip}{\\small\\bfseries #1}\\par}\n\n% \\job{title}{dates}{organisation}{location}\n\\newcommand{\\job}[4]{%\n  \\par\\needspace{3\\baselineskip}%\n  {\\bfseries #1}\\hfill{\\small\\itshape\\color{gray}#2}\\\\*%\n  {\\small\\color{gray}#3\\ifx&#4&\\else{} \\textbullet{} #4\\fi}%\n}\n\n\\begin{document}\n\n\\begin{minipage}[c]{1.0\\linewidth}\n  {\\fontsize{25}{27}\\selectfont\\bfseries\\color{accent} Dr Jane Smith}\\\\[0.3em]\n  {\\large Postdoctoral Researcher, Computational Neuroscience}\\\\[0.35em]\n  \\small \\mbox{\\href{mailto:j.smith@university.edu}{j.smith@university.edu}} \\enspace\\textbar\\enspace \\mbox{\\href{tel:+442000000000}{+44 20 0000 0000}} \\enspace\\textbar\\enspace \\mbox{Oxford, UK}\\\\[0.15em]\n  \\mbox{\\href{https://janesmith.github.io}{janesmith.github.io}} \\enspace\\textbar\\enspace \\mbox{\\href{https://github.com/janesmith}{github.com/janesmith}} \\enspace\\textbar\\enspace \\mbox{\\href{https://orcid.org/0000-0002-1825-0097}{ORCID~0000-0002-1825-0097}}\n\\end{minipage}\n\n\\vspace{0.4em}\n{\\color{accent}\\rule{\\linewidth}{1.8pt}}\n\n\\sect{Profile}\n{\\small Computational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\\par}\n\n\\sect{Skills}\n{\\small\n\\textbf{Programming:} Python, PyTorch, JAX, R\\\\[2pt]\n\\textbf{Tools:} Git, LaTeX, Slurm, Docker\\\\[2pt]\n\\textbf{Languages:} English (native), French (B2)\n\\par}\n\n\\sect{Experience}\n\n\\job{Postdoctoral Research Fellow}{Oct. 2023 -- present}{University of Oxford}{Oxford, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40\\%\n  \\item Leads a team of 3 PhD students and 2 master's interns\n\\end{itemize}\n\n\\sect{Education}\n\n\\job{Ph.D. in Computational Neuroscience}{Oct. 2019 -- Sept. 2023}{University of Cambridge}{Cambridge, UK}\n\\begin{itemize}[noitemsep, topsep=3pt, leftmargin=1.2em]\n  \\item Thesis: Probabilistic models of predictive coding in visual cortex\n\\end{itemize}\n\n\\vspace{0.3em}\n\\job{M.Sc. in Mathematics}{Sept. 2017 -- June 2019}{Imperial College London}{London, UK}\n\n\\sect{Publications}\n\\sectsub{Journal articles}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} \\& Researcher, A. (2023). Efficient coding with correlated neural noise. \\textit{PLOS Computational Biology}.\n\\end{enumerate}\n\\sectsub{Conference papers}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item Chen, L., \\textbf{Smith, J.} \\& Okafor, N. (2024). Predictive coding as amortised inference. \\textit{Advances in Neural Information Processing Systems (NeurIPS)}.\n\\end{enumerate}\n\\sectsub{Preprints}\n\\begin{enumerate}[leftmargin=*, itemsep=2pt, topsep=3pt]\n  \\item \\textbf{Smith, J.} (2025). Sparse priors for laminar fMRI. \\textit{bioRxiv}.\n\\end{enumerate}\n\n\\sect{Grants and fellowships}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\\end{itemize}\n\n\\sect{Teaching and supervision}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n  \\item 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\\end{itemize}\n\n\\sect{Invited talks}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2024: Gatsby Computational Neuroscience Unit, London\n\\end{itemize}\n\n\\sect{Awards}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item 2023: Best Thesis Prize, Cambridge Neuroscience\n\\end{itemize}\n\n\\sect{Service}\n\\begin{itemize}[noitemsep, topsep=2pt, leftmargin=1.2em]\n  \\item Reviewer for PLOS Computational Biology and NeurIPS\n\\end{itemize}\n\n\\sect{References}\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk\\par\n\n\\end{document}",
+      "text": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu | +44 20 0000 0000 | Oxford, UK\njanesmith.github.io | github.com/janesmith | ORCID 0000-0002-1825-0097\n\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\n\nSkills\nProgramming: Python, PyTorch, JAX, R\nTools: Git, LaTeX, Slurm, Docker\nLanguages: English (native), French (B2)\n\nExperience\nPostdoctoral Research Fellow\n\nOct. 2023 – present\n\nUniversity of Oxford • Oxford, UK\n\n• Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\n• Leads a team of 3 PhD students and 2 master’s interns\n\nEducation\nPh.D. in Computational Neuroscience\n\nOct. 2019 – Sept. 2023\n\nUniversity of Cambridge • Cambridge, UK\n\n• Thesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics\n\nSept. 2017 – June 2019\n\nImperial College London • London, UK\n\nPublications\nJournal articles\n\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS Computational Biology.\nConference papers\n\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in Neural Information\nProcessing Systems (NeurIPS).\nPreprints\n\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\n\nGrants and fellowships\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\nTeaching and supervision\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\nInvited talks\n• 2024: Gatsby Computational Neuroscience Unit, London\n\nAwards\n• 2023: Best Thesis Prize, Cambridge Neuroscience\n\nService\n• Reviewer for PLOS Computational Biology and NeurIPS\n\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk",
+      "layout": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu | +44 20 0000 0000 | Oxford, UK\njanesmith.github.io | github.com/janesmith | ORCID 0000-0002-1825-0097\n\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\nSkills\nProgramming: Python, PyTorch, JAX, R\nTools: Git, LaTeX, Slurm, Docker\nLanguages: English (native), French (B2)\nExperience\nPostdoctoral Research Fellow                                                                               Oct. 2023 – present\nUniversity of Oxford • Oxford, UK\n• Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\n• Leads a team of 3 PhD students and 2 master’s interns\nEducation\nPh.D. in Computational Neuroscience                                                                     Oct. 2019 – Sept. 2023\nUniversity of Cambridge • Cambridge, UK\n• Thesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics                                                                                   Sept. 2017 – June 2019\nImperial College London • London, UK\nPublications\nJournal articles\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS Computational Biology.\nConference papers\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in Neural Information\n   Processing Systems (NeurIPS).\nPreprints\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\n\nGrants and fellowships\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\n\nTeaching and supervision\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\n\nInvited talks\n• 2024: Gatsby Computational Neuroscience Unit, London\n\nAwards\n• 2023: Best Thesis Prize, Cambridge Neuroscience\n\nService\n• Reviewer for PLOS Computational Biology and NeurIPS\n\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk",
+      "pypdf": "Dr Jane Smith\nPostdoctoral Researcher, Computational Neuroscience\nj.smith@university.edu | +44 20 0000 0000 | Oxford, UK\njanesmith.github.io | github.com/janesmith | ORCID 0000-0002-1825-0097\nProfile\nComputational modelling of neural circuits, Bayesian inference in sensory processing and machine learning for neuroimaging.\nSkills\nProgramming: Python, PyTorch, JAX, R\nT ools: Git, LaTeX, Slurm, Docker\nLanguages: English (native), French (B2)\nExperience\nPostdoctoral Research F ellow Oct. 2023 – present\nUniversity of Oxford • Oxford, UK\n• Built a Bayesian decoder that cut analysis time for 7T fMRI data by 40%\n• Leads a team of 3 PhD students and 2 master’s interns\nEducation\nPh.D. in Computational Neuroscience Oct. 2019 – Sept. 2023\nUniversity of Cambridge • Cambridge, UK\n• Thesis: Probabilistic models of predictive coding in visual cortex\nM.Sc. in Mathematics Sept. 2017 – June 2019\nImperial College London • London, UK\nPublications\nJournal articles\n1. Smith, J. & Researcher, A. (2023). Efficient coding with correlated neural noise. PLOS Computational Biology.\nConference papers\n1. Chen, L., Smith, J. & Okafor, N. (2024). Predictive coding as amortised inference. Advances in Neural Information\nProcessing Systems (NeurIPS).\nPreprints\n1. Smith, J. (2025). Sparse priors for laminar fMRI. bioRxiv.\nGrants and fellowships\n• 2023 – 2025: Marie Skłodowska-Curie Postdoctoral Fellowship (EUR 215,000)\nTeaching and supervision\n• 2024: Lecturer, Bayesian Models of Cognition (M.Sc., 40 students)\n• 2020 – 2022: Supervisor, Part II Neuroscience, University of Cambridge\nInvited talks\n• 2024: Gatsby Computational Neuroscience Unit, London\nAwards\n• 2023: Best Thesis Prize, Cambridge Neuroscience\nService\n• Reviewer for PLOS Computational Biology and NeurIPS\nReferences\nProf. Alan Turner, University of Cambridge, a.turner@cam.ac.uk",
+      "fonts": [
+        {
+          "name": "LMRoman12-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "PdfTeX-Space",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman12-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Bold",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Italic",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman9-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Regular",
+          "toUnicode": true
+        },
+        {
+          "name": "LMRoman10-Italic",
+          "toUnicode": true
+        }
+      ],
+      "pages": 1,
+      "bytes": 214138,
+      "codepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "’",
+          "cp": "U+2019"
+        },
+        {
+          "ch": "ł",
+          "cp": "U+0142"
+        }
+      ],
+      "pypdfCodepoints": [
+        {
+          "ch": "–",
+          "cp": "U+2013"
+        },
+        {
+          "ch": "•",
+          "cp": "U+2022"
+        },
+        {
+          "ch": "’",
+          "cp": "U+2019"
+        },
+        {
+          "ch": "ł",
+          "cp": "U+0142"
+        }
+      ]
+    }
+  }
+}
