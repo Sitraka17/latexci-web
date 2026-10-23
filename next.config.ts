@@ -63,7 +63,17 @@ const nextConfig: NextConfig = {
   // Vercel runs Next.js natively — no static export needed.
   // Images are optimized by Vercel's built-in image service.
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // The Cloudflare staging host (workers.dev) serves the same content as
+      // latexci.com and must never be indexed; the host condition never
+      // matches in production.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: ".*\\.workers\\.dev" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
   },
 };
 
