@@ -150,7 +150,9 @@ export default function RootLayout({
         <div id="main" tabIndex={-1}>
           {children}
         </div>
-        <Analytics />
+        {/* Vercel-only: the script lives at /_vercel/insights and 404s on any
+            other host (Cloudflare staging), so it is gated on the build env. */}
+        {process.env.VERCEL === "1" && <Analytics />}
       </body>
     </html>
   );

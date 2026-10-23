@@ -1,0 +1,25 @@
+// Cloudflare Workers config — STAGING ONLY.
+// Deployed with `npm run cf:staging` to latexci-staging.<account>.workers.dev.
+// Production stays on Vercel until the DNS cutover is decided; nothing here
+// touches latexci.com.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "latexci-staging",
+  "main": ".open-next/worker.js",
+  "account_id": "4b6d10a2b7d2668f28bc5e6de845cfc3",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Self-reference service binding, used by OpenNext for cache revalidation
+  // calls. Harmless with the default (no-op) incremental cache.
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "latexci-staging" }
+  ],
+  // Staging runs without GOOGLE_CLIENT_ID/AUTH_SECRET on purpose: sign-in is
+  // switched off (isAuthConfigured=false) and the PDF export is open, which
+  // lets the compile path be tested without a Google account.
+  "vars": {}
+}

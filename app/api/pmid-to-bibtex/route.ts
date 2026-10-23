@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { bibText, protectTitleCaps, pubmedAuthor, safeKeyPart, titleCaseJournal, type PubmedAuthor } from "@/lib/bib-escape";
 
-export const runtime = "edge";
+// Node runtime: the Cloudflare adapter (OpenNext) does not bundle edge-runtime
+// routes; on Workers both run on workerd anyway, and Vercel serves it fine.
+export const runtime = "nodejs";
 
 /** Fetch article metadata from NCBI E-utilities (free, no key needed for low traffic) */
 export async function GET(req: NextRequest) {

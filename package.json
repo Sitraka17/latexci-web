@@ -9,6 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:staging": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
@@ -45,6 +48,7 @@
     "postcss": "^8.5.10"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -55,6 +59,7 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "wrangler": "^4.152.0"
   }
 }

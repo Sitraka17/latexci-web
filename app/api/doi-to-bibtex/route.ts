@@ -3,7 +3,9 @@ import { rateLimit } from "@/lib/rate-limit";
 import { bibText, normalizeDoi, protectTitleCaps } from "@/lib/bib-escape";
 import { formatEntry, parseBibTeX, splitAuthors } from "@/lib/bibtex";
 
-export const runtime = "edge";
+// Node runtime: the Cloudflare adapter (OpenNext) does not bundle edge-runtime
+// routes; on Workers both run on workerd anyway, and Vercel serves it fine.
+export const runtime = "nodejs";
 
 /** Basic DOI format check — must start with "10." followed by registrant code. */
 const DOI_RE = /^10\.\d{4,}[\w.()/:;-]*\/\S+$/;

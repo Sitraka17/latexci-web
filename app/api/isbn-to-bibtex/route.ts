@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { lookupIsbn } from "@/lib/isbn-lookup";
 
-export const runtime = "edge";
+// Node runtime: the Cloudflare adapter (OpenNext) does not bundle edge-runtime
+// routes; on Workers both run on workerd anyway, and Vercel serves it fine.
+export const runtime = "nodejs";
 
 /** Descriptive User-Agent: Open Library asks clients to identify themselves. */
 const UA = { "User-Agent": "latexci.com ISBN lookup (+https://latexci.com; mailto:contact@latexci.com)" };

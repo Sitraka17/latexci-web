@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { arxivAuthors, bibText, decodeXmlEntities, escapeLatex, protectTitleCaps, safeKeyPart } from "@/lib/bib-escape";
 
-export const runtime = "edge";
+// Node runtime: the Cloudflare adapter (OpenNext) does not bundle edge-runtime
+// routes; on Workers both run on workerd anyway, and Vercel serves it fine.
+export const runtime = "nodejs";
 
 /** Raw inner XML of the first <tag>, tags stripped, entities NOT decoded. */
 function xmlText(xml: string, tag: string): string {

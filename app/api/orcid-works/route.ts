@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 
-export const runtime = "edge";
+// Node runtime: the Cloudflare adapter (OpenNext) does not bundle edge-runtime
+// routes; on Workers both run on workerd anyway, and Vercel serves it fine.
+export const runtime = "nodejs";
 
 // ORCID iD: four blocks of four, last character may be X (ISO 7064 checksum).
 const ORCID_RE = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
