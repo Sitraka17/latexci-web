@@ -130,12 +130,41 @@ export const metadata: Metadata = {
   // search engines at the homepage as its "canonical" copy.
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "latexci",
+  url: "https://latexci.com",
+  logo: "https://latexci.com/icon.svg",
+  description: "Free LaTeX tools for researchers and students: live preview, diff, Word to LaTeX, BibTeX converters, symbol search, table generator, templates, and CV builder.",
+  founder: {
+    "@type": "Person",
+    name: "Sitraka Forler",
+    url: "https://github.com/Sitraka17",
+  },
+  sameAs: [
+    "https://github.com/Sitraka17/latexci-web",
+  ],
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "latexci",
+  url: "https://latexci.com",
+  description: "Free LaTeX tools in your browser: live preview, diff, Word to LaTeX, BibTeX, symbol search, table generator, templates, and CV builder.",
+  publisher: { "@type": "Organization", name: "latexci", url: "https://latexci.com" },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`h-full ${cmSerif.variable} ${cmSerifItalic.variable} ${cmSans.variable} ${cmTypewriter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
+        {/* Structured data: Organization + WebSite (site-wide, not page-specific) */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
         {/* Anti-flash: read saved theme before first paint — must be synchronous */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('latexci_theme');if(t==='light'||(t==null&&window.matchMedia('(prefers-color-scheme:light)').matches)){document.documentElement.classList.add('light');}}catch(e){}})();` }} />
         {/* KaTeX CSS is imported (self-hosted/bundled) at the top of this file. */}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import BibTexTool from "@/components/BibTexTool";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
@@ -164,6 +165,11 @@ export default function DoiToBibtexPage() {
 
           <h2>Appendix A&ensp;Questions</h2>
           <Faq items={FAQS} name="doi-bibtex-faq" />
+
+          <RelatedTools tools={[
+            { label: "Live LaTeX Preview", href: "/tools/preview" },
+            { label: "LaTeX Templates",    href: "/tools/templates" },
+          ]} />
         </section>
       </main>
       <SiteFooter />

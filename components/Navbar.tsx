@@ -1,4 +1,5 @@
 import Link from "@/components/Link";
+import { DISCORD_URL } from "@/lib/site";
 import ThemeToggle from "./ThemeToggle";
 import AuthButton from "./AuthButton";
 import NavLinks from "./NavLinks";
@@ -40,16 +41,18 @@ export default function Navbar() {
           <ThemeToggle />
           <AuthButton />
           <Link href="/pricing" className="nav-pricing">Free</Link>
-          <a
-            href="https://discord.gg/latexci"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="nav-icon-btn nav-discord"
-            aria-label="Join the latexci Discord community"
-            title="Join the latexci Discord community"
-          >
-            {DiscordIcon}
-          </a>
+          {DISCORD_URL && (
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-icon-btn nav-discord"
+              aria-label="Join the latexci Discord community"
+              title="Join the latexci Discord community"
+            >
+              {DiscordIcon}
+            </a>
+          )}
           <a
             href="https://github.com/Sitraka17/latexci-web"
             target="_blank"
@@ -71,9 +74,11 @@ export default function Navbar() {
             </summary>
             <div className="mobile-panel">
               <NavLinks variant="mobile" />
-              <a href="https://discord.gg/latexci" target="_blank" rel="noopener noreferrer" className="mobile-link mobile-discord">
-                Discord community ↗
-              </a>
+              {DISCORD_URL && (
+                <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="mobile-link mobile-discord">
+                  Discord community ↗
+                </a>
+              )}
               <a href="https://github.com/Sitraka17/latexci-web" target="_blank" rel="noopener noreferrer" className="mobile-link mobile-muted">
                 GitHub ↗
               </a>

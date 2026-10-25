@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import WordToLatex from "@/components/WordToLatex";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
@@ -178,6 +179,14 @@ export default function WordToLatexPage() {
 
           <h2>Appendix A&ensp;Questions</h2>
           <Faq items={FAQS} name="word-faq" />
+
+          <RelatedTools tools={[
+            { label: "Live LaTeX Preview", href: "/tools/preview" },
+            { label: "LaTeX Diff",         href: "/tools/diff" },
+            { label: "Table Generator",    href: "/tools/table" },
+            { label: "BibTeX Tools",       href: "/tools/bibtex" },
+            { label: "LaTeX Templates",    href: "/tools/templates" },
+          ]} />
         </section>
       </main>
       <SiteFooter />

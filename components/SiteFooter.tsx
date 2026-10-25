@@ -1,4 +1,5 @@
 import Link from "@/components/Link";
+import { DISCORD_URL } from "@/lib/site";
 
 // Server component: the footer is static links, so it ships no client JS.
 // Hover effects are plain CSS (.ft-* rules in app/globals.css) instead of the former
@@ -27,9 +28,10 @@ const LEARN = [
 ];
 
 const COMMUNITY = [
-  { label: "Discord",     href: "https://discord.gg/latexci", external: true, accent: true },
+  ...(DISCORD_URL ? [{ label: "Discord", href: DISCORD_URL, external: true, accent: true }] : []),
   { label: "GitHub Issues",  href: "https://github.com/Sitraka17/latexci-web/issues", external: true },
-  { label: "Feature Requests", href: "https://github.com/Sitraka17/latexci-web/discussions", external: true },
+  // Discussions are disabled on the repo; feature requests go to a new issue.
+  { label: "Feature Requests", href: "https://github.com/Sitraka17/latexci-web/issues/new", external: true },
 ];
 
 const YEAR = new Date().getFullYear();

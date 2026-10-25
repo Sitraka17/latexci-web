@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import TableGenerator from "@/components/TableGenerator";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
@@ -199,6 +200,14 @@ export default function TablePage() {
 
           <h2>Appendix A&ensp;Questions</h2>
           <Faq items={FAQS} name="table-faq" />
+
+          <RelatedTools tools={[
+            { label: "Live LaTeX Preview", href: "/tools/preview" },
+            { label: "Symbol Search",      href: "/tools/symbols" },
+            { label: "LaTeX Diff",         href: "/tools/diff" },
+            { label: "LaTeX Templates",    href: "/tools/templates" },
+            { label: "BibTeX Tools",       href: "/tools/bibtex" },
+          ]} />
         </article>
       </main>
       <SiteFooter />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import LatexDiff from "@/components/LatexDiff";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
@@ -144,6 +145,14 @@ patch -p1 < changes.patch         # same thing without Git`}</pre>
 
           <h2>Appendix A&ensp;Questions</h2>
           <Faq items={FAQS} name="diff-faq" />
+
+          <RelatedTools tools={[
+            { label: "Live LaTeX Preview", href: "/tools/preview" },
+            { label: "Word to LaTeX",      href: "/tools/word-to-latex" },
+            { label: "Table Generator",    href: "/tools/table" },
+            { label: "LaTeX Templates",    href: "/tools/templates" },
+            { label: "BibTeX Tools",       href: "/tools/bibtex" },
+          ]} />
         </article>
       </main>
 

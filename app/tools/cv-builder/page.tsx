@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import CvBuilder from "@/components/CvBuilder";
 import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
@@ -129,6 +130,13 @@ export default function CvBuilderPage() {
 
           <h2>Appendix A&ensp;Questions</h2>
           <Faq items={FAQS} name="cv-faq" />
+
+          <RelatedTools tools={[
+            { label: "LaTeX Templates",    href: "/tools/templates" },
+            { label: "Live LaTeX Preview", href: "/tools/preview" },
+            { label: "BibTeX Tools",       href: "/tools/bibtex" },
+            { label: "Symbol Search",      href: "/tools/symbols" },
+          ]} />
         </section>
       </main>
       <SiteFooter />

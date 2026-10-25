@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import BibTexTool from "@/components/BibTexTool";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { cleanBibTeX } from "@/lib/bibtex";
@@ -200,6 +201,13 @@ export default function BibTexPage() {
             None of the BibTeX tools needs an account, and there is no limit on the size of the file
             beyond what your browser can hold.
           </p>
+
+          <RelatedTools tools={[
+            { label: "Live LaTeX Preview", href: "/tools/preview" },
+            { label: "LaTeX Diff",         href: "/tools/diff" },
+            { label: "LaTeX Templates",    href: "/tools/templates" },
+            { label: "Symbol Search",      href: "/tools/symbols" },
+          ]} />
         </section>
       </main>
       <SiteFooter />

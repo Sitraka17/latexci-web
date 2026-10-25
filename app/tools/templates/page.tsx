@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import Link from "@/components/Link";
+import RelatedTools from "@/components/RelatedTools";
 import TemplatesFilter from "@/components/TemplatesFilter";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { TEMPLATES } from "@/lib/templates";
@@ -44,9 +45,29 @@ export const metadata: Metadata = {
   },
 };
 
+const appSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Free LaTeX Templates | latexci",
+  description: "28 free LaTeX templates: NeurIPS, ICML, ACL, Nature, PhD thesis, CV, Beamer. Open any template in the browser editor instantly.",
+  url: "https://latexci.com/tools/templates",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web Browser",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+
+const RELATED_TOOLS = [
+  { label: "Live LaTeX Preview", href: "/tools/preview" },
+  { label: "CV Generator",       href: "/tools/cv-builder" },
+  { label: "Symbol Search",      href: "/tools/symbols" },
+  { label: "Table Generator",    href: "/tools/table" },
+  { label: "BibTeX Tools",       href: "/tools/bibtex" },
+];
+
 export default function TemplatesPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "LaTeX Templates", path: "/tools/templates" })) }} />
       <Navbar />
 
@@ -151,6 +172,13 @@ export default function TemplatesPage() {
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Related tools */}
+        <section style={{ padding: "0 1.5rem 3rem" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <RelatedTools tools={RELATED_TOOLS} />
           </div>
         </section>
       </div>

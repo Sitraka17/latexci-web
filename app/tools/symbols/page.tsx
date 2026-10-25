@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import Link from "@/components/Link";
+import RelatedTools from "@/components/RelatedTools";
 import SymbolSearch from "@/components/SymbolSearch";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { SYMBOLS, CATEGORIES } from "@/lib/symbols";
@@ -44,11 +45,30 @@ export const metadata: Metadata = {
   },
 };
 
+const appSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "LaTeX Symbol Search | latexci",
+  description: "Search 350+ LaTeX symbols by name, command, or Unicode. One-click copy with live KaTeX preview.",
+  url: "https://latexci.com/tools/symbols",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web Browser",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+
+const RELATED_TOOLS = [
+  { label: "Live LaTeX Preview", href: "/tools/preview" },
+  { label: "LaTeX Templates",    href: "/tools/templates" },
+  { label: "Table Generator",    href: "/tools/table" },
+  { label: "BibTeX Tools",       href: "/tools/bibtex" },
+];
+
 export default function SymbolsPage() {
   const totalSymbols = SYMBOLS.length;
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema({ name: "Symbol Search", path: "/tools/symbols" })) }} />
       <Navbar />
 
@@ -181,6 +201,13 @@ export default function SymbolsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Related tools */}
+        <section style={{ padding: "0 1.5rem 3rem" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <RelatedTools tools={RELATED_TOOLS} />
           </div>
         </section>
       </main>

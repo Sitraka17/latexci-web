@@ -13,7 +13,8 @@
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:staging": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",

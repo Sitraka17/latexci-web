@@ -4,6 +4,7 @@ import katex from "katex";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import Faq from "@/components/Faq";
+import { DISCORD_URL } from "@/lib/site";
 
 // Pre-render at build time — no runtime cost, pixel-perfect math
 const HERO_FORMULA = katex.renderToString(
@@ -221,8 +222,10 @@ export default function HomePage() {
         <Faq items={FAQS} />
 
         <p className="remark" style={{ marginTop: "2.25rem" }}>
-          <b>Remark.</b> Questions, template requests or a compilation error you cannot solve? The{" "}
-          <a href="https://discord.gg/latexci" target="_blank" rel="noopener">latexci Discord</a> is open to everyone.
+          <b>Remark.</b> Questions, template requests or a compilation error you cannot solve?{" "}
+          {DISCORD_URL
+            ? <>The <a href={DISCORD_URL} target="_blank" rel="noopener">latexci Discord</a> is open to everyone.</>
+            : <>Open an <a href="https://github.com/Sitraka17/latexci-web/issues/new" target="_blank" rel="noopener">issue on GitHub</a>; every one gets an answer.</>}
         </p>
       </main>
 

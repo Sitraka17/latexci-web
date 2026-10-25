@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
+import RelatedTools from "@/components/RelatedTools";
 import LatexEditor from "@/components/LatexEditor";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
@@ -63,6 +64,16 @@ const faqSchema = {
     acceptedAnswer: { "@type": "Answer", text: f.a },
   })),
 };
+
+const RELATED_TOOLS = [
+  { label: "LaTeX Diff",        href: "/tools/diff" },
+  { label: "Word to LaTeX",     href: "/tools/word-to-latex" },
+  { label: "Table Generator",   href: "/tools/table" },
+  { label: "BibTeX Tools",      href: "/tools/bibtex" },
+  { label: "Symbol Search",     href: "/tools/symbols" },
+  { label: "LaTeX Templates",   href: "/tools/templates" },
+  { label: "CV Generator",      href: "/tools/cv-builder" },
+];
 
 const srOnly: CSSProperties = {
   position: "absolute", width: 1, height: 1, overflow: "hidden",
@@ -143,6 +154,8 @@ export default function PreviewPage() {
               <p style={{ ...para, margin: 0 }}>{f.a}</p>
             </div>
           ))}
+
+          <RelatedTools tools={RELATED_TOOLS} />
         </div>
       </section>
 

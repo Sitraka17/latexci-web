@@ -1116,3 +1116,7 @@ button.btn { cursor: pointer; }
 .paper ol.checklist li { margin-bottom: 0.45rem; }
 .paper .booktabs code, .paper p code, .paper li code { font-family: var(--font-tt); font-size: 0.92em; }
 .paper p code { white-space: nowrap; }
+
+/* "See also." line (components/RelatedTools.tsx), outside or inside .paper */
+nav.remark { font-size: 0.95rem; line-height: 1.7; color: var(--fg); max-width: 72ch; }
+nav.remark a { color: var(--accent); }
