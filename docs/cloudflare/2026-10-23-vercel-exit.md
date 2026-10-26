@@ -1,7 +1,7 @@
 # Sortie de Vercel : mesure ISR et faisabilité Cloudflare Workers (23/10/2026)
 
 Branche `cloudflare-staging`. Rien de déployé en production, aucune bascule DNS.
-Staging vérifié : https://latexci-staging.trains-lux.workers.dev
+Staging vérifié : https://latexci-staging.<compte>.workers.dev (adresse exacte hors du dépôt public)
 
 ## Volet A : lectures ISR, mesure avant/après
 
