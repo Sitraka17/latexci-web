@@ -11,7 +11,7 @@ aucun secret n'a été touché. Le Worker de staging `latexci-staging` reste en 
 | Élément | Fichier | Détail |
 |---|---|---|
 | Config Worker de prod | `wrangler.production.jsonc` | nom `latexci`, `WORKER_SELF_REFERENCE` vers `latexci`, `keep_vars: true`, observabilité activée, aucun domaine déclaré |
-| Build sans secrets locaux | `scripts/cf-build.mjs` | met `.env*` de côté pendant le build, les remet toujours, retire `VERCEL*` de l'environnement, échoue si `.open-next/cloudflare/next-env.mjs` contient une variable |
+| Build et déploiement gardés | `scripts/cf-guard.mjs` (`scripts/cf-build.mjs` le relaie) | voir « Garde-fou des secrets » plus bas |
 | Scripts npm | `package.json` | `cf:build:prod`, `cf:preview:prod`, `cf:deploy` (prod) ; `cf:build`, `cf:preview`, `cf:staging` passent aussi par le wrapper |
 | Analytics Vercel | `app/layout.tsx` | `<Analytics />` rendu seulement si `VERCEL=1` au build ; le wrapper retire `VERCEL` : aucun appel `/_vercel/insights` sur Cloudflare (vérifié) |
 | Origine du site | build | `NEXT_PUBLIC_SITE_URL=https://latexci.com` est inliné au build : canonical, sitemap et robots pointent sur latexci.com (vérifié) |
@@ -104,8 +104,75 @@ Toutes les pages et routes ci-dessous répondent comme attendu, sans aucun secre
 
 - Le texte de `/privacy` mentionne encore Vercel Analytics ; à ajuster (ou à remplacer
   par Cloudflare Web Analytics, beacon sans cookie) au choix de Sitraka.
-- Le Worker `latexci-staging` embarque le token Blob du build du 23/10 : le redéployer
-  avec `npm run cf:staging` (wrapper) ou le supprimer, puis régénérer le token Blob.
+- Le Worker `latexci-staging` embarque le token Blob du build du 23/10 : voir
+  « Garde-fou des secrets », section « À faire par Sitraka ».
 - `@opennextjs/cloudflare` est bloqué à 1.20.1 tant que Next n'est pas en >=16.4.1.
 - Déploiement automatique possible plus tard : GitHub Action avec les secrets de dépôt
   `CLOUDFLARE_API_TOKEN` et `CLOUDFLARE_ACCOUNT_ID` (dépôt public, Actions gratuites).
+
+## Garde-fou des secrets (`scripts/cf-guard.mjs`, ajouté le 01/11/2026)
+
+Tous les scripts `cf:*` passent par ce garde-fou. Il :
+
+1. relève en mémoire les valeurs secrètes des `.env*`, `.dev.vars` et de
+   l'environnement du build (jamais affichées) ;
+2. met les `.env*` de côté pendant `opennextjs-cloudflare build` et les remet toujours ;
+3. retire `VERCEL*` de l'environnement et impose `NEXT_PUBLIC_SITE_URL=https://latexci.com`
+   pour la prod ;
+4. vide `.open-next/cloudflare/next-env.mjs` (affiche seulement les noms retirés) ;
+5. fait empaqueter le Worker par wrangler (`deploy --dry-run --outdir`, sans compte) ;
+6. scanne tout `.open-next/` : valeurs connues de `GOOGLE_CLIENT_ID`, `AUTH_SECRET`,
+   `BLOB_READ_WRITE_TOKEN`, `VERCEL_OIDC_TOKEN`, `OTEL_EXPORTER_OTLP_HEADERS`, plus toute
+   forme `vercel_blob_rw_...`, `GOCSPX-...` ou JWT émis par Vercel. Échec au moindre
+   résultat. `ADMIN_EMAILS` donne un simple avertissement (adresse peut-être publique).
+
+`npm run cf:deploy` refuse en plus : un arbre git non propre, un `wrangler.production.jsonc`
+qui ne vise pas le Worker `latexci` ou qui déclare une route ou un domaine, un build fait
+pour une autre cible. `npm run cf:staging` tolère un arbre non propre (avertissement).
+
+Vérifié le 01/11/2026 avec de fausses valeurs dans un `.env.local` temporaire : le build
+OpenNext brut recopie bien `ADMIN_EMAILS`, `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`,
+`GOOGLE_CLIENT_ID` dans `next-env.mjs` et `npm run cf:scan` le refuse ; le build gardé
+(`npm run cf:build:prod`) passe, `next-env.mjs` vide, aucune valeur trouvée.
+
+Ne jamais lancer `npx opennextjs-cloudflare build` ou `deploy` à la main : toujours les
+scripts npm.
+
+### À faire par Sitraka (dans l'ordre)
+
+Le Worker `latexci-staging` (build du 23/10, avant le garde-fou) contient le
+`BLOB_READ_WRITE_TOKEN` réel et un `VERCEL_OIDC_TOKEN`. L'historique des versions du
+Worker le garde même après un redéploiement : **la rotation du token Blob est obligatoire**.
+
+1. Retirer l'ancienne version du staging, au choix :
+   ```bash
+   npm run cf:staging                      # redéploiement gardé (sans secret)
+   # ou, si le staging ne sert plus :
+   npx wrangler delete -c wrangler.jsonc
+   ```
+2. Régénérer le token Blob : tableau de bord Vercel > Storage > store `latexci-users` >
+   réglages du store, régénérer (rotate) le jeton lecture-écriture. Ne pas supprimer le store.
+3. Vérifier que la variable `BLOB_READ_WRITE_TOKEN` du projet Vercel `latexci` porte bien
+   le nouveau jeton (Settings > Environment Variables), puis redéployer latexci.com, qui
+   est encore servi par Vercel :
+   ```bash
+   vercel deploy --prod --yes
+   ```
+   Tester aussitôt le tableau admin du dashboard (lecture Blob).
+4. Mettre à jour le fichier local (facultatif) : `vercel env pull .env.local`.
+5. Poser les secrets du Worker de prod. Coller chaque valeur à l'invite de wrangler,
+   jamais dans la ligne de commande :
+   ```bash
+   npx wrangler secret put GOOGLE_CLIENT_ID      -c wrangler.production.jsonc
+   npx wrangler secret put AUTH_SECRET           -c wrangler.production.jsonc
+   npx wrangler secret put BLOB_READ_WRITE_TOKEN -c wrangler.production.jsonc   # le NOUVEAU jeton
+   npx wrangler secret put ADMIN_EMAILS          -c wrangler.production.jsonc
+   ```
+6. Redéployer la prod Cloudflare depuis un arbre propre, puis contrôler :
+   ```bash
+   git status                 # doit être vide
+   npm run cf:deploy          # build gardé, scan, puis deploy
+   curl -s https://latexci.<compte>.workers.dev/api/health   # attendu : "auth":"google"
+   ```
+7. `VERCEL_OIDC_TOKEN` expire seul en quelques heures : rien à faire, sauf si un
+   comportement anormal apparaît dans les journaux Vercel.

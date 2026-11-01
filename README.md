@@ -58,8 +58,10 @@ Deploy: until the DNS cutover, latexci.com is still served by Vercel
 (`vercel deploy --prod --yes`). The Cloudflare Worker `latexci` is deployed
 with `npm run cf:deploy` (config `wrangler.production.jsonc`); its secrets are
 set with `npx wrangler secret put NAME -c wrangler.production.jsonc`. The CF
-build wrapper (`scripts/cf-build.mjs`) keeps `.env*` files out of the Worker
-bundle and inlines `NEXT_PUBLIC_SITE_URL=https://latexci.com`.
+build guard (`scripts/cf-guard.mjs`, used by every `cf:*` script) keeps `.env*`
+files out of the Worker bundle, empties `next-env.mjs`, scans `.open-next/` for
+secrets (`npm run cf:scan`) and inlines `NEXT_PUBLIC_SITE_URL=https://latexci.com`.
+Never run `opennextjs-cloudflare build/deploy` by hand.
 
 ## License
 

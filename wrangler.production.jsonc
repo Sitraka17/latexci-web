@@ -1,5 +1,5 @@
 // Cloudflare Workers config, PRODUCTION (latexci.com).
-// Build and deploy with `npm run cf:deploy` (scripts/cf-build.mjs + wrangler).
+// Build and deploy with `npm run cf:deploy` (scripts/cf-guard.mjs + wrangler).
 // Until the DNS cutover the Worker only answers on latexci.<account>.workers.dev,
 // where next.config.ts adds X-Robots-Tag: noindex. The custom domain
 // latexci.com is attached by hand after the zone moves to Cloudflare
@@ -24,7 +24,7 @@
   //   GOOGLE_CLIENT_ID, AUTH_SECRET, BLOB_READ_WRITE_TOKEN
   // Plain var ADMIN_EMAILS is set in the dashboard (or as a secret); keep_vars
   // stops a redeploy from wiping it. NEXT_PUBLIC_SITE_URL is inlined at BUILD
-  // time by scripts/cf-build.mjs, not read at runtime.
+  // time by scripts/cf-guard.mjs, not read at runtime.
   "keep_vars": true,
   "vars": {},
   "observability": { "enabled": true }

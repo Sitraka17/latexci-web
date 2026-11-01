@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // OpenNext / wrangler output (hundreds of MB of bundled JS).
+    ".open-next/**",
   ]),
 ]);
 
