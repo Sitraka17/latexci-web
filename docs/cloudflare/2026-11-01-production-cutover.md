@@ -28,7 +28,7 @@ aucun secret n'a été touché. Le Worker de staging `latexci-staging` reste en 
 
 ```bash
 npm ci
-npm test                 # vitest, 292 tests
+npm test                 # vitest, 296 tests
 npm run cf:deploy        # build prod + deploy du Worker "latexci"
 ```
 
@@ -154,10 +154,15 @@ Worker le garde même après un redéploiement : **la rotation du token Blob est
    réglages du store, régénérer (rotate) le jeton lecture-écriture. Ne pas supprimer le store.
 3. Vérifier que la variable `BLOB_READ_WRITE_TOKEN` du projet Vercel `latexci` porte bien
    le nouveau jeton (Settings > Environment Variables), puis redéployer latexci.com, qui
-   est encore servi par Vercel :
+   est encore servi par Vercel. Le faire depuis `main`, jamais depuis la branche
+   `cloudflare-staging` (sinon du code non fusionné part en production Vercel) :
    ```bash
+   git switch main && git pull
    vercel deploy --prod --yes
+   git switch cloudflare-staging
    ```
+   Autre possibilité sans changer de branche : tableau de bord Vercel > Deployments >
+   dernier déploiement de production > Redeploy (reprend le même code, avec le nouveau jeton).
    Tester aussitôt le tableau admin du dashboard (lecture Blob).
 4. Mettre à jour le fichier local (facultatif) : `vercel env pull .env.local`.
 5. Poser les secrets du Worker de prod. Coller chaque valeur à l'invite de wrangler,
