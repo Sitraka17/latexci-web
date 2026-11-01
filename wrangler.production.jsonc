@@ -1,0 +1,31 @@
+// Cloudflare Workers config, PRODUCTION (latexci.com).
+// Build and deploy with `npm run cf:deploy` (scripts/cf-build.mjs + wrangler).
+// Until the DNS cutover the Worker only answers on latexci.<account>.workers.dev,
+// where next.config.ts adds X-Robots-Tag: noindex. The custom domain
+// latexci.com is attached by hand after the zone moves to Cloudflare
+// (see docs/cloudflare/2026-11-01-production-cutover.md); it is deliberately
+// NOT declared here so a deploy can never grab the domain early.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "latexci",
+  "main": ".open-next/worker.js",
+  "account_id": "4b6d10a2b7d2668f28bc5e6de845cfc3",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Self-reference service binding used by OpenNext for cache revalidation.
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "latexci" }
+  ],
+  // Secrets (set with `npx wrangler secret put NAME -c wrangler.production.jsonc`):
+  //   GOOGLE_CLIENT_ID, AUTH_SECRET, BLOB_READ_WRITE_TOKEN
+  // Plain var ADMIN_EMAILS is set in the dashboard (or as a secret); keep_vars
+  // stops a redeploy from wiping it. NEXT_PUBLIC_SITE_URL is inlined at BUILD
+  // time by scripts/cf-build.mjs, not read at runtime.
+  "keep_vars": true,
+  "vars": {},
+  "observability": { "enabled": true }
+}

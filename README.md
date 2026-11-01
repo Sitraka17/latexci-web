@@ -27,6 +27,8 @@ npm run dev     # local server on http://localhost:3000
 npm run build   # production build
 npm run test    # unit tests (Vitest)
 npm run lint    # ESLint
+npm run cf:deploy       # build + deploy the production Worker "latexci" (Cloudflare)
+npm run cf:preview:prod # same build, served locally by workerd
 ```
 
 ## Environment variables
@@ -48,9 +50,16 @@ and Word to LaTeX are open to everyone, which is convenient for local work.
 
 - [`docs/google-signin.md`](docs/google-signin.md): sign-in, user records,
   environment setup.
+- [`docs/cloudflare/2026-11-01-production-cutover.md`](docs/cloudflare/2026-11-01-production-cutover.md):
+  move from Vercel to Cloudflare Workers, smoke test, remaining cutover steps.
 - `CLAUDE.md` / `AGENTS.md`: conventions for contributors and agents.
 
-Deploy: `vercel deploy --prod --yes`.
+Deploy: until the DNS cutover, latexci.com is still served by Vercel
+(`vercel deploy --prod --yes`). The Cloudflare Worker `latexci` is deployed
+with `npm run cf:deploy` (config `wrangler.production.jsonc`); its secrets are
+set with `npx wrangler secret put NAME -c wrangler.production.jsonc`. The CF
+build wrapper (`scripts/cf-build.mjs`) keeps `.env*` files out of the Worker
+bundle and inlines `NEXT_PUBLIC_SITE_URL=https://latexci.com`.
 
 ## License
 
