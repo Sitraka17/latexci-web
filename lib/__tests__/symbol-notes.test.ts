@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { SYMBOL_NOTES } from "@/lib/symbol-notes";
 import { SYMBOLS } from "@/lib/symbols";
 
@@ -68,5 +70,19 @@ describe("rewritten snippets, November 2026", () => {
       expect(seo!.description.length, name).toBeLessThanOrEqual(155);
       expect(seo!.title, name).toMatch(/\\[a-zA-Z]+/);
     }
+  });
+});
+
+// /tools/isbn-to-bibtex had 719 impressions for 8 clicks (same period): its
+// rewritten title and description must also fit 60 / 155 characters.
+describe("ISBN to BibTeX snippet", () => {
+  const src = readFileSync(join(__dirname, "../../app/tools/isbn-to-bibtex/page.tsx"), "utf8");
+  const meta = src.slice(src.indexOf("export const metadata"), src.indexOf("keywords:"));
+  it("fits 60 / 155 characters and names @book", () => {
+    const title = meta.match(/title: "([^"]+)"/)![1];
+    const desc = meta.match(/description:\s*"([^"]+)"/)![1];
+    expect((title + " | latexci").length, title).toBeLessThanOrEqual(60);
+    expect(desc.length).toBeLessThanOrEqual(155);
+    expect(title).toContain("@book");
   });
 });

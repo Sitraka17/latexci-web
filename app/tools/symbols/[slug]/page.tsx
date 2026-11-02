@@ -27,8 +27,12 @@ import {
   hubInfo,
 } from "@/lib/seo-pages";
 
+// "arrows" -> "Arrows": family names as plain nouns, so the 16 links do not
+// all repeat "... in LaTeX".
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 // Date the editorial notes were last revised (TechArticle dateModified).
-const NOTES_MODIFIED = "2026-10-16";
+const NOTES_MODIFIED = "2026-11-02"; // keep equal to NOTES_LASTMOD in app/sitemap.ts
 
 export const dynamicParams = false;
 
@@ -401,7 +405,7 @@ export default async function SymbolPage({ params }: Props) {
           <ul className="sym-families">
             {otherFamilies.map((c) => (
               <li key={c}>
-                <Link href={categoryHref(c)} style={{ color: "var(--accent)" }}>{hubInfo(c).h1}</Link>
+                <Link href={categoryHref(c)} style={{ color: "var(--accent)" }}>{capitalize(hubInfo(c).noun)}</Link>
               </li>
             ))}
           </ul>

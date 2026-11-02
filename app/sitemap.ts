@@ -10,7 +10,9 @@ import { CATEGORIES } from "@/lib/symbols";
 const PROGRAMMATIC_LASTMOD = "2026-10-13";
 // Symbol pages with an editorial note (lib/symbol-notes.ts) and the category
 // hubs were last revised on this date; bump it when the notes change.
-const NOTES_LASTMOD = "2026-10-16";
+// 2026-11-02: six notes retitled, "Home" crumb and item list on the hubs.
+// Set this (and the "/" entry below) to the merge day if it lands later.
+const NOTES_LASTMOD = "2026-11-02";
 // CV template pages got new titles, descriptions and a guide link on this date.
 const CV_TEMPLATES_LASTMOD = "2026-10-18";
 

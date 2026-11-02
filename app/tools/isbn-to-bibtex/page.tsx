@@ -8,7 +8,7 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "ISBN to BibTeX Converter: Free, Online, No Signup",
+  title: "ISBN to BibTeX: Free Online @book Converter",
   description:
     "Paste an ISBN-10 or ISBN-13 and copy a clean @book BibTeX entry: authors, title, publisher, year. Free online converter, no account, Open Library data.",
   keywords: [
@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/tools/isbn-to-bibtex" },
   openGraph: {
-    title: "ISBN to BibTeX Converter: Free, Online, No Signup",
+    title: "ISBN to BibTeX: Free Online @book Converter",
     description: "Paste an ISBN-10 or ISBN-13 and copy a clean @book BibTeX entry from Open Library data. Free, no account.",
     url: "/tools/isbn-to-bibtex", type: "website",
   },
-  twitter: { card: "summary_large_image", title: "ISBN to BibTeX Converter: Free, Online, No Signup" },
+  twitter: { card: "summary_large_image", title: "ISBN to BibTeX: Free Online @book Converter" },
 };
 
 const FAQS = [
