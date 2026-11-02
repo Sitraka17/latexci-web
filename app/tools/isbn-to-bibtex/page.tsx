@@ -148,6 +148,12 @@ export default function IsbnToBibtexPage() {
             The same page also cleans a whole <code>.bib</code> file and looks up the other kinds of
             identifier. None of these tools needs an account.
           </p>
+          <p>
+            Then format it: paste the entry, or your whole <code>.bib</code> file, into the{" "}
+            <Link href="/tools/bibtex-to-apa">BibTeX to APA converter</Link> to get a reference list you
+            can paste into Word, also in <Link href="/tools/bibtex-to-mla">MLA</Link> and{" "}
+            <Link href="/tools/bibtex-to-chicago">Chicago</Link>.
+          </p>
           <nav aria-label="Related tools">
             <ul className="bib-seealso">
               {RELATED.map(({ label, href }) => (

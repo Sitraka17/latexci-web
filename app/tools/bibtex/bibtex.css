@@ -82,3 +82,46 @@ textarea.bib-area::placeholder, .bib-row input::placeholder { color: var(--fg-mu
 .bib-paper .bib-stack pre { font-family: var(--font-mono), monospace; font-size: 0.8rem; line-height: 1.55; color: var(--fg); margin: 0; overflow-x: auto; white-space: pre; }
 .bib-lookup textarea.bib-area { min-height: 13rem; }
 .bib-paper .bib-fig pre { font-family: var(--font-mono), monospace; font-size: 0.8rem; line-height: 1.55; color: var(--fg); margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ── Formatter: /tools/bibtex-to-apa, -mla, -chicago ───────────────────── */
+.fmt-opts { display: flex; flex-wrap: wrap; gap: 0.9rem 1.6rem; align-items: end; }
+.fmt-opts .field { width: 20rem; max-width: 100%; }
+.fmt-headbtns { display: inline-flex; gap: 0.4rem; }
+.bib-panehead > label { font-size: inherit; color: inherit; }
+.fmt-count { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* The list is set like a page of the paper: serif, the style's hanging indent. */
+.fmt-out { flex: 1; min-height: 19rem; overflow: auto; box-sizing: border-box; border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-bg); color: var(--paper-fg); padding: 0.95rem 1.15rem; font-family: var(--font-serif); font-size: 1rem; line-height: 1.55; transition: opacity 0.15s; }
+.fmt-out:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.fmt-out.is-busy { opacity: 0.55; }
+.fmt-list { list-style: none; margin: 0; padding: 0; }
+.fmt-list li { margin: 0 0 0.6rem; overflow-wrap: anywhere; }
+.fmt-list li:last-child { margin-bottom: 0; }
+.fmt-out.is-hanging .fmt-list li { padding-left: 2em; text-indent: -2em; }
+.fmt-list.is-numbered li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); padding-left: 0; text-indent: 0; }
+.fmt-label { font-variant-numeric: tabular-nums; }
+.fmt-empty { margin: 0; color: var(--fg-muted); font-style: italic; }
+
+.fmt-warn ul { margin: 0.25rem 0 0; padding-left: 1.2rem; list-style: disc; }
+.fmt-warn li + li { margin-top: 0.1rem; }
+.fmt-warn code, .fmt-cites code, .fmt-examples code { font-family: var(--font-tt), monospace; font-size: 0.9em; }
+.fmt-cites { overflow-x: auto; }
+.fmt-cites caption, .fmt-examples caption { caption-side: top; text-align: left; font-family: var(--font-serif); font-weight: 700; font-size: 0.98rem; padding: 0 0 0.45rem; }
+.fmt-cites td.muted { color: var(--fg-muted); text-align: center; }
+.fmt-cites tbody th { font-weight: 400; white-space: nowrap; width: 1%; text-align: left; padding: 0.5rem 0.6rem; vertical-align: top; }
+.fmt-cites tbody tr:last-child th { border-bottom: 1.6px solid var(--fg); }
+.fmt-cites thead th { font-size: 0.92rem; }
+.fmt-cites td { font-size: 0.95rem; }
+
+/* Article: examples rendered at build time */
+.bib-paper .fmt-examples td { font-size: 0.95rem; line-height: 1.5; overflow-wrap: anywhere; }
+.bib-paper .fmt-examples td:first-child { white-space: nowrap; }
+.bib-paper .fmt-examples .muted { color: var(--fg-muted); font-size: 0.88rem; }
+.bib-paper .fmt-examples .fmt-ref { padding-left: 1.6em; text-indent: -1.6em; }
+.bib-paper .fmt-credit { font-size: 0.92rem; line-height: 1.6; color: var(--fg-muted); margin-top: 2rem; }
+
+@media (max-width: 520px) {
+  .fmt-opts .field { width: 100%; }
+  .fmt-out { min-height: 14rem; padding: 0.8rem 0.85rem; }
+  .bib-paper .fmt-examples td:first-child { white-space: normal; }
+}
