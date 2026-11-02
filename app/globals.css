@@ -910,6 +910,13 @@ footer {
   padding: 0.75rem 1rem; margin: 0 0 1rem; font-size: 0.9rem; line-height: 1.7; color: var(--fg-muted);
 }
 .note-pitfall strong { color: var(--fg); }
+/* "Other symbol families": every category hub, two columns on wide screens */
+.sym-families {
+  columns: 2; column-gap: 2rem; padding-left: 1.25rem; margin: 0 0 1rem;
+  color: var(--fg-muted); font-size: 0.92rem; line-height: 1.7;
+}
+.sym-families li { break-inside: avoid; }
+@media (max-width: 560px) { .sym-families { columns: 1; } }
 
 /* ─────────────────────────────────────────────────────
    CV generator (components/CvBuilder.tsx)

@@ -36,8 +36,8 @@ export interface SymbolNote {
 export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   "indicator function": {
     seo: {
-      title: "Indicator function in LaTeX: why \\mathbb{1} fails",
-      description: "\\mathbb{1} prints the wrong glyph under pdfLaTeX. Three ways that work, \\mathds{1}, \\mathbbm{1} and \\mathbf{1}, each compiled, with its package.",
+      title: "Indicator function LaTeX: \\mathds{1}, \\mathbbm{1}",
+      description: "\\mathbb{1} prints the wrong glyph under pdfLaTeX. Copy \\mathds{1} (dsfont), \\mathbbm{1} (bbm) or \\mathbf{1}, each compiled, with its package.",
     },
     variants: [
       { code: "\\mathds{1}", pkg: "dsfont", use: "The usual choice: a crisp vector double-struck 1." },
@@ -50,8 +50,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "normal distribution": {
     seo: {
-      title: "Normal distribution in LaTeX: \\mathcal{N}(\\mu,\\sigma^2)",
-      description: "Write X \\sim \\mathcal{N}(\\mu, \\sigma^2), not \\mathbb{N} (the natural numbers). Univariate, standard and multivariate forms, compiled and ready to copy.",
+      title: "Normal distribution in LaTeX: X \\sim \\mathcal{N}",
+      description: "Write X \\sim \\mathcal{N}(\\mu, \\sigma^2) with a calligraphic N, not \\mathbb{N}. Standard, univariate and multivariate forms, compiled and ready to copy.",
     },
     variants: [
       { code: "\\mathcal{N}(\\mu, \\sigma^2)", pkg: "", use: "The standard notation for a Gaussian with mean and variance." },
@@ -144,8 +144,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "iff": {
     seo: {
-      title: "If and only if in LaTeX: \\iff or \\Leftrightarrow?",
-      description: "\\iff needs no package and is wider than \\Leftrightarrow because it adds space on both sides. The four ways to write if and only if, compared.",
+      title: "If and only if in LaTeX: \\iff, ready to copy",
+      description: "Type \\iff for if and only if, no package needed. Copy it in one click and see when \\Leftrightarrow or \\Longleftrightarrow fits better, each compiled.",
     },
     variants: [
       { code: "\\iff", pkg: "", use: "\"If and only if\": a long double arrow with extra space on both sides. Built into LaTeX." },
@@ -158,8 +158,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "hbar Planck": {
     seo: {
-      title: "h-bar in LaTeX: \\hbar, \\hslash, and why not \\bar{h}",
-      description: "\\bar{h} puts the bar above the letter, not across it. Use \\hbar for the reduced Planck constant, or \\hslash (amssymb) for the slanted stroke.",
+      title: "hbar in LaTeX: \\hbar and \\hslash, ready to copy",
+      description: "Type \\hbar for the reduced Planck constant, no package needed; \\hslash (amssymb) gives a slanted stroke. Why \\bar{h} looks wrong, and a copyable example.",
     },
     variants: [
       { code: "\\hbar", pkg: "", use: "Reduced Planck constant, h divided by 2 pi." },
@@ -171,8 +171,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "delta": {
     seo: {
-      title: "Delta in LaTeX: \\delta, \\Delta or \\partial?",
-      description: "Lowercase \\delta, capital \\Delta and \\partial compared, plus the Kronecker delta, the Dirac delta, upright \\updelta and \\nabla vs \\Delta for the Laplacian.",
+      title: "Delta in LaTeX: \\delta and \\Delta, ready to copy",
+      description: "Lowercase delta is \\delta, capital delta is \\Delta: copy either in one click. Also \\partial, the Kronecker and Dirac deltas and \\updelta, each compiled.",
     },
     variants: [
       { code: "\\delta", pkg: "", use: "Lowercase: small variations, a radius in epsilon-delta proofs." },
@@ -358,8 +358,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   // ── Added 2026-10-16: the next most-searched symbols ─────────────────────
   "Delta": {
     seo: {
-      title: "Capital Delta in LaTeX: \\Delta, \\varDelta, \\triangle",
-      description: "\\Delta is the upright capital delta for a change or the Laplacian; \\varDelta is italic and \\triangle a shape. Each compiled, with lowercase \\delta.",
+      title: "Capital Delta in LaTeX: \\Delta, ready to copy",
+      description: "Type \\Delta for capital delta, no package needed, and copy it in one click. \\varDelta (amsmath) gives the italic form; \\nabla^2 is the other Laplacian.",
     },
     variants: [
       { code: "\\Delta", pkg: "", use: "Upright capital delta: a difference, the discriminant, the Laplacian." },

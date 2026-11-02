@@ -54,3 +54,19 @@ describe("search snippets", () => {
     expect(new Set(titles).size).toBe(titles.length);
   });
 });
+
+// Pages with the most impressions and almost no clicks (Search Console,
+// 4 to 31 Oct 2026, docs of 2 Nov): rewritten so the full <title>, brand
+// included, fits 60 characters and the description 155.
+describe("rewritten snippets, November 2026", () => {
+  const rewritten = ["delta", "iff", "hbar Planck", "normal distribution", "indicator function", "Delta"];
+  it("fit 60 / 155 characters and name the command searched", () => {
+    for (const name of rewritten) {
+      const seo = SYMBOL_NOTES[name]?.seo;
+      expect(seo, name).toBeDefined();
+      expect((seo!.title + " | latexci").length, seo!.title).toBeLessThanOrEqual(60);
+      expect(seo!.description.length, name).toBeLessThanOrEqual(155);
+      expect(seo!.title, name).toMatch(/\\[a-zA-Z]+/);
+    }
+  });
+});

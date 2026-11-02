@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import SiteFooter from "@/components/SiteFooter";
 import Faq from "@/components/Faq";
 import { DISCORD_URL } from "@/lib/site";
+import { CATEGORIES } from "@/lib/symbols";
+import { categoryHref, hubInfo } from "@/lib/seo-pages";
 
 // Pre-render at build time — no runtime cost, pixel-perfect math
 const HERO_FORMULA = katex.renderToString(
@@ -190,6 +192,16 @@ export default function HomePage() {
           </table>
         </div>
         <p className="caption"><b>Table 1.</b> The tools on latexci. All are free.</p>
+        <p>
+          The symbol reference is also arranged by family, one table per family with the command and
+          the package for each symbol:{" "}
+          {CATEGORIES.map((c, i) => (
+            <span key={c}>
+              <Link href={categoryHref(c)}>{hubInfo(c).noun}</Link>
+              {i < CATEGORIES.length - 1 ? ", " : "."}
+            </span>
+          ))}
+        </p>
 
         <h2><span className="secnum">2</span>When it helps</h2>
         <p>Three situations from real writing weeks, and the tool that settles each one:</p>
