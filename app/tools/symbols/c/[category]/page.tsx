@@ -73,16 +73,40 @@ export default async function SymbolHubPage({ params }: Props) {
   const withNotes = symbols.filter((s) => noteFor(s.name)).length;
 
   const breadcrumb = breadcrumbSchema(
-    { name: "Symbol Search", path: "/tools/symbols" },
+    { name: "LaTeX symbols", path: "/tools/symbols" },
     { name: category, path: categoryHref(category) },
   );
+  // One entry per canonical symbol page (duplicate commands share a URL).
+  const listed = symbols.filter((s, i) => symbols.findIndex((x) => canonicalSlug(x) === canonicalSlug(s)) === i);
+  const collection = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: hub.h1,
+    description: hub.description,
+    url: `https://latexci.com${categoryHref(category)}`,
+    inLanguage: "en",
+    isPartOf: { "@type": "WebSite", name: "latexci", url: "https://latexci.com" },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: listed.length,
+      itemListElement: listed.map((s, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: `${displayName(s)} (${s.command})`,
+        url: `https://latexci.com/tools/symbols/${canonicalSlug(s)}`,
+      })),
+    },
+  };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collection) }} />
       <Navbar />
       <main className="paper hub" style={{ flex: 1, width: "100%", boxSizing: "border-box", paddingBottom: "3rem" }}>
         <nav aria-label="Breadcrumb" className="hub-crumbs">
+          <Link href="/">Home</Link>
+          <span aria-hidden="true">›</span>
           <Link href="/tools/symbols">LaTeX symbols</Link>
           <span aria-hidden="true">›</span>
           <span>{category}</span>

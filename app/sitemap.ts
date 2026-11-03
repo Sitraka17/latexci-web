@@ -10,7 +10,9 @@ import { CATEGORIES } from "@/lib/symbols";
 const PROGRAMMATIC_LASTMOD = "2026-10-13";
 // Symbol pages with an editorial note (lib/symbol-notes.ts) and the category
 // hubs were last revised on this date; bump it when the notes change.
-const NOTES_LASTMOD = "2026-10-16";
+// 2026-11-02: six notes retitled, "Home" crumb and item list on the hubs.
+// Set this (and the "/" entry below) to the merge day if it lands later.
+const NOTES_LASTMOD = "2026-11-02";
 // CV template pages got new titles, descriptions and a guide link on this date.
 const CV_TEMPLATES_LASTMOD = "2026-10-18";
 
@@ -23,24 +25,26 @@ const BASE_URL =
 // timestamp would tell Google every page changes on every deploy, which is false and
 // trains crawlers to ignore our lastmod. These are honest, stable dates — bump the
 // relevant entry when you materially edit a page (templates also covers lib/templates.ts).
+// Checked against git on 2026-11-02: the 25/10 "See also" lines and the 2/11
+// formatter links changed the visible text of the pages dated accordingly.
 const LAST_MODIFIED: Record<string, string> = {
-  "/": "2026-10-07",
+  "/": "2026-11-02",
   "/academics": "2026-10-18",
-  "/tools/preview": "2026-10-07",
-  "/tools/table": "2026-10-13",
-  "/tools/diff": "2026-10-13",
-  "/tools/word-to-latex": "2026-10-13",
-  "/tools/bibtex": "2026-10-13",
-  "/tools/doi-to-bibtex": "2026-10-13",
-  "/tools/arxiv-to-bibtex": "2026-10-13",
-  "/tools/pubmed-to-bibtex": "2026-10-13",
-  "/tools/isbn-to-bibtex": "2026-10-13",
+  "/tools/preview": "2026-10-25",
+  "/tools/table": "2026-10-25",
+  "/tools/diff": "2026-10-25",
+  "/tools/word-to-latex": "2026-10-25",
+  "/tools/bibtex": "2026-11-02",
+  "/tools/doi-to-bibtex": "2026-11-02",
+  "/tools/arxiv-to-bibtex": "2026-11-02",
+  "/tools/pubmed-to-bibtex": "2026-11-02",
+  "/tools/isbn-to-bibtex": "2026-11-02",
   "/tools/bibtex-to-apa": "2026-11-02",
   "/tools/bibtex-to-mla": "2026-11-02",
   "/tools/bibtex-to-chicago": "2026-11-02",
-  "/tools/symbols": "2026-10-16",
-  "/tools/templates": "2026-10-18",
-  "/tools/cv-builder": "2026-10-18",
+  "/tools/symbols": "2026-10-25",
+  "/tools/templates": "2026-10-25",
+  "/tools/cv-builder": "2026-10-25",
   "/latex-resume-ats": "2026-10-18",
   "/orcid-to-latex-cv": "2026-10-18",
   "/cv-latex": "2026-10-18",
