@@ -47,6 +47,12 @@ const CONVERTERS = [
   { label: "ISBN → BibTeX",   href: "/tools/isbn-to-bibtex",   id: "ISBN",      source: "Open Library",  example: "9780262033848" },
 ];
 
+const FORMATTERS = [
+  { style: "APA", edition: "7th", href: "/tools/bibtex-to-apa", label: "BibTeX → APA" },
+  { style: "MLA", edition: "9th", href: "/tools/bibtex-to-mla", label: "BibTeX → MLA" },
+  { style: "Chicago", edition: "18th, author-date and notes", href: "/tools/bibtex-to-chicago", label: "BibTeX → Chicago" },
+];
+
 // Figure 2: a deliberately untidy file. The right-hand side is not written by
 // hand: it is what cleanBibTeX returns for this input with the default options,
 // computed at build time, so the figure cannot drift from the tool.
@@ -191,7 +197,32 @@ export default function BibTexPage() {
           </nav>
           <p className="caption"><b>Table 2.</b> The four lookups, their data source and their dedicated page.</p>
 
-          <h2><span className="secnum">3</span>Where your file goes</h2>
+          <h2><span className="secnum">3</span>Formatting a reference list</h2>
+          <p>
+            A co-author in Word or a journal outside LaTeX wants a formatted list, not a{" "}
+            <code>.bib</code> file. The formatter turns the same file into a sorted reference list in
+            the style you need and copies it with its italics and hanging indent. Each style has its
+            own page, listed in Table 3.
+          </p>
+          <nav aria-label="Reference list formatters" className="bib-table">
+            <table className="booktabs">
+              <thead>
+                <tr><th>Style</th><th>Edition</th><th>Page</th></tr>
+              </thead>
+              <tbody>
+                {FORMATTERS.map(({ style, edition, href, label }) => (
+                  <tr key={href}>
+                    <td>{style}</td>
+                    <td>{edition}</td>
+                    <td><Link href={href}>{label}</Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </nav>
+          <p className="caption"><b>Table 3.</b> The formatter pages. IEEE and Harvard are in the style selector of each.</p>
+
+          <h2><span className="secnum">4</span>Where your file goes</h2>
           <p>
             Nowhere. The cleaner runs entirely in your browser: the <code>.bib</code> file you paste or
             upload is never sent to a server. A lookup sends the identifier you typed, and nothing else,

@@ -8,7 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CopyButton from "@/components/CopyButton";
 import FavouriteButton from "@/components/FavouriteButton";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
-import type { SymbolEntry, SymbolCategory } from "@/lib/symbols";
+import { CATEGORIES, type SymbolEntry, type SymbolCategory } from "@/lib/symbols";
 import { noteFor } from "@/lib/symbol-notes";
 import { clampDescription } from "@/lib/snippet";
 import {
@@ -27,8 +27,12 @@ import {
   hubInfo,
 } from "@/lib/seo-pages";
 
+// "arrows" -> "Arrows": family names as plain nouns, so the 16 links do not
+// all repeat "... in LaTeX".
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 // Date the editorial notes were last revised (TechArticle dateModified).
-const NOTES_MODIFIED = "2026-10-16";
+const NOTES_MODIFIED = "2026-11-02"; // keep equal to NOTES_LASTMOD in app/sitemap.ts
 
 export const dynamicParams = false;
 
@@ -184,11 +188,14 @@ export default async function SymbolPage({ params }: Props) {
         publisher: { "@type": "Organization", name: "latexci", url: "https://latexci.com" },
       }
     : null;
+  // The last crumb is the canonical URL, so a duplicate-command page never
+  // declares itself in structured data while its canonical points elsewhere.
   const breadcrumb = breadcrumbSchema(
-    { name: "Symbol Search", path: "/tools/symbols" },
+    { name: "LaTeX symbols", path: "/tools/symbols" },
     { name: sym.category, path: categoryHref(sym.category) },
-    { name, path: `/tools/symbols/${slug}` },
+    { name, path: `/tools/symbols/${canonicalSlug(sym)}` },
   );
+  const otherFamilies = CATEGORIES.filter((c) => c !== sym.category);
   const confused = confusedWith(sym);
   const blurb = note ? null : symbolBlurb(sym);
   const livePreview = previewHref(
@@ -207,6 +214,8 @@ export default async function SymbolPage({ params }: Props) {
         <div style={wrap}>
           {/* Breadcrumb trail (visible) */}
           <nav aria-label="Breadcrumb" style={{ fontSize: "0.8rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
+            <Link href="/" style={{ color: "var(--accent)", textDecoration: "none" }}>Home</Link>
+            <span style={{ margin: "0 0.5rem" }}>›</span>
             <Link href="/tools/symbols" style={{ color: "var(--accent)", textDecoration: "none" }}>LaTeX symbols</Link>
             <span style={{ margin: "0 0.5rem" }}>›</span>
             <Link href={categoryHref(sym.category)} style={{ color: "var(--accent)", textDecoration: "none" }}>{sym.category}</Link>
@@ -389,6 +398,17 @@ export default async function SymbolPage({ params }: Props) {
               </p>
             </>
           )}
+
+          {/* Every family hub, from every symbol page: the hubs are the pages that
+              link to all symbols, so this keeps each symbol two links from any other. */}
+          <h2 style={h2}>Other symbol families</h2>
+          <ul className="sym-families">
+            {otherFamilies.map((c) => (
+              <li key={c}>
+                <Link href={categoryHref(c)} style={{ color: "var(--accent)" }}>{capitalize(hubInfo(c).noun)}</Link>
+              </li>
+            ))}
+          </ul>
 
           {/* FAQ */}
           <h2 style={h2}>FAQ</h2>

@@ -351,6 +351,87 @@ function normalizeAuthorName(name: string): string {
   return `${last}, ${first}`;
 }
 
+export interface NameParts {
+  first: string;
+  von: string;
+  last: string;
+  jr: string;
+  /** The whole name is one braced group, e.g. `{World Health Organization}`. */
+  literal?: string;
+}
+
+/** True when a name token starts with a lowercase letter (a "von" particle). */
+function isVonToken(tok: string): boolean {
+  // `{\"u}ber`-style special characters count by the letter they produce;
+  // any other braced token is caseless, so never a particle.
+  const special = tok.match(/^\{\\(?:[^a-zA-Z]|[a-zA-Z]+)\s*\{?\s*([a-zA-Z])/);
+  if (special) return /[a-z]/.test(special[1]);
+  if (tok.startsWith("{")) return false;
+  const plain = tok.replace(/^\\[^a-zA-Z]\{?/, "");
+  return /^\p{Ll}/u.test(plain);
+}
+
+/**
+ * "von Last" -> { von, last }. As in BibTeX, the von part is the longest run
+ * of leading tokens that ends with a lowercase token; the final token is
+ * always part of Last.
+ */
+function splitVonLast(tokens: string[]): { von: string; last: string } {
+  let lastVon = -1;
+  for (let j = 0; j < tokens.length - 1; j++) if (isVonToken(tokens[j])) lastVon = j;
+  if (lastVon < 0) return { von: "", last: tokens.join(" ") };
+  return { von: tokens.slice(0, lastVon + 1).join(" "), last: tokens.slice(lastVon + 1).join(" ") };
+}
+
+/**
+ * Split one BibTeX name into its four parts (First, von, Last, Jr), in any of
+ * the three BibTeX forms: "First von Last", "von Last, First" and
+ * "von Last, Jr, First". "John Smith Jr." and "John Smith, Jr." keep the
+ * suffix as the Jr part, as normalizeAuthors does. A name that is a single
+ * braced group is a literal (an organisation).
+ */
+export function splitNameParts(raw: string): NameParts {
+  const name = raw.replace(/~/g, " ").trim();
+  const empty = { first: "", von: "", last: "", jr: "" };
+  if (!name) return empty;
+  const whole = topLevelTokens(name);
+  if (whole.length === 1 && whole[0].startsWith("{") && whole[0].endsWith("}") && !/^\{\\/.test(whole[0])) {
+    return { ...empty, last: whole[0], literal: whole[0].slice(1, -1).trim() };
+  }
+  if (hasTopLevelComma(name)) {
+    const pieces = topLevelCommaParts(name);
+    if (pieces.length === 2 && NAME_SUFFIX.test(pieces[1])) {
+      const parts = topLevelTokens(pieces[0]);
+      if (parts.length >= 2) return { ...splitFirstVonLast(parts), jr: pieces[1] };
+    }
+    const { von, last } = splitVonLast(topLevelTokens(pieces[0]));
+    if (pieces.length >= 3) {
+      return { first: pieces.slice(2).join(", "), von, last, jr: pieces[1] };
+    }
+    return { first: pieces[1] ?? "", von, last, jr: "" };
+  }
+  const parts = topLevelTokens(name);
+  if (parts.length >= 3 && NAME_SUFFIX.test(parts[parts.length - 1])) {
+    const jr = parts.pop()!;
+    return { ...splitFirstVonLast(parts), jr };
+  }
+  return { ...splitFirstVonLast(parts), jr: "" };
+}
+
+/** "First von Last" (no comma): First is everything before the first particle. */
+function splitFirstVonLast(parts: string[]): { first: string; von: string; last: string } {
+  if (parts.length === 1) return { first: "", von: "", last: parts[0] };
+  let start = -1;
+  for (let k = 1; k < parts.length - 1; k++) {
+    if (isVonToken(parts[k])) { start = k; break; }
+  }
+  if (start < 0) {
+    return { first: parts.slice(0, -1).join(" "), von: "", last: parts[parts.length - 1] };
+  }
+  const { von, last } = splitVonLast(parts.slice(start));
+  return { first: parts.slice(0, start).join(" "), von, last };
+}
+
 /**
  * Split an author list on `and` at brace depth 0 only. A dangling `and` at
  * either end yields an empty name, which callers may filter out.

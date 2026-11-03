@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from "react";
 import { cleanBibTeX } from "@/lib/bibtex";
 import { normalizeDoi } from "@/lib/bib-escape";
+import Link from "@/components/Link";
 import "@/app/tools/bibtex/bibtex.css";
 
 export type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
@@ -606,6 +607,7 @@ export default function BibTexTool({
           Clean your .bib file here, then upload it directly to Overleaf via{" "}
           <em>New Project → Upload Project</em>, or paste it into your Overleaf bibliography file.
           The DOI, arXiv, and PubMed lookups give you correctly-formatted entries in one click.
+          Writing in Word? <Link href="/tools/bibtex-to-apa">Format the file as an APA, MLA or Chicago reference list</Link>.
         </p>
       </div>
     </>

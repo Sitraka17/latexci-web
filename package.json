@@ -60,6 +60,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.8",
     "@xmldom/xmldom": "^0.8.15",
+    "citeproc": "2.4.63",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
