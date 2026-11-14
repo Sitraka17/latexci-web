@@ -8,11 +8,18 @@ import { CATEGORIES } from "@/lib/symbols";
 // generated from static data, so a single honest creation date is correct until
 // that data changes (bump when lib/symbols.ts or lib/templates.ts changes shape).
 const PROGRAMMATIC_LASTMOD = "2026-10-13";
+// Symbol pages without a note: titles and descriptions rewritten (PR #4).
+// Template pages keep PROGRAMMATIC_LASTMOD, the PR does not touch them.
+const SYMBOL_PAGES_LASTMOD = "2026-11-14";
 // Symbol pages with an editorial note (lib/symbol-notes.ts) and the category
 // hubs were last revised on this date; bump it when the notes change.
 // 2026-11-02: six notes retitled, "Home" crumb and item list on the hubs.
+// 2026-11-14: symbol titles and descriptions name the package, variant table
+// on the note pages, rewritten notes (PR #4).
 // Set this (and the "/" entry below) to the merge day if it lands later.
-const NOTES_LASTMOD = "2026-11-02";
+const NOTES_LASTMOD = "2026-11-14";
+// The category hubs were not touched by PR #4 and keep their 2/11 date.
+const HUBS_LASTMOD = "2026-11-02";
 // CV template pages got new titles, descriptions and a guide link on this date.
 const CV_TEMPLATES_LASTMOD = "2026-10-18";
 
@@ -28,7 +35,7 @@ const BASE_URL =
 // Checked against git on 2026-11-02: the 25/10 "See also" lines and the 2/11
 // formatter links changed the visible text of the pages dated accordingly.
 const LAST_MODIFIED: Record<string, string> = {
-  "/": "2026-11-02",
+  "/": "2026-11-14",
   "/academics": "2026-10-18",
   "/tools/preview": "2026-10-25",
   "/tools/table": "2026-10-25",
@@ -36,8 +43,8 @@ const LAST_MODIFIED: Record<string, string> = {
   "/tools/word-to-latex": "2026-10-25",
   "/tools/bibtex": "2026-11-02",
   "/tools/doi-to-bibtex": "2026-11-02",
-  "/tools/arxiv-to-bibtex": "2026-11-02",
-  "/tools/pubmed-to-bibtex": "2026-11-02",
+  "/tools/arxiv-to-bibtex": "2026-11-14",
+  "/tools/pubmed-to-bibtex": "2026-11-14",
   "/tools/isbn-to-bibtex": "2026-11-02",
   "/tools/bibtex-to-apa": "2026-11-02",
   "/tools/bibtex-to-mla": "2026-11-02",
@@ -102,7 +109,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // still render (200) for generateStaticParams but are not submitted here.
   const symbols: MetadataRoute.Sitemap = canonicalSymbolSlugs().map((slug) => ({
     url: `${BASE_URL}/tools/symbols/${slug}`,
-    lastModified: noteFor(symbolBySlug(slug)?.name ?? "") ? NOTES_LASTMOD : PROGRAMMATIC_LASTMOD,
+    lastModified: noteFor(symbolBySlug(slug)?.name ?? "") ? NOTES_LASTMOD : SYMBOL_PAGES_LASTMOD,
     changeFrequency: "yearly",
     priority: 0.5,
   }));
@@ -115,7 +122,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const hubs: MetadataRoute.Sitemap = CATEGORIES.map((c) => ({
     url: `${BASE_URL}${categoryHref(c)}`,
-    lastModified: NOTES_LASTMOD,
+    lastModified: HUBS_LASTMOD,
     changeFrequency: "monthly",
     priority: 0.7,
   }));

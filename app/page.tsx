@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "@/components/Link";
 import katex from "katex";
 import Navbar from "@/components/Navbar";
@@ -15,9 +16,11 @@ const HERO_FORMULA = katex.renderToString(
 );
 
 export const metadata: Metadata = {
-  title: "The Tools Overleaf Forgot: Free LaTeX Utilities",
+  // Position 26 (Search Console, 14 Oct to 10 Nov 2026): the slogan alone named
+  // no tool. The title now says what people search for; the H1 keeps the slogan.
+  title: { absolute: "Free Online LaTeX Tools: BibTeX, Symbols, Preview | latexci" },
   description:
-    "Free LaTeX tools for researchers: BibTeX cleaner, Word to LaTeX, live preview, diff, 28 templates. PDF export and Word import with a one-click Google sign-in.",
+    "Free LaTeX tools for researchers: BibTeX cleaner, Word to LaTeX, live preview, diff, 28 templates. PDF export and Word import with a Google sign-in.",
   keywords: [
     "bibtex cleaner online", "word to latex converter", "latex diff tool",
     "doi to bibtex", "arxiv to bibtex", "latex preview online",
@@ -51,7 +54,7 @@ The Gaussian integral:
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
-const TOOLS: { href: string; label: string; desc: string; access: string }[] = [
+const TOOLS: { href: string; label: string; desc: ReactNode; access: string }[] = [
   { href: "/tools/preview", label: "Live preview and PDF",
     desc: "Paste a .tex file and see it typeset as you type: equations, theorems, tables, references. Export a real PDF.",
     access: "PDF: Google sign-in" },
@@ -59,7 +62,9 @@ const TOOLS: { href: string; label: string; desc: string; access: string }[] = [
     desc: "Turn a .docx into clean LaTeX: headings, lists, booktabs tables, footnotes and Word equations, with a quality report.",
     access: "Google sign-in" },
   { href: "/tools/bibtex", label: "BibTeX tools",
-    desc: "Clean and deduplicate a .bib file; get an entry from a DOI, an arXiv ID, a PubMed ID or an ISBN.",
+    desc: <>Clean and deduplicate a .bib file; get an entry from a <Link href="/tools/doi-to-bibtex">DOI</Link>,
+      an <Link href="/tools/arxiv-to-bibtex">arXiv ID</Link>, a <Link href="/tools/pubmed-to-bibtex">PubMed ID</Link> or
+      an <Link href="/tools/isbn-to-bibtex">ISBN</Link>.</>,
     access: "No account" },
   { href: "/tools/diff", label: "LaTeX diff",
     desc: "Compare two versions of a paper line by line or word by word, and download a patch for git apply.",
@@ -74,7 +79,11 @@ const TOOLS: { href: string; label: string; desc: string; access: string }[] = [
     desc: "28 starting points: PhD thesis, NeurIPS, ICML, ACL, Beamer, CVs, school reports.",
     access: "No account" },
   { href: "/tools/symbols", label: "Symbol search",
-    desc: "Find the command for any of 350+ symbols by name, by command or by pasting the character.",
+    desc: <>Find the command for any of 350+ symbols by name, by command or by pasting the character.
+      Most looked up: the <Link href="/tools/symbols/indicator-function">indicator function</Link>,
+      the <Link href="/tools/symbols/normal-distribution">normal distribution</Link>,{" "}
+      <Link href="/tools/symbols/iff">if and only if</Link>, <Link href="/tools/symbols/delta">delta</Link> and{" "}
+      <Link href="/tools/symbols/hbar-planck">hbar</Link>.</>,
     access: "No account" },
 ];
 
