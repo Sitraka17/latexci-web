@@ -217,29 +217,81 @@ export function confusedWith(sym: SymbolEntry, n = 3): SymbolEntry[] {
 // ── Titles ────────────────────────────────────────────────────────────────
 /** The layout appends " | latexci": titles fit 55 characters before it. */
 export const TITLE_MAX = 55;
+/**
+ * Symbol pages: 50 characters before " | latexci", so the whole <title> stays
+ * within the 60 that Google shows without cutting it.
+ */
+export const SYMBOL_TITLE_MAX = 50;
 
 export function singleGlyph(sym: SymbolEntry): string | null {
   return sym.unicode && [...sym.unicode].length === 1 ? sym.unicode : null;
 }
 
-/** "Delta in LaTeX: \delta (δ)": answer first, glyph last so it reads cleanly. */
+/** The glyph in brackets, unless the command already is that glyph (+, =). */
+function glyphSuffix(sym: SymbolEntry): string {
+  const g = singleGlyph(sym);
+  return g && g !== sym.command ? ` (${g})` : "";
+}
+
+/**
+ * "Nmid in LaTeX: \nmid (∤), needs amssymb". The command alone is what Google
+ * already prints above the results, so the title adds what the page settles:
+ * the package to load, or the other case of a Greek letter.
+ */
 export function symbolPageTitle(sym: SymbolEntry): string {
   // Hand-written for the pages Search Console shows most (lib/symbol-notes.ts).
   const seo = noteFor(sym.name)?.seo;
   if (seo) return seo.title;
-  const g = singleGlyph(sym);
   const name = displayName(sym);
-  const base = `${name} in LaTeX: ${sym.command}${g ? ` (${g})` : ""}`;
-  // Greek letters: name the other case too, the usual reason to open the page.
+  const base = `${name} in LaTeX: ${sym.command}${glyphSuffix(sym)}`;
   const other = caseCounterpart(sym);
+  const pkg = sym.package && sym.package !== "base" ? sym.package : null;
   const candidates = [
     other ? `${base} vs ${other.command} (${other.unicode})` : "",
+    other ? `${name} in LaTeX: ${sym.command} vs ${other.command}` : "",
+    pkg ? `${base}, needs ${pkg}` : "",
+    pkg ? `${name} in LaTeX: ${sym.command}, needs ${pkg}` : "",
     base,
     `${name} in LaTeX: ${sym.command}`,
     `${name} in LaTeX`,
   ];
-  for (const t of candidates) if (t && t.length <= TITLE_MAX) return t;
-  return `${name.slice(0, TITLE_MAX - 9).trim()} in LaTeX`;
+  for (const t of candidates) if (t && t.length <= SYMBOL_TITLE_MAX) return t;
+  return `${name.slice(0, SYMBOL_TITLE_MAX - 9).trim()} in LaTeX`;
+}
+
+/**
+ * Meta description for a symbol page. Google's own snippet often shows the
+ * command already, so this says what only the page gives: the exact preamble
+ * line, the other case of a Greek letter, a one-click copy, the rendered
+ * symbol and the neighbours worth comparing. At most 155 characters.
+ */
+export function symbolPageDescription(sym: SymbolEntry): string {
+  const seo = noteFor(sym.name)?.seo;
+  if (seo) return seo.description;
+  const g = glyphSuffix(sym);
+  const isText = sym.category === "Text Symbols";
+  const pkg = sym.package && sym.package !== "base" ? sym.package : null;
+  const other = caseCounterpart(sym);
+  const n = relatedSymbols(sym).length;
+  const noun = HUBS[sym.category as SymbolCategory]?.noun ?? "symbols";
+  // Sentences are joined by hand: a command such as \perp\!\!\!\perp holds
+  // "!" and would fool a sentence splitter. The first one always stays.
+  const lname = displayName(sym).toLowerCase();
+  // "Type \wedge for wedge (∧)" says the name twice: show the glyph instead.
+  const what = g && sym.command.replace(/^\\/, "").toLowerCase() === lname ? `to print ${singleGlyph(sym)}` : `for ${lname}${g}`;
+  const first =
+    `Type ${sym.command} ${what} ${isText ? "in running text" : "in math mode"}` +
+    (pkg ? `, after \\usepackage{${pkg}} in the preamble.` : `, with no package to load.`);
+  const extras = [
+    other ? `${other.category === "Greek Uppercase" ? "Capital" : "Lowercase"}: ${other.command} (${other.unicode}).` : "",
+    n ? `Copy it in one click, see it rendered and compare ${n} related ${noun}.` : "",
+    "Copy it in one click and see it rendered.",
+  ];
+  let out = first;
+  for (const e of extras) {
+    if (e && !out.includes(e.slice(0, 20)) && (out + " " + e).length <= 155) out += " " + e;
+  }
+  return out;
 }
 
 // ── Category hubs: /tools/symbols/c/[category] ────────────────────────────

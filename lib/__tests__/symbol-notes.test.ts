@@ -60,15 +60,26 @@ describe("search snippets", () => {
 // Pages with the most impressions and almost no clicks (Search Console,
 // 4 to 31 Oct 2026, docs of 2 Nov): rewritten so the full <title>, brand
 // included, fits 60 characters and the description 155.
+// Rewritten again on 14 Nov (Search Console, 14 Oct to 10 Nov: 1 000 to 2 600
+// impressions at positions 5 to 8, CTR 0 to 0.6 %): a title that only repeats
+// the command Google already shows earns no click, so each one now names the
+// choice or the trap the page settles. Every note title fits 60 with the brand.
 describe("rewritten snippets, November 2026", () => {
   const rewritten = ["delta", "iff", "hbar Planck", "normal distribution", "indicator function", "Delta"];
-  it("fit 60 / 155 characters and name the command searched", () => {
+  it("fit 60 / 155 characters and name a command", () => {
     for (const name of rewritten) {
       const seo = SYMBOL_NOTES[name]?.seo;
       expect(seo, name).toBeDefined();
       expect((seo!.title + " | latexci").length, seo!.title).toBeLessThanOrEqual(60);
       expect(seo!.description.length, name).toBeLessThanOrEqual(155);
-      expect(seo!.title, name).toMatch(/\\[a-zA-Z]+/);
+      expect(seo!.title + " " + seo!.description, name).toMatch(/\\[a-zA-Z]+/);
+      expect(seo!.title, name).not.toMatch(/ready to copy/);
+    }
+  });
+  it("keep every note title within 60 characters, brand included", () => {
+    for (const [name, n] of Object.entries(SYMBOL_NOTES)) {
+      if (!n.seo) continue;
+      expect((n.seo.title + " | latexci").length, name).toBeLessThanOrEqual(60);
     }
   });
 });

@@ -8,7 +8,7 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "PubMed to BibTeX: Turn a PMID into a Clean @article",
+  title: "PubMed to BibTeX: PMID to a Clean @article Entry",
   description:
     "Paste a PMID and copy an @article entry: author names split correctly (particles, Jr, group authors), journal, volume, pages. Free, no account.",
   keywords: [

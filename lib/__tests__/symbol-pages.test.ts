@@ -4,6 +4,8 @@ import { TEMPLATES } from "@/lib/templates";
 import {
   CONFUSABLE_GROUPS,
   TITLE_MAX,
+  SYMBOL_TITLE_MAX,
+  symbolPageDescription,
   canonicalSlug,
   canonicalSymbolSlugs,
   caseCounterpart,
@@ -59,10 +61,12 @@ describe("internal links between symbol pages", () => {
 });
 
 describe("titles", () => {
-  it(`fit ${TITLE_MAX} characters before " | latexci" on every symbol page`, () => {
+  it(`fit ${SYMBOL_TITLE_MAX} characters before " | latexci" on every symbol page`, () => {
     for (const s of SYMBOLS) {
       const t = symbolPageTitle(s);
-      expect(t.length, `${s.name}: ${t}`).toBeLessThanOrEqual(TITLE_MAX);
+      expect(t.length, `${s.name}: ${t}`).toBeLessThanOrEqual(SYMBOL_TITLE_MAX);
+      // "+ (+)": the glyph is not repeated when it is the command itself.
+      expect(t, s.name).not.toMatch(/(^|\s)(\S) \(\2\)/);
       // The em dash page names its own subject; nothing else may use one.
       if (s.unicode !== EM_DASH) expect(t, s.name).not.toContain(EM_DASH);
     }
@@ -94,5 +98,19 @@ describe("pages without a note", () => {
       if (plain[i].unicode !== EM_DASH) expect(b, plain[i].name).not.toContain(EM_DASH);
     }
     expect(new Set(blurbs).size).toBe(blurbs.length);
+  });
+});
+
+describe("meta descriptions of symbol pages", () => {
+  it("fit 155 characters, name the command and the package when one is needed", () => {
+    for (const s of SYMBOLS) {
+      const d = symbolPageDescription(s);
+      expect(d.length, `${s.name}: ${d}`).toBeLessThanOrEqual(155);
+      if (s.unicode !== EM_DASH) expect(d, s.name).not.toContain(EM_DASH);
+      if (noteFor(s.name)?.seo) continue;
+      expect(d, s.name).toContain(s.command);
+      if (s.package && s.package !== "base") expect(d, s.name).toContain(`\\usepackage{${s.package}}`);
+      else expect(d, s.name).toContain("no package");
+    }
   });
 });

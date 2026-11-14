@@ -900,6 +900,20 @@ footer {
 }
 .note-table tbody tr:last-child td { border-bottom: 1.5px solid var(--fg-muted); }
 .note-table td:first-child { white-space: nowrap; }
+.note-render { margin-top: 0.35rem; color: var(--fg); font-size: 1.05rem; line-height: 1.4; }
+.note-norender { color: var(--fg-muted); font-size: 0.75rem; font-style: italic; }
+/* Phones: one block per variant (command, rendering, package, use) instead of
+   three squeezed columns. */
+@media (max-width: 600px) {
+  .note-table thead { display: none; }
+  .note-table, .note-table tbody, .note-table tr, .note-table td { display: block; width: 100%; box-sizing: border-box; }
+  .note-table tr { border-bottom: 1px solid var(--border); padding: 0.55rem 0; }
+  .note-table tbody tr:first-child { border-top: 1.5px solid var(--fg-muted); }
+  .note-table tbody tr:last-child { border-bottom: 1.5px solid var(--fg-muted); }
+  .note-table td, .note-table tbody tr:last-child td { border: 0; padding: 0.15rem 0; }
+  .note-table td:first-child { white-space: normal; }
+  .note-table td[data-label]::before { content: attr(data-label) ": "; color: var(--fg); font-weight: 600; }
+}
 .note-reco {
   display: inline-block; margin-left: 0.4rem; font-size: 0.68rem; font-weight: 600;
   color: var(--accent2); text-transform: uppercase; letter-spacing: 0.05em;

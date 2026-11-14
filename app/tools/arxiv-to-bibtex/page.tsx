@@ -8,7 +8,7 @@ import Faq from "@/components/Faq";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "arXiv to BibTeX: Paste an ID or URL, Copy the Entry",
+  title: "arXiv to BibTeX: Paste an ID or URL, Get the Entry",
   description:
     "Paste 2301.07041 or an arxiv.org link and copy a BibTeX entry with the full author list, year, eprint and archivePrefix, built from the arXiv API. Free.",
   keywords: [

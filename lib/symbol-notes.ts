@@ -50,8 +50,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "normal distribution": {
     seo: {
-      title: "Normal distribution in LaTeX: X \\sim \\mathcal{N}",
-      description: "Write X \\sim \\mathcal{N}(\\mu, \\sigma^2) with a calligraphic N, not \\mathbb{N}. Standard, univariate and multivariate forms, compiled and ready to copy.",
+      title: "Normal distribution in LaTeX, 1D and multivariate",
+      description: "X \\sim \\mathcal{N}(\\mu, \\sigma^2) takes a calligraphic N, not \\mathbb{N}. Univariate and multivariate forms (\\boldsymbol from amsmath), compiled.",
     },
     variants: [
       { code: "\\mathcal{N}(\\mu, \\sigma^2)", pkg: "", use: "The standard notation for a Gaussian with mean and variance." },
@@ -77,7 +77,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "converges in probability": {
     seo: {
-      title: "Convergence in probability in LaTeX: \\xrightarrow{p}",
+      title: "Convergence in probability LaTeX: \\xrightarrow{p}",
       description: "Arrow with a p above it: \\xrightarrow{p} (amsmath), plus \\overset and \\stackrel variants, and the arrows for convergence in distribution and almost surely.",
     },
     variants: [
@@ -91,7 +91,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "equal": {
     seo: {
-      title: "Equals signs in LaTeX: =, \\neq, \\approx, \\equiv, :=",
+      title: "Equal signs in LaTeX: \\neq, \\approx, \\equiv, :=",
       description: "Typing := leaves the colon too low: use \\coloneqq. Not equal, approximately equal, equivalent and equal by definition, each with the package it needs.",
     },
     variants: [
@@ -119,7 +119,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "cong": {
     seo: {
-      title: "Congruent in LaTeX: \\cong, \\simeq, \\approxeq, \\equiv",
+      title: "Congruent in LaTeX: \\cong, \\simeq or \\equiv?",
       description: "Which symbol for congruent, isomorphic or equivalent: \\cong, \\simeq, \\approxeq (amssymb) and \\equiv side by side, rendered and ready to copy.",
     },
     variants: [
@@ -132,7 +132,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "argmax": {
     seo: {
-      title: "argmax in LaTeX: put the subscript under both words",
+      title: "argmax in LaTeX: the subscript under both words",
       description: "\\arg\\max puts the subscript under max only. \\operatorname*{argmax} or \\DeclareMathOperator* centres it under the whole operator in display math.",
     },
     variants: [
@@ -144,8 +144,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "iff": {
     seo: {
-      title: "If and only if in LaTeX: \\iff, ready to copy",
-      description: "Type \\iff for if and only if, no package needed. Copy it in one click and see when \\Leftrightarrow or \\Longleftrightarrow fits better, each compiled.",
+      title: "If and only if in LaTeX: \\iff or \\Leftrightarrow?",
+      description: "\\iff needs no package and adds a thick space on each side, unlike \\Longleftrightarrow; \\Leftrightarrow is the short arrow. Each compiled, one-click copy.",
     },
     variants: [
       { code: "\\iff", pkg: "", use: "\"If and only if\": a long double arrow with extra space on both sides. Built into LaTeX." },
@@ -158,8 +158,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "hbar Planck": {
     seo: {
-      title: "hbar in LaTeX: \\hbar and \\hslash, ready to copy",
-      description: "Type \\hbar for the reduced Planck constant, no package needed; \\hslash (amssymb) gives a slanted stroke. Why \\bar{h} looks wrong, and a copyable example.",
+      title: "hbar in LaTeX: \\hbar vs \\hslash, not \\bar{h}",
+      description: "\\hbar needs no package; \\hslash (amssymb) has a slanted stroke. \\bar{h} puts the bar above the h, not across its stem. E = \\hbar \\omega, ready to copy.",
     },
     variants: [
       { code: "\\hbar", pkg: "", use: "Reduced Planck constant, h divided by 2 pi." },
@@ -171,8 +171,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "delta": {
     seo: {
-      title: "Delta in LaTeX: \\delta and \\Delta, ready to copy",
-      description: "Lowercase delta is \\delta, capital delta is \\Delta: copy either in one click. Also \\partial, the Kronecker and Dirac deltas and \\updelta, each compiled.",
+      title: "Delta in LaTeX: \\delta, \\Delta or \\partial?",
+      description: "Seven forms: \\delta, \\Delta, the curly \\partial, Kronecker \\delta_{ij}, Dirac \\delta(x), upright \\updelta (upgreek). Each compiled, one-click copy.",
     },
     variants: [
       { code: "\\delta", pkg: "", use: "Lowercase: small variations, a radius in epsilon-delta proofs." },
@@ -189,8 +189,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "lambda": {
     seo: {
-      title: "Lambda in LaTeX: \\lambda, \\Lambda and a bold lambda",
-      description: "\\mathbf{\\lambda} stays thin, because \\mathbf skips Greek letters. Use \\boldsymbol{\\lambda}; plus capital \\Lambda and upright \\uplambda.",
+      title: "Lambda in LaTeX: \\lambda, \\Lambda, bold lambda",
+      description: "\\mathbf{\\lambda} stays thin, because \\mathbf skips Greek letters. Use \\boldsymbol{\\lambda} (amsmath); plus capital \\Lambda and upright \\uplambda (upgreek).",
     },
     variants: [
       { code: "\\lambda", pkg: "", use: "Lowercase: eigenvalues, wavelength, rates." },
@@ -255,7 +255,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "forall": {
     seo: {
-      title: "For all in LaTeX: \\forall, \\exists, \\exists!, \\nexists",
+      title: "For all in LaTeX: \\forall, \\exists, \\nexists",
       description: "The quantifiers in one place: \\forall, \\exists, unique existence \\exists! and \\nexists (amssymb), rendered and ready to copy.",
     },
     variants: [
@@ -295,7 +295,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "mathcal D": {
     seo: {
-      title: "Calligraphic D in LaTeX: \\mathcal, \\mathscr, \\mathfrak",
+      title: "Calligraphic D in LaTeX: \\mathcal{D}, \\mathscr{D}",
       description: "Four fancy D letters and the package each needs: \\mathcal{D}, \\mathscr{D} (mathrsfs), \\mathfrak{D} and \\mathbb{D}. Capitals only for \\mathcal.",
     },
     variants: [
@@ -358,8 +358,8 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   // ── Added 2026-10-16: the next most-searched symbols ─────────────────────
   "Delta": {
     seo: {
-      title: "Capital Delta in LaTeX: \\Delta, ready to copy",
-      description: "Type \\Delta for capital delta, no package needed, and copy it in one click. \\varDelta (amsmath) gives the italic form; \\nabla^2 is the other Laplacian.",
+      title: "Capital Delta in LaTeX: \\Delta, not \\triangle",
+      description: "\\Delta needs no package; \\varDelta (amsmath) is the italic form and \\triangle a geometric shape, not the letter. For the Laplacian: \\Delta f or \\nabla^2 f.",
     },
     variants: [
       { code: "\\Delta", pkg: "", use: "Upright capital delta: a difference, the discriminant, the Laplacian." },
@@ -653,7 +653,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "rightarrow": {
     seo: {
-      title: "Right arrow in LaTeX: \\rightarrow, \\to, \\Rightarrow",
+      title: "Right arrow LaTeX: \\rightarrow, \\to, \\Rightarrow",
       description: "\\rightarrow and \\to are the same arrow; \\Rightarrow is the double arrow for implication. Longer and labelled arrows too, each one compiled.",
     },
     variants: [
@@ -751,7 +751,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "probability E": {
     seo: {
-      title: "Expected value in LaTeX: \\mathbb{E} or \\operatorname",
+      title: "Expectation in LaTeX: \\mathbb{E} or \\operatorname",
       description: "A plain E[X] is set as an italic variable. \\mathbb{E} (amssymb), an upright \\operatorname{E}, a subscripted expectation and a one-line macro, compiled.",
     },
     variants: [
@@ -808,7 +808,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   },
   "mathcal L": {
     seo: {
-      title: "Calligraphic L in LaTeX: \\mathcal{L} and \\mathscr{L}",
+      title: "Calligraphic L in LaTeX: \\mathcal{L}, \\mathscr{L}",
       description: "\\mathcal{L} for a Lagrangian, a loss or the Laplace transform; \\mathscr{L} (mathrsfs) for a script L; \\ell for a lowercase script l. Compiled.",
     },
     variants: [
