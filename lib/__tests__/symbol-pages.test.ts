@@ -17,6 +17,7 @@ import {
   symbolBlurb,
   symbolBySlug,
   symbolPageTitle,
+  displayName,
 } from "@/lib/seo-pages";
 import { noteFor } from "@/lib/symbol-notes";
 
@@ -111,6 +112,25 @@ describe("meta descriptions of symbol pages", () => {
       expect(d, s.name).toContain(s.command);
       if (s.package && s.package !== "base") expect(d, s.name).toContain(`\\usepackage{${s.package}}`);
       else expect(d, s.name).toContain("no package");
+    }
+  });
+
+  it("keep the case of the letter or acronym they name", () => {
+    // "calligraphic h" would name a letter \mathcal cannot even draw.
+    for (const s of SYMBOLS) {
+      if (noteFor(s.name)?.seo) continue;
+      const d = symbolPageDescription(s);
+      expect(d, s.name).not.toMatch(/\b(calligraphic|blackboard bold|script|complexity|probability|big) [a-z]\b/);
+      for (const w of displayName(s).split(" ").slice(1)) {
+        if (/^[A-Z]+$/.test(w)) expect(d, s.name).toContain(w);
+      }
+    }
+  });
+
+  it("show no placeholder letter or fraction slash as the glyph", () => {
+    for (const s of SYMBOLS) {
+      const text = symbolPageTitle(s) + " " + symbolPageDescription(s);
+      expect(text, s.name).not.toMatch(/ \([A-Za-z0-9\u2044]\)/);
     }
   });
 });

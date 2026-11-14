@@ -190,7 +190,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
   "lambda": {
     seo: {
       title: "Lambda in LaTeX: \\lambda, \\Lambda, bold lambda",
-      description: "\\mathbf{\\lambda} stays thin, because \\mathbf skips Greek letters. Use \\boldsymbol{\\lambda} (amsmath); plus capital \\Lambda and upright \\uplambda (upgreek).",
+      description: "\\mathbf{\\lambda} stays thin: \\mathbf skips lowercase Greek. Use \\boldsymbol{\\lambda} (amsmath); plus capital \\Lambda and upright \\uplambda (upgreek).",
     },
     variants: [
       { code: "\\lambda", pkg: "", use: "Lowercase: eigenvalues, wavelength, rates." },
@@ -198,7 +198,7 @@ export const SYMBOL_NOTES: Record<string, SymbolNote> = {
       { code: "\\boldsymbol{\\lambda}", pkg: "amsmath", use: "Bold, for a vector of parameters." },
       { code: "\\uplambda", pkg: "upgreek", use: "Upright lambda, as ISO style asks for constants." },
     ],
-    pitfall: "\\mathbf{\\lambda} stays thin: \\mathbf only changes Latin letters and digits. Use \\boldsymbol (amsmath) or \\bm (bm).",
+    pitfall: "\\mathbf{\\lambda} stays thin: \\mathbf only changes Latin letters, digits and capital Greek letters. Use \\boldsymbol (amsmath) or \\bm (bm).",
     example: { code: "A v = \\lambda v", pkg: "" },
   },
   "sigma": {

@@ -285,7 +285,7 @@ export default async function SymbolPage({ params }: Props) {
                             <div className="note-render">{variantHtml[i]
                               ? <span dangerouslySetInnerHTML={{ __html: variantHtml[i]! }} />
                               : <span className="note-norender" title={v.preamble ? "A definition: it draws nothing by itself" : "KaTeX cannot draw this one; it compiles with the package shown"}>
-                                  {v.preamble ? "preamble line" : "pdfLaTeX only"}</span>}</div>
+                                  {v.preamble ? "preamble line" : "no browser preview"}</span>}</div>
                           </td>
 
                           <td data-label="Package">{v.pkg ? <code style={codeStyle}>{v.pkg}</code> : "none"}{v.preamble ? " (preamble)" : ""}</td>
@@ -298,7 +298,7 @@ export default async function SymbolPage({ params }: Props) {
                 <figcaption className="note-caption">
                   {`Table 1. Ways to write ${sym.name} in LaTeX.`} Every line was compiled with pdfLaTeX
                   (TeX Live 2026) loading only the package shown; each rendering is drawn in your
-                  browser by KaTeX, and &ldquo;pdfLaTeX only&rdquo; marks a command KaTeX cannot draw.
+                  browser by KaTeX, and &ldquo;no browser preview&rdquo; marks a command KaTeX cannot draw, though it compiles.
                 </figcaption>
               </figure>
               {note.pitfall && (

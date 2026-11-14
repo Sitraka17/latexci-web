@@ -227,10 +227,15 @@ export function singleGlyph(sym: SymbolEntry): string | null {
   return sym.unicode && [...sym.unicode].length === 1 ? sym.unicode : null;
 }
 
-/** The glyph in brackets, unless the command already is that glyph (+, =). */
+/**
+ * The glyph in brackets, unless the command already is that glyph (+, =), or
+ * the "glyph" is only a placeholder letter (\overbrace{x}^{n} gives "x") or
+ * the fraction slash U+2044 standing in for \frac, which would mislead.
+ */
 function glyphSuffix(sym: SymbolEntry): string {
   const g = singleGlyph(sym);
-  return g && g !== sym.command ? ` (${g})` : "";
+  if (!g || g === sym.command || /^[A-Za-z0-9]$/.test(g) || g === "\u2044") return "";
+  return ` (${g})`;
 }
 
 /**
@@ -276,9 +281,16 @@ export function symbolPageDescription(sym: SymbolEntry): string {
   const noun = HUBS[sym.category as SymbolCategory]?.noun ?? "symbols";
   // Sentences are joined by hand: a command such as \perp\!\!\!\perp holds
   // "!" and would fool a sentence splitter. The first one always stays.
-  const lname = displayName(sym).toLowerCase();
+  // Title case goes, but a letter or an acronym keeps its case ("calligraphic
+  // H", "big O", "XOR"), and so does a capital the data itself writes ("big
+  // Omega", "covariance Cov").
+  const own = new Set(sym.name.split(" "));
+  const lname = displayName(sym)
+    .split(" ")
+    .map((w) => (/^[A-Z][a-z-]+$/.test(w) && !own.has(w) ? w.toLowerCase() : w))
+    .join(" ");
   // "Type \wedge for wedge (∧)" says the name twice: show the glyph instead.
-  const what = g && sym.command.replace(/^\\/, "").toLowerCase() === lname ? `to print ${singleGlyph(sym)}` : `for ${lname}${g}`;
+  const what = g && sym.command.replace(/^\\/, "").toLowerCase() === lname.toLowerCase() ? `to print ${singleGlyph(sym)}` : `for ${lname}${g}`;
   const first =
     `Type ${sym.command} ${what} ${isText ? "in running text" : "in math mode"}` +
     (pkg ? `, after \\usepackage{${pkg}} in the preamble.` : `, with no package to load.`);
