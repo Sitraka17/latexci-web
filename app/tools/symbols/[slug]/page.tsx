@@ -10,7 +10,6 @@ import FavouriteButton from "@/components/FavouriteButton";
 import { breadcrumbSchema } from "@/lib/breadcrumbs";
 import { CATEGORIES, type SymbolEntry, type SymbolCategory } from "@/lib/symbols";
 import { noteFor } from "@/lib/symbol-notes";
-import { clampDescription } from "@/lib/snippet";
 import {
   allSymbolSlugs,
   symbolBySlug,
@@ -23,6 +22,7 @@ import {
   categoryHref,
   symbolBlurb,
   symbolPageTitle,
+  symbolPageDescription,
   previewHref,
   hubInfo,
 } from "@/lib/seo-pages";
@@ -88,21 +88,7 @@ function glyphOf(sym: SymbolEntry): string | null {
 
 const pageTitle = symbolPageTitle;
 
-function describe(sym: SymbolEntry): string {
-  const seo = noteFor(sym.name)?.seo;
-  if (seo) return seo.description;
-  const where = sym.package === "base" ? "no package needed" : `package ${sym.package}`;
-  const note = noteFor(sym.name);
-  const alts = note ? note.variants.slice(1).map((v) => v.code).join(", ") : "";
-  const other = caseCounterpart(sym);
-  const g = glyphOf(sym);
-  return clampDescription(
-    `Type ${sym.command} for ${displayName(sym).toLowerCase()}${g ? ` (${g})` : ""} in LaTeX, ${where}.` +
-    (other ? ` ${other.category === "Greek Uppercase" ? "Capital" : "Lowercase"} form: ${other.command} (${other.unicode}).` : "") +
-    (alts ? ` Alternatives that compile: ${alts}.` : "") +
-    ` Copy it, see it rendered and browse related symbols. Free, no signup.`,
-  );
-}
+const describe = symbolPageDescription;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -118,7 +104,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: { canonical: canonPath },
     openGraph: {
       title: pageTitle(sym),
-      description: noteFor(sym.name)?.seo?.description ?? `LaTeX code for ${sym.name} (${sym.unicode}): ${sym.command}.`,
+      description: describe(sym),
       url: canonPath,
       type: "website",
     },
@@ -152,6 +138,11 @@ export default async function SymbolPage({ params }: Props) {
     : (EXAMPLE[sym.category]?.(displayTex(sym)) ?? null);
   const exampleHtml = exampleRender ? renderMath(exampleRender, true) : null;
   const related = relatedSymbols(sym);
+  // Rendered column of the variants table. Preamble lines draw nothing; a
+  // command KaTeX lacks (\mathds, \updelta, \qty...) gets no fake glyph.
+  const variantHtml = (note?.variants ?? []).map((v) =>
+    v.preamble ? null : renderMath(v.text ? `\\text{${v.code}}` : v.code),
+  );
   const pkg = pkgNote(sym.package);
   // Some "unicode" fields are words (e.g. operators like "argmax"), not a glyph.
   // Only treat a genuine single code point as a Unicode glyph worth showing.
@@ -291,8 +282,13 @@ export default async function SymbolPage({ params }: Props) {
                             <code style={codeStyle}>{v.code}</code>{" "}
                             <CopyButton text={v.code} label="Copy" />
                             {i === 0 && <span className="note-reco">recommended</span>}
+                            <div className="note-render">{variantHtml[i]
+                              ? <span dangerouslySetInnerHTML={{ __html: variantHtml[i]! }} />
+                              : <span className="note-norender" title={v.preamble ? "A definition: it draws nothing by itself" : "KaTeX cannot draw this one; it compiles with the package shown"}>
+                                  {v.preamble ? "preamble line" : "no browser preview"}</span>}</div>
                           </td>
-                          <td>{v.pkg ? <code style={codeStyle}>{v.pkg}</code> : "none"}{v.preamble ? " (preamble)" : ""}</td>
+
+                          <td data-label="Package">{v.pkg ? <code style={codeStyle}>{v.pkg}</code> : "none"}{v.preamble ? " (preamble)" : ""}</td>
                           <td>{v.use}</td>
                         </tr>
                       ))}
@@ -300,8 +296,9 @@ export default async function SymbolPage({ params }: Props) {
                   </table>
                 </div>
                 <figcaption className="note-caption">
-                  Table 1. Ways to write {sym.name} in LaTeX. Every line was compiled with pdfLaTeX
-                  (TeX Live 2026) loading only the package shown.
+                  {`Table 1. Ways to write ${sym.name} in LaTeX.`} Every line was compiled with pdfLaTeX
+                  (TeX Live 2026) loading only the package shown; each rendering is drawn in your
+                  browser by KaTeX, and &ldquo;no browser preview&rdquo; marks a command KaTeX cannot draw, though it compiles.
                 </figcaption>
               </figure>
               {note.pitfall && (
