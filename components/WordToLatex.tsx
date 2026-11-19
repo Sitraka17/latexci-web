@@ -212,8 +212,8 @@ export default function WordToLatex() {
               </p>
             )
           )}
-          <div {...getRootProps()} className={`tool-frame w2l-drop${isDragActive ? " is-active" : ""}${done ? " is-compact" : ""}`}>
-            <input {...getInputProps()} />
+          <div {...getRootProps({ role: "button", "aria-label": "Choose a .docx file, or drop it here" })} className={`tool-frame w2l-drop${isDragActive ? " is-active" : ""}${done ? " is-compact" : ""}`}>
+            <input {...getInputProps({ "aria-label": "Word file (.docx)" })} />
             <svg width="34" height="42" viewBox="0 0 34 42" aria-hidden="true" className="w2l-icon">
               <path d="M2 1h20l10 10v30H2z" fill="none" stroke="currentColor" strokeWidth="1.4" />
               <path d="M22 1v10h10M8 20h18M8 26h18M8 32h12" fill="none" stroke="currentColor" strokeWidth="1.2" />

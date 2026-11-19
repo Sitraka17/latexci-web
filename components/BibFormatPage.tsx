@@ -14,15 +14,19 @@ export const FORMAT_PAGES = [
   { href: "/tools/bibtex-to-apa", label: "BibTeX to APA" },
   { href: "/tools/bibtex-to-mla", label: "BibTeX to MLA" },
   { href: "/tools/bibtex-to-chicago", label: "BibTeX to Chicago" },
+  { href: "/tools/bibtex-to-ieee", label: "BibTeX to IEEE" },
+  { href: "/tools/bibtex-to-harvard", label: "BibTeX to Harvard" },
+  { href: "/tools/doi-to-apa", label: "DOI to APA" },
 ];
 
 /**
- * Shell of the three formatter pages: structured data, the tool (with the
+ * Shell of the formatter pages: structured data, the tool (with the
  * sample list formatted at build time, so it shows before any script runs),
  * the page's own article, the credits and the questions.
  */
 export default async function BibFormatPage({
   style, path, name, heading, tagline, description, faqs, children,
+  sample = SAMPLE_BIB, lookupFirst = false,
 }: {
   style: StyleId;
   path: string;
@@ -33,8 +37,12 @@ export default async function BibFormatPage({
   description: string;
   faqs: { q: string; a: string }[];
   children: ReactNode;
+  /** .bib text shown on load (empty on the DOI to APA page). */
+  sample?: string;
+  /** Put the identifier lookup first (DOI to APA). */
+  lookupFirst?: boolean;
 }) {
-  const initial = await nodeFormatter().format(SAMPLE_BIB, style);
+  const initial = await nodeFormatter().format(sample, style);
   const appSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -60,7 +68,7 @@ export default async function BibFormatPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <Navbar />
       <main style={{ flex: 1 }}>
-        <BibFormatTool defaultStyle={style} sample={SAMPLE_BIB} initial={initial} heading={heading} tagline={tagline} />
+        <BibFormatTool defaultStyle={style} sample={sample} initial={initial} heading={heading} tagline={tagline} lookupFirst={lookupFirst} />
 
         <section className="paper bib-paper" aria-label={`About the ${name} converter`}>
           {children}

@@ -1,0 +1,21 @@
+# Cloudflare Workers static assets (OpenNext copies public/ into the assets
+# directory). Hashed Next.js chunks and the versioned citeproc file never
+# change, so browsers may keep them for a year. The CSL styles are served as
+# XML so Cloudflare compresses them (application/vnd.citationstyles.style+xml
+# is not on its list of compressible types).
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+/vendor/citeproc/*
+  Cache-Control: public, max-age=31536000, immutable
+/csl/apa.csl
+  Content-Type: application/xml; charset=utf-8
+/csl/modern-language-association.csl
+  Content-Type: application/xml; charset=utf-8
+/csl/chicago-author-date.csl
+  Content-Type: application/xml; charset=utf-8
+/csl/chicago-notes-bibliography.csl
+  Content-Type: application/xml; charset=utf-8
+/csl/ieee.csl
+  Content-Type: application/xml; charset=utf-8
+/csl/harvard-cite-them-right.csl
+  Content-Type: application/xml; charset=utf-8

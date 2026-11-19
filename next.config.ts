@@ -73,6 +73,13 @@ const nextConfig: NextConfig = {
         has: [{ type: "host", value: ".*\\.workers\\.dev" }],
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
+      // The former Vercel deployment (latexci-web.vercel.app) still builds
+      // from main: same rule, so only latexci.com is indexed.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: ".*\\.vercel\\.app" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
     ];
   },
 };

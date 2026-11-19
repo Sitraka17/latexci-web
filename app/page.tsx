@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   // no tool. The title now says what people search for; the H1 keeps the slogan.
   title: { absolute: "Free Online LaTeX Tools: BibTeX, Symbols, Preview | latexci" },
   description:
-    "Free LaTeX tools for researchers: BibTeX cleaner, Word to LaTeX, live preview, diff, 28 templates. PDF export and Word import with a Google sign-in.",
+    "Free LaTeX tools for researchers: BibTeX cleaner, BibTeX to APA, Word to LaTeX, live preview, diff, 28 templates. PDF export with a Google sign-in.",
   keywords: [
     "bibtex cleaner online", "word to latex converter", "latex diff tool",
     "doi to bibtex", "arxiv to bibtex", "latex preview online",
@@ -64,7 +64,10 @@ const TOOLS: { href: string; label: string; desc: ReactNode; access: string }[] 
   { href: "/tools/bibtex", label: "BibTeX tools",
     desc: <>Clean and deduplicate a .bib file; get an entry from a <Link href="/tools/doi-to-bibtex">DOI</Link>,
       an <Link href="/tools/arxiv-to-bibtex">arXiv ID</Link>, a <Link href="/tools/pubmed-to-bibtex">PubMed ID</Link> or
-      an <Link href="/tools/isbn-to-bibtex">ISBN</Link>.</>,
+      an <Link href="/tools/isbn-to-bibtex">ISBN</Link>; turn it into an{" "}
+      <Link href="/tools/bibtex-to-apa">APA</Link>, <Link href="/tools/bibtex-to-mla">MLA</Link>,{" "}
+      <Link href="/tools/bibtex-to-chicago">Chicago</Link> or <Link href="/tools/bibtex-to-ieee">IEEE</Link>{" "}
+      reference list for Word.</>,
     access: "No account" },
   { href: "/tools/diff", label: "LaTeX diff",
     desc: "Compare two versions of a paper line by line or word by word, and download a patch for git apply.",

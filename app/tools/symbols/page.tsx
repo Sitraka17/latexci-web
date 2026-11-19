@@ -12,7 +12,7 @@ import { symbolsByCategory, symbolSlug, canonicalSlug, displayName, categoryHref
 export const metadata: Metadata = {
   title: "LaTeX Symbol Search: 350+ Symbols with Live Preview",
   description:
-    "Search 350+ LaTeX symbols by name, command, or Unicode: Greek, operators, arrows, logic, physics, stats. One-click copy with live KaTeX preview. Faster than Detexify.",
+    "Search 350+ LaTeX symbols by name, command or Unicode: Greek, operators, arrows, logic, physics. One-click copy with a live KaTeX preview.",
   keywords: [
     "latex symbols",
     "latex symbol search",

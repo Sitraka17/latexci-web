@@ -27,7 +27,7 @@ export default async function BibFormatExamples({ style, table }: { style: Style
                 <td>
                   {r.entries.map((e) => (
                     <div key={e.id} className={r.layout.hangingIndent ? "fmt-ref" : undefined}>
-                      {e.label ? `${e.label} ` : ""}
+                      {/* Each row is formatted alone, so a numbered style would label every row [1]. */}
                       <span dangerouslySetInnerHTML={{ __html: e.html }} />
                     </div>
                   ))}

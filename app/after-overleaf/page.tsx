@@ -50,7 +50,7 @@ const TOOLS = [
   {
     href: "/tools/bibtex",
     title: "BibTeX tools",
-    desc: "Clean messy .bib files, look up DOIs, and fetch arXiv citations. Replaces the Mendeley and Zotero sync you just lost.",
+    desc: "Clean messy .bib files, look up DOIs, fetch arXiv citations, and format the list in APA, MLA or Chicago for Word. Replaces the Mendeley and Zotero sync you just lost.",
     role: "Replaces Overleaf sync",
     access: "No account",
   },
