@@ -13,7 +13,7 @@ import "./word.css";
 export const metadata: Metadata = {
   title: "Word to LaTeX Converter: .docx to .tex in Your Browser",
   description:
-    "Convert Word .docx to LaTeX in your browser: headings, lists, booktabs tables, figures and Word equations, with a quality report. Free, first file with no account.",
+    "Convert Word .docx to LaTeX in your browser: headings, lists, booktabs tables and Word equations, with a quality report. First file free, no account.",
   keywords: [
     "word to latex converter", "docx to latex", "convert word to latex", "word to tex",
     "docx to tex converter", "word equations to latex", "omml to latex",

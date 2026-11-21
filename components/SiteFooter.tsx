@@ -12,6 +12,12 @@ const TOOLS = [
   { label: "arXiv → BibTeX", href: "/tools/arxiv-to-bibtex" },
   { label: "PubMed → BibTeX",href: "/tools/pubmed-to-bibtex" },
   { label: "ISBN → BibTeX",  href: "/tools/isbn-to-bibtex" },
+  { label: "BibTeX → APA",   href: "/tools/bibtex-to-apa" },
+  { label: "BibTeX → MLA",   href: "/tools/bibtex-to-mla" },
+  { label: "BibTeX → Chicago", href: "/tools/bibtex-to-chicago" },
+  { label: "BibTeX → IEEE",  href: "/tools/bibtex-to-ieee" },
+  { label: "BibTeX → Harvard", href: "/tools/bibtex-to-harvard" },
+  { label: "DOI → APA",      href: "/tools/doi-to-apa" },
   { label: "LaTeX Diff",     href: "/tools/diff" },
   { label: "Word → LaTeX",   href: "/tools/word-to-latex" },
   { label: "Symbol Search",  href: "/tools/symbols" },
@@ -23,6 +29,9 @@ const TOOLS = [
 const LEARN = [
   { label: "Academics hub",  href: "/academics" },
   { label: "Life after Overleaf", href: "/after-overleaf" },
+  { label: "ATS-friendly LaTeX resume", href: "/latex-resume-ats" },
+  { label: "ORCID to LaTeX CV", href: "/orcid-to-latex-cv" },
+  { label: "CV en LaTeX (FR)", href: "/cv-latex" },
   { label: "Free",           href: "/pricing" },
   { label: "GitHub",         href: "https://github.com/Sitraka17/latexci-web", external: true },
 ];

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { STYLES, styleById, type StyleId } from "@/lib/csl-styles";
 import { toHtmlDocument, toPlainText, toRichHtml, type FormatResult } from "@/lib/bib-output";
 import type { BibFormatter } from "@/lib/bib-format";
+import { identifierLookup, readHandoff } from "@/lib/bib-handoff";
 import "@/app/tools/bibtex/bibtex.css";
 
 // The formatter, citeproc-js (about 190 kB gzipped, served unminified from
@@ -19,9 +20,19 @@ function getFormatter(): Promise<BibFormatter> {
   formatterPromise ??= Promise.all([import("@/lib/bib-format"), import("@/lib/citeproc-load")]).then(
     ([{ BibFormatter }, { evalCiteproc, CITEPROC_FILE }]) => {
       let csl: Promise<ReturnType<typeof evalCiteproc>> | null = null;
+      // Style and locale files are fetched once each, whatever the number of style changes.
+      const files = new Map<string, Promise<string>>();
       return new BibFormatter({
         citeproc: () => (csl ??= fetchText(`/vendor/citeproc/${CITEPROC_FILE}`).then(evalCiteproc)),
-        file: (name) => fetchText(`/csl/${name}`),
+        file: (name) => {
+          let p = files.get(name);
+          if (!p) {
+            p = fetchText(`/csl/${name}`);
+            files.set(name, p);
+            p.catch(() => files.delete(name));
+          }
+          return p;
+        },
       });
     },
   );
@@ -55,6 +66,9 @@ async function copyPlain(text: string): Promise<boolean> {
   try { await navigator.clipboard.writeText(text); return true; } catch { return copyRich("", text); }
 }
 
+/** The last .bib text typed in the formatter, kept in this browser only. */
+const DRAFT_KEY = "latexci_bibformat";
+
 function download(name: string, type: string, body: string) {
   const url = URL.createObjectURL(new Blob([body], { type }));
   const a = Object.assign(document.createElement("a"), { href: url, download: name });
@@ -70,6 +84,7 @@ export default function BibFormatTool({
   initial,
   heading,
   tagline,
+  lookupFirst = false,
 }: {
   defaultStyle: StyleId;
   /** .bib text shown on load. */
@@ -78,6 +93,8 @@ export default function BibFormatTool({
   initial: FormatResult;
   heading: string;
   tagline: string;
+  /** Page built around an identifier (DOI to APA): the lookup field comes first and has focus. */
+  lookupFirst?: boolean;
 }) {
   const uid = useId();
   const [input, setInput] = useState(sample);
@@ -87,7 +104,10 @@ export default function BibFormatTool({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [ident, setIdent] = useState("");
+  const [looking, setLooking] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const identRef = useRef<HTMLInputElement>(null);
   const firstRun = useRef(true);
   const runId = useRef(0);
 
@@ -118,6 +138,31 @@ export default function BibFormatTool({
     return () => clearTimeout(t);
   }, [input, styleId, sentenceCase, run]);
 
+  // Entries handed over by a converter (#bib=...) win over the saved draft.
+  useEffect(() => {
+    let src = readHandoff(window.location.hash);
+    if (src) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    } else {
+      try { src = localStorage.getItem(DRAFT_KEY); } catch { src = null; }
+    }
+    // Browser-only state (URL fragment, local storage): read after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (src && src !== sample) setInput(src);
+    if (lookupFirst) identRef.current?.focus();
+  }, [sample, lookupFirst]);
+
+  // Keep what the user typed, so a reload or a later visit starts from it.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        if (input === sample) localStorage.removeItem(DRAFT_KEY);
+        else localStorage.setItem(DRAFT_KEY, input);
+      } catch { /* private mode: nothing kept */ }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [input, sample]);
+
   // Load the formatter once the page is idle, so the first change is quick.
   useEffect(() => {
     const t = setTimeout(() => { getFormatter().then((f) => f.prepare(defaultStyle)).catch(() => {}); }, 1200);
@@ -133,6 +178,32 @@ export default function BibFormatTool({
   const shown = result.style === styleId ? result : null;
   const fileBase = `references-${style.short.toLowerCase().replace(/\s+/g, "-")}`;
   const plural = (k: number, one: string, many = `${one}s`) => `${k} ${k === 1 ? one : many}`;
+
+  const addByIdentifier = async () => {
+    const q = identifierLookup(ident);
+    if (!q) {
+      setError("Enter a DOI (10.xxxx/...), an arXiv ID (2106.09685), an ISBN or a PubMed ID.");
+      return;
+    }
+    setLooking(true);
+    try {
+      const res = await fetch(q.url);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        setError(`${q.kind.toUpperCase()} lookup: ${j.error ?? "no entry found"}`);
+        return;
+      }
+      const bib = (await res.text()).trim();
+      setInput((cur) => (cur.trim() && cur !== sample ? `${cur.trimEnd()}\n\n${bib}\n` : `${bib}\n`));
+      setIdent("");
+      setError("");
+      flash(`Added the entry for ${ident.trim()}.`);
+    } catch {
+      setError("Network error: the lookup did not answer.");
+    } finally {
+      setLooking(false);
+    }
+  };
 
   const loadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -169,6 +240,26 @@ export default function BibFormatTool({
                 </label>
               </div>
 
+              <div className="field fmt-add">
+                <label htmlFor={`${uid}-id`}>Add by DOI, arXiv ID, ISBN or PubMed ID</label>
+                <div className="bib-row">
+                  <input
+                    ref={identRef}
+                    id={`${uid}-id`}
+                    value={ident}
+                    onChange={(e) => setIdent(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") void addByIdentifier(); }}
+                    placeholder="10.1093/comjnl/27.2.97  or  2106.09685  or  978-0-201-52983-8"
+                    spellCheck={false}
+                    autoComplete="off"
+                    className="input"
+                  />
+                  <button type="button" className="btn" onClick={() => void addByIdentifier()} disabled={looking || !ident.trim()}>
+                    {looking ? "Looking up…" : "Add entry"}
+                  </button>
+                </div>
+              </div>
+
               <div className="bib-cols">
                 <div className="bib-pane">
                   <div className="bib-panehead">
@@ -195,12 +286,12 @@ export default function BibFormatTool({
                       {style.listName}, {style.label}
                     </span>
                     <span className="fmt-count" aria-hidden="true">{busy ? "Formatting…" : plural(n, "entry", "entries")}</span>
+                    <span className="sr-only" aria-live="polite">{busy ? "" : `${plural(n, "entry", "entries")}, ${style.label}`}</span>
                   </div>
                   <div
                     className={`fmt-out${result.layout.hangingIndent ? " is-hanging" : ""}${busy ? " is-busy" : ""}`}
                     role="region"
                     aria-labelledby={`${uid}-out`}
-                    aria-live="polite"
                     aria-busy={busy}
                     tabIndex={0}
                   >
@@ -215,7 +306,11 @@ export default function BibFormatTool({
                       </ol>
                     ) : (
                       <p className="fmt-empty">
-                        {busy ? `Loading the ${style.short} style…` : "Paste BibTeX entries on the left to see them formatted here."}
+                        {busy
+                          ? `Loading the ${style.short} style…`
+                          : lookupFirst
+                            ? `Enter a DOI above and press Add entry: its ${style.short} reference appears here.`
+                            : "Paste BibTeX entries on the left to see them formatted here."}
                       </p>
                     )}
                   </div>

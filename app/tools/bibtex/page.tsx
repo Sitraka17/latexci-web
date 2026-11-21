@@ -10,7 +10,7 @@ import { cleanBibTeX } from "@/lib/bibtex";
 export const metadata: Metadata = {
   title: "BibTeX Tools: DOI, arXiv, PubMed, ISBN Lookup",
   description:
-    "Free BibTeX tools: clean and format .bib files, look up DOIs via CrossRef, fetch arXiv and PubMed citations, convert ISBNs to @book entries. No signup, works in any browser.",
+    "Free BibTeX tools: clean a .bib file, get entries from a DOI, arXiv, PubMed or ISBN, and format the list in APA, MLA or Chicago. No signup.",
   keywords: [
     "bibtex cleaner", "bibtex formatter", "doi to bibtex", "arxiv to bibtex",
     "pubmed to bibtex", "pmid to bibtex", "isbn to bibtex", "book bibtex generator",

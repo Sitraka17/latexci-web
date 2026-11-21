@@ -109,6 +109,12 @@ const WORKFLOW_STEPS = [
     cta: "Convert Word to LaTeX",
     href: "/tools/word-to-latex",
   },
+  {
+    title: "Hand in the bibliography in Word too.",
+    desc: "A committee or a journal wants a .docx? Paste the .bib file into the formatter and copy an APA, MLA, Chicago or IEEE list with italics and hanging indent.",
+    cta: "Format BibTeX in APA",
+    href: "/tools/bibtex-to-apa",
+  },
 ];
 
 const WHY_LATEX = [
@@ -188,7 +194,7 @@ export default function AcademicsPage() {
           </p>
         </section>
 
-        <h2><span className="secnum">1</span>A thesis workflow in four steps</h2>
+        <h2><span className="secnum">1</span>A thesis workflow in five steps</h2>
         <p>
           Each step below uses one tool. Every tool is free and works in your browser; only PDF export and
           Word to LaTeX ask for a one-click Google sign-in.

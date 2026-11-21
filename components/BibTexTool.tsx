@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from "react";
 import { cleanBibTeX } from "@/lib/bibtex";
 import { normalizeDoi } from "@/lib/bib-escape";
 import Link from "@/components/Link";
+import { FORMAT_TARGETS, formatHref } from "@/lib/bib-handoff";
 import "@/app/tools/bibtex/bibtex.css";
 
 export type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
@@ -41,6 +42,22 @@ function CopyBtn({ text }: { text: string }) {
 }
 
 // ── Output pane (right-hand side of every lookup tab) ────────────────────────
+// ── Hand the entries to a formatter page (APA, MLA...) in the URL fragment ───
+function FormatLinks({ bib }: { bib: string }) {
+  if (!bib.trim()) return null;
+  return (
+    <p className="bib-handoff">
+      For Word: format as{" "}
+      {FORMAT_TARGETS.map((t, i) => (
+        <span key={t.href}>
+          {i > 0 && (i === FORMAT_TARGETS.length - 1 ? " or " : ", ")}
+          <a href={formatHref(t.href, bib)}>{t.label}</a>
+        </span>
+      ))}
+    </p>
+  );
+}
+
 function OutputBox({ value, label, placeholder }: { value: string; label?: string; placeholder?: string }) {
   return (
     <div className="bib-pane">
@@ -54,6 +71,7 @@ function OutputBox({ value, label, placeholder }: { value: string; label?: strin
         placeholder={placeholder}
         className="codebox bib-area"
       />
+      <FormatLinks bib={value} />
     </div>
   );
 }
@@ -211,6 +229,7 @@ function CleanTab() {
             placeholder="Cleaned BibTeX will appear here."
             className="codebox bib-area"
           />
+          <FormatLinks bib={output} />
         </div>
       </div>
 
@@ -607,7 +626,8 @@ export default function BibTexTool({
           Clean your .bib file here, then upload it directly to Overleaf via{" "}
           <em>New Project → Upload Project</em>, or paste it into your Overleaf bibliography file.
           The DOI, arXiv, and PubMed lookups give you correctly-formatted entries in one click.
-          Writing in Word? <Link href="/tools/bibtex-to-apa">Format the file as an APA, MLA or Chicago reference list</Link>.
+          Writing in Word? <Link href="/tools/bibtex-to-apa">Format the file as an APA, MLA, Chicago, IEEE or Harvard reference list</Link>,
+          or go straight from a DOI with <Link href="/tools/doi-to-apa">DOI to APA</Link>.
         </p>
       </div>
     </>
