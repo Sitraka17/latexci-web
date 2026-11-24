@@ -27,7 +27,7 @@ const SECTIONS = [
       "**CV generator**: your CV draft stays in your browser (local storage) and is never sent to latexci. If you use the optional ORCID import, only the ORCID iD you enter is sent to ORCID (orcid.org) to list your public works. ORCID is operated in the United States, so this is an international data transfer under Art. 44 GDPR.",
       "**Sign-in**: PDF export, and Word to LaTeX after your first file, need a sign-in with your Google account. Google tells us your name, your email address and a stable account id. We keep them in a signed cookie in your browser and in a short account record: first and last sign-in dates and how many times you signed in, exported a PDF and converted a Word file. The record is stored privately in Vercel Blob (Paris region, EU). Documents you save in the editor stay in your browser (local storage) and are never sent to latexci.",
       "**Product-news emails** (optional): if you tick the box under the sign-in button, your account record notes that you agreed, with the date, and we may email you when a new tool or template ships, at most once a month. The box is never ticked for you; untick it at any time in your dashboard, or reply to any of these emails.",
-      "**Analytics**: latexci.com runs no page-view analytics. Cloudflare, which serves the site, keeps the usual technical request logs (IP address, page, time) to deliver it and protect it from abuse. No cookies are set for this purpose.",
+      "**Usage counter**: latexci.com counts page views and a few tool actions (a reference list copied, a DOI looked up, a Word file converted) as daily totals per page, with the referring site's name when you arrive from another site. It sets no cookie and stores no IP address, browser details or identifier, and never what you type or paste. Cloudflare, which serves the site, also keeps the usual technical request logs (IP address, page, time) to deliver it and protect it from abuse.",
     ],
   },
   {
@@ -75,7 +75,7 @@ const SECTIONS = [
     title: "7. Changes to this policy",
     body: [
       "We may update this policy from time to time. Material changes will be communicated via the GitHub repository changelog or by email to registered users.",
-      "This policy was last updated on 20 November 2026.",
+      "This policy was last updated on 25 November 2026.",
     ],
   },
 ];

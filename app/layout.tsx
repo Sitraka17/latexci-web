@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
+import PageCounter from "@/components/PageCounter";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
@@ -182,6 +183,8 @@ export default function RootLayout({
         {/* Vercel-only: the script lives at /_vercel/insights and 404s on any
             other host (Cloudflare staging), so it is gated on the build env. */}
         {process.env.VERCEL === "1" && <Analytics />}
+        {/* Cookieless counter (lib/counter.ts), written to D1 on the Cloudflare Worker. */}
+        <PageCounter />
       </body>
     </html>
   );

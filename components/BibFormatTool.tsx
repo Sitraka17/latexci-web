@@ -4,6 +4,7 @@ import { STYLES, styleById, type StyleId } from "@/lib/csl-styles";
 import { toHtmlDocument, toPlainText, toRichHtml, type FormatResult } from "@/lib/bib-output";
 import type { BibFormatter } from "@/lib/bib-format";
 import { identifierLookup, readHandoff } from "@/lib/bib-handoff";
+import { track } from "@/lib/track";
 import "@/app/tools/bibtex/bibtex.css";
 
 // The formatter, citeproc-js (about 190 kB gzipped, served unminified from
@@ -197,6 +198,7 @@ export default function BibFormatTool({
       setInput((cur) => (cur.trim() && cur !== sample ? `${cur.trimEnd()}\n\n${bib}\n` : `${bib}\n`));
       setIdent("");
       setError("");
+      track("fmt_add", { x: q.kind });
       flash(`Added the entry for ${ident.trim()}.`);
     } catch {
       setError("Network error: the lookup did not answer.");
@@ -322,6 +324,7 @@ export default function BibFormatTool({
                   type="button" className="btn btn-primary" disabled={!shown || n === 0 || busy}
                   onClick={async () => {
                     const ok = await copyRich(toRichHtml(result), toPlainText(result));
+                    if (ok) track("fmt_copy", { x: styleId });
                     flash(ok ? `Copied ${plural(n, "reference")} with italics and indent. Paste into Word or Google Docs.` : "Copy failed: select the list and copy it by hand.");
                   }}
                 >
@@ -331,17 +334,18 @@ export default function BibFormatTool({
                   type="button" className="btn" disabled={!shown || n === 0 || busy}
                   onClick={async () => {
                     const ok = await copyPlain(toPlainText(result));
+                    if (ok) track("fmt_copy", { x: `${styleId}:text` });
                     flash(ok ? `Copied ${plural(n, "reference")} as plain text.` : "Copy failed.");
                   }}
                 >
                   Copy plain text
                 </button>
                 <button type="button" className="btn" disabled={!shown || n === 0 || busy}
-                  onClick={() => download(`${fileBase}.txt`, "text/plain;charset=utf-8", toPlainText(result))}>
+                  onClick={() => { track("fmt_download", { x: `${styleId}:txt` }); download(`${fileBase}.txt`, "text/plain;charset=utf-8", toPlainText(result)); }}>
                   Download .txt
                 </button>
                 <button type="button" className="btn" disabled={!shown || n === 0 || busy}
-                  onClick={() => download(`${fileBase}.html`, "text/html;charset=utf-8", toHtmlDocument(result))}>
+                  onClick={() => { track("fmt_download", { x: `${styleId}:html` }); download(`${fileBase}.html`, "text/html;charset=utf-8", toHtmlDocument(result)); }}>
                   Download .html
                 </button>
                 <span className="bib-stats" role="status">{status}</span>

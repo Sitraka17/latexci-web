@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { latexToHtml, ParseWarning } from "@/lib/latex-parser";
 import LZString from "lz-string";
+import { track } from "@/lib/track";
 import { createDoc, getDoc, titleFrom, updateDoc } from "@/lib/local-docs";
 import SignInPrompt from "@/components/SignInPrompt";
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
@@ -669,6 +670,7 @@ export default function LatexEditor({ initialValue }: { initialValue?: string })
       }
 
       const blob = await res.blob();
+      track("pdf_export");
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement("a"), {
         href: url,

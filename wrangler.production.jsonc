@@ -26,6 +26,16 @@
   // stops a redeploy from wiping it. NEXT_PUBLIC_SITE_URL is inlined at BUILD
   // time by scripts/cf-guard.mjs, not read at runtime.
   "keep_vars": true,
+  // Cookieless counter (lib/counter.ts, app/api/e): daily totals, no cookie, no IP.
+  // Schema: migrations/0001_ev.sql (`npx wrangler d1 migrations apply latexci-events --remote`).
+  "d1_databases": [
+    {
+      "binding": "EVENTS_DB",
+      "database_name": "latexci-events",
+      "database_id": "32420851-a12e-498c-ac04-ea9b4e7a3cab",
+      "migrations_dir": "migrations"
+    }
+  ],
   "vars": {},
   "observability": { "enabled": true }
 }
