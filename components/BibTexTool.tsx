@@ -4,6 +4,7 @@ import { cleanBibTeX } from "@/lib/bibtex";
 import { normalizeDoi } from "@/lib/bib-escape";
 import Link from "@/components/Link";
 import { FORMAT_TARGETS, formatHref } from "@/lib/bib-handoff";
+import { track } from "@/lib/track";
 import "@/app/tools/bibtex/bibtex.css";
 
 export type Tab = "clean" | "doi" | "arxiv" | "pmid" | "isbn";
@@ -51,7 +52,7 @@ function FormatLinks({ bib }: { bib: string }) {
       {FORMAT_TARGETS.map((t, i) => (
         <span key={t.href}>
           {i > 0 && (i === FORMAT_TARGETS.length - 1 ? " or " : ", ")}
-          <a href={formatHref(t.href, bib)}>{t.label}</a>
+          <a href={formatHref(t.href, bib)} onClick={() => track("handoff", { x: t.label.toLowerCase() })}>{t.label}</a>
         </span>
       ))}
     </p>
@@ -155,6 +156,7 @@ function CleanTab() {
     });
     setOutput(result.output);
     setStats(result.stats);
+    track("bib_clean");
     setWarnings(result.warnings);
   }, [input, sort, dedup, norAuth, strip]);
 
@@ -286,6 +288,7 @@ function DoiTab() {
         setError(j.error ?? "Unknown error");
       } else {
         setResult(await res.text());
+        track("lookup", { x: "doi" });
       }
     } catch {
       setError("Network error");
@@ -353,6 +356,7 @@ function ArxivTab() {
         setError(j.error ?? "Unknown error");
       } else {
         setResult(await res.text());
+        track("lookup", { x: "arxiv" });
       }
     } catch {
       setError("Network error");
@@ -420,6 +424,7 @@ function PmidTab() {
         setError(j.error ?? "Unknown error");
       } else {
         setResult(await res.text());
+        track("lookup", { x: "pmid" });
       }
     } catch {
       setError("Network error");
@@ -486,7 +491,7 @@ function IsbnTab() {
       // (403) but answers visitors. The server route is only a fallback.
       const { lookupIsbn } = await import("@/lib/isbn-lookup");
       const direct = await lookupIsbn(raw);
-      if (direct.ok) { setResult(direct.bibtex); return; }
+      if (direct.ok) { setResult(direct.bibtex); track("lookup", { x: "isbn" }); return; }
       if (direct.status === 400 || direct.status === 404) { setError(direct.error); return; }
       const res = await fetch(`/api/isbn-to-bibtex?isbn=${encodeURIComponent(raw)}`);
       if (!res.ok) {
@@ -494,6 +499,7 @@ function IsbnTab() {
         setError(j.error ?? "Unknown error");
       } else {
         setResult(await res.text());
+        track("lookup", { x: "isbn" });
       }
     } catch {
       setError("Network error");

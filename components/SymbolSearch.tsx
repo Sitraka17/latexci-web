@@ -5,6 +5,7 @@ import { CATEGORIES, SYMBOLS, searchSymbols, type SymbolEntry } from "@/lib/symb
 import { toggleFavourite, type FavouriteSymbol } from "@/lib/favourites";
 import { useFavouriteSymbols } from "@/components/useFavouriteSymbols";
 import CopyButton from "@/components/CopyButton";
+import { track } from "@/lib/track";
 
 // ── KaTeX lazy loader ────────────────────────────────────────────────────────
 let katexLoaded = false;
@@ -60,6 +61,7 @@ function SymbolCard({ sym, onCopy, katexReady }: { sym: SymbolEntry; onCopy: (cm
     navigator.clipboard?.writeText(sym.command).then(() => {
       setCopied(true);
       onCopy(sym.command);
+      track("symbol_copy", { x: sym.name });
       setTimeout(() => setCopied(false), 1500);
     }).catch(() => {});
   }

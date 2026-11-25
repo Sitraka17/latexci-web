@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "@/components/Link";
 import { useRouter } from "next/navigation";
 import LZString from "lz-string";
+import { track } from "@/lib/track";
 import { TEMPLATES, CATEGORIES } from "@/lib/templates";
 
 // Templates marked as new (shown with a badge)
@@ -51,9 +52,10 @@ export default function TemplatesFilter() {
   // The editor deep link (#s=<lz>) is built on click, not at render time:
   // embedding every compressed source in the hub HTML cost ~80 KB.
   // href stays the per-template page (crawlable, works for new-tab/middle-click).
-  const openInEditor = useCallback((e: React.MouseEvent<HTMLAnchorElement>, source: string) => {
+  const openInEditor = useCallback((e: React.MouseEvent<HTMLAnchorElement>, source: string, id: string) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    track("template_open", { x: id });
     router.push(`/tools/preview#s=${LZString.compressToEncodedURIComponent(source)}`);
   }, [router]);
 
@@ -248,7 +250,7 @@ export default function TemplatesFilter() {
                   <Link
                     href={href}
                     prefetch={false}
-                    onClick={e => openInEditor(e, t.source)}
+                    onClick={e => openInEditor(e, t.source, t.id)}
                     style={{
                       flex: 2,
                       display: "inline-flex", alignItems: "center", justifyContent: "center",

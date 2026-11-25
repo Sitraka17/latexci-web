@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { track } from "@/lib/track";
 import {
   generateCv, orcidPubType, unsupportedChars, lengthWarning, normalizeCv, exampleFor, EXAMPLE_CV, EMPTY_CV, EMPTY_ENTRY, EMPTY_PUB,
   type CvData, type CvEntry, type CvLang, type CvPublication, type PubType,
@@ -175,6 +176,7 @@ export default function CvBuilder() {
   }
 
   function download() {
+    track("cv_download");
     const blob = new Blob([texSource], { type: "application/x-tex;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);

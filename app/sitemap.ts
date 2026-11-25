@@ -60,7 +60,7 @@ const LAST_MODIFIED: Record<string, string> = {
   "/cv-latex": "2026-10-18",
   "/after-overleaf": "2026-11-20",
   "/pricing": "2026-10-07",
-  "/privacy": "2026-11-20",
+  "/privacy": "2026-11-25",
   "/terms": "2026-10-06",
 };
 

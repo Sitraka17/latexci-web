@@ -5,6 +5,7 @@ import GoogleSignIn from "@/components/GoogleSignIn";
 import { docxToLatex } from "@/lib/word-latex";
 import { useDropzone } from "react-dropzone";
 import dynamic from "next/dynamic";
+import { track } from "@/lib/track";
 
 const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
 
@@ -137,6 +138,7 @@ export default function WordToLatex() {
 
       setResult(finalLatex);
       setWarnings(warns);
+      track("word_convert");
       setReport(fullReport);
       setStatus("done");
     } catch (err) {
